@@ -90,7 +90,7 @@ async function main() {
 
   await initBot(chatbotConfig, () => initChatbot(app));
   await initBot(chilliConfig, () => initChilli());
-  await initBot(coachConfig, () => initCoach());
+  await initBot(coachConfig, () => initCoach(app));
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
   await initBot(learnerConfig, () => initLearner(app));

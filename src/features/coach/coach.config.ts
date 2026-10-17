@@ -1,3 +1,4 @@
+import { MMPS_BASE_URL } from '@core/config';
 import type { TelegramBotConfig } from '@services/telegram';
 
 export const BOT_CONFIG: TelegramBotConfig = {
@@ -8,6 +9,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
     START: { command: '/start', description: 'התחל מהתחלה', hide: true },
     TABLES: { command: '/tables', description: '📊 טבלאות 📊' },
     MATCHES: { command: '/matches', description: '🎱 מחזור הבא 🎱' },
+    DASHBOARD: { command: '/dashboard', description: '📺 דשבורד משחקים חיים 📺' },
     ACTIONS: { command: '/actions', description: '⚙️ פעולות ⚙️' },
   },
   keyboardOptions: ['היום', 'מחר', 'מחרתיים', 'אתמול'],
@@ -20,6 +22,7 @@ export const ANALYTIC_EVENT_NAMES = {
   CONTACT: 'CONTACT',
   TABLE: 'TABLE',
   MATCH: 'MATCH',
+  DASHBOARD: 'DASHBOARD',
   CUSTOM_LEAGUES: 'CUSTOM_LEAGUES',
   CUSTOM_LEAGUES_SELECT: 'CUSTOM_LEAGUES_SELECT',
   ERROR: 'ERROR',
@@ -34,3 +37,5 @@ export enum BOT_ACTIONS {
   CUSTOM_LEAGUES = 'cust_leag',
   CUSTOM_LEAGUES_SELECT = 'cust_leag_select',
 }
+
+export const DASHBOARD_APP_URL = `${MMPS_BASE_URL}/coach/`;

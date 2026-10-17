@@ -1,12 +1,13 @@
-import type { Bot, Context } from 'grammy';
+import { type Bot, type Context, InlineKeyboard } from 'grammy';
 import { MY_USER_NAME } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getDateDescription } from '@core/utils';
 import { notify } from '@services/notifier';
 import { COMPETITION_IDS_MAP } from '@services/scores-365';
 import { buildInlineKeyboard, getCallbackQueryData, getMessageData, MessageLoader, UserDetails } from '@services/telegram';
-import { addSubscription, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
-import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG } from './coach.config';
+import { addSubscription, getOrCreateDashboardAccessToken, getSubscription, saveUserDetails, updateSubscription } from '@shared/coach';
+import { getDefaultDashboardPreferences } from './api';
+import { ANALYTIC_EVENT_NAMES, BOT_ACTIONS, BOT_CONFIG, DASHBOARD_APP_URL } from './coach.config';
 import { CoachService } from './coach.service';
 import { getDateFromUserInput } from './utils';
 
@@ -32,11 +33,12 @@ export class CoachController {
   ) {}
 
   init(): void {
-    const { START, TABLES, MATCHES, ACTIONS } = BOT_CONFIG.commands;
+    const { START, TABLES, MATCHES, DASHBOARD, ACTIONS } = BOT_CONFIG.commands;
 
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.command(TABLES.command.replace('/', ''), (ctx) => this.tablesHandler(ctx));
     this.bot.command(MATCHES.command.replace('/', ''), (ctx) => this.matchesHandler(ctx));
+    this.bot.command(DASHBOARD.command.replace('/', ''), (ctx) => this.dashboardHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
@@ -71,6 +73,18 @@ export class CoachController {
       2,
     );
     await ctx.reply('לאיזה ליגה?', { reply_markup: keyboard });
+  }
+
+  private async dashboardHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
+    const defaults = await getDefaultDashboardPreferences(chatId);
+    const token = await getOrCreateDashboardAccessToken(chatId, defaults);
+    const keyboard = new InlineKeyboard()
+      .webApp('📺 פתח דשבורד', DASHBOARD_APP_URL)
+      .row()
+      .url('🌐 פתח בדפדפן', `${DASHBOARD_APP_URL}?t=${encodeURIComponent(token)}`);
+    await ctx.reply(['📺 כל המשחקים החיים שלך במסך אחד', 'הקישור לדפדפן אישי - אל תשתף אותו'].join('\n'), { reply_markup: keyboard });
+    notify(BOT_CONFIG, { action: ANALYTIC_EVENT_NAMES.DASHBOARD }, userDetails);
   }
 
   private async actionsHandler(ctx: Context): Promise<void> {

@@ -7,7 +7,7 @@ Detailed breakdown of the MMPS directory structure.
 ```
 mmps/
 ├── src/                    # Source code
-├── apps/                   # npm workspaces — Vite mini-apps (savings-web, earth-web, learner-web, zika-web)
+├── apps/                   # npm workspaces — Vite mini-apps (savings-web, earth-web, learner-web, zika-web, coach-web)
 ├── docs/                   # VitePress documentation
 ├── dist/                   # Compiled JavaScript (generated)
 ├── coverage/               # Test coverage reports (generated)

@@ -5,3 +5,6 @@ export { getActiveSubscriptions, getSubscription, addSubscription, updateSubscri
 
 // User repository functions
 export { saveUserDetails, getUserDetails } from './user.repository';
+
+// Dashboard preferences repository functions
+export { getDashboardPreferences, saveDashboardPreferences, getOrCreateDashboardAccessToken, findDashboardUserByAccessToken } from './dashboard-preferences.repository';
