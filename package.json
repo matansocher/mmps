@@ -58,6 +58,7 @@
   "license": "ISC",
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.4",
+    "@google-cloud/pubsub": "^6.3.0",
     "@grammyjs/hydrate": "^1.6.0",
     "@grammyjs/runner": "^2.0.3",
     "@langchain/core": "^1.2.17",
