@@ -9,7 +9,7 @@ AI tools allow the chatbot to perform specific actions like getting weather, set
 ## Tool Structure
 
 ```typescript
-// shared/ai/tools/{name}/{name}.tool.ts
+// src/shared/ai/tools/{name}/{name}.tool.ts
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 
@@ -104,16 +104,17 @@ describe('weatherTool', () => {
 
 ## Available Tools
 
-27 tools are registered in `src/features/chatbot/agent/agent.ts`, grouped by domain:
+31 tools are registered in `src/features/chatbot/agent/agent.ts`, grouped by domain:
 
 - **Personal / productivity**: calendar (can invite guests by email via `attendees`), gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics
-- **Media / social**: spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels
-- **Information**: weather, earthquake
-- **Sports / games**: competitions-list, competition-matches, competition-table, match-summary, top-matches-for-prediction, match-prediction, makavdia, wolt, worldly
+- **Media / social**: spotify, spotify-podcast, social (Twitter/X, TikTok, YouTube and public Telegram channels in one tool)
+- **Information / web**: weather, earthquake, web-search, browse-url, places
+- **Travel**: hotel-watcher
+- **Sports / games**: competitions-list, competition-matches, competition-table, match-summary, top-matches-for-prediction, match-prediction, makavdia, wolt, worldly, game-releases, game-price-watcher, game-scores
 - **Markets**: polymarket
 - **Dev tooling**: github
 
-Additional tool directories exist in `src/shared/ai/tools/` (audio, crypto, flights, image, maps, music, rain-radar, stocks) but are not currently registered.
+Some tools are exported from `src/shared/ai/tools/` but not currently registered (rain-radar, and the google-maps-place / google-place-details tools in `maps/`).
 
 ## GitHub Tool
 
@@ -147,7 +148,7 @@ GITHUB_APP_INSTALLATION_ID=456789
 
 ### Actions
 
-The GitHub tool supports 12 actions:
+The GitHub tool supports 14 actions:
 
 - `create_issue` - Create a new issue with title, body, labels, assignees
 - `get_issue` - Get details of a specific issue
@@ -161,13 +162,15 @@ The GitHub tool supports 12 actions:
 - `get_pr_checks` - Get CI/CD status checks for a pull request
 - `list_pr_files` - List files changed in a pull request
 - `get_pr_reviews` - Get reviews for a pull request
+- `merge_pr` - Merge a pull request (squash by default; `merge` / `rebase` via `mergeMethod`)
+- `deploy` - Dispatch the Heroku deploy GitHub Actions workflow
 
 ### Service Architecture
 
 The GitHub service is organized into focused modules:
 
 ```
-services/github/
+src/services/github/
 ├── constants.ts              # Repo config (matansocher/mmps)
 ├── types.ts                  # Type definitions
 ├── index.ts                  # Barrel exports
@@ -179,8 +182,15 @@ services/github/
     ├── update-issue.ts
     ├── create-issue-comment.ts
     ├── create-pull-request-comment.ts
+    ├── add-labels.ts
     ├── list-issues.ts
     ├── list-pull-requests.ts
+    ├── get-pull-request.ts
+    ├── get-pr-checks.ts
+    ├── get-pr-reviews.ts
+    ├── list-pr-files.ts
+    ├── merge-pull-request.ts
+    ├── trigger-workflow.ts   # workflow_dispatch (deploy)
     └── index.ts              # Barrel exports
 ```
 
@@ -206,6 +216,10 @@ The chatbot can trigger automated GitHub Actions workflows:
 - Use case: Request implementation generation with natural language like "implement this issue" or "generate code for this"
 
 Both are jobs in `.github/workflows/ai.yml`, using `openai/codex-action`.
+
+**Deploy Workflow**
+- Trigger: the `deploy` action dispatches `.github/workflows/heroku-deploy.yml` via `workflow_dispatch`
+- Use case: "deploy mmps" or "ship it to production"
 
 When the chatbot recognizes these requests, it uses the GitHub tool to add the appropriate label, triggering the automation:
 

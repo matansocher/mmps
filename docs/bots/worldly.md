@@ -82,6 +82,7 @@ Collections:
 - `Country` - Country quiz data
 - `State` - US state quiz data
 - `GameLog` - Per-user quiz answers and results
+- `GlobeProgress` - Per-user [Earth](/bots/earth) mini-app progress
 
 ## Scheduled Tasks
 

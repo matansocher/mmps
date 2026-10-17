@@ -6,7 +6,7 @@ This page goes deeper than the [Chatbot overview](/bots/chatbot) — it explains
 
 ## 1. What it is (30-second version)
 
-The **chatbot** is one of six Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **27 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
+The **chatbot** is one of six Telegram bots in the `mmps` monorepo. It's a **conversational AI assistant** that users message on Telegram. Under the hood it's a **ReAct agent** (Reason + Act) that can call **31 tools** — weather, Gmail, Google Calendar, reminders, sports predictions, Spotify, GitHub automation, Polymarket, and more.
 
 Key engineering properties:
 
@@ -44,9 +44,9 @@ The feature lives in `src/features/chatbot/` and follows the repo's **Controller
 | File | Responsibility |
 |------|----------------|
 | `chatbot.init.ts` | Manual DI wiring. Opens Mongo connections, builds the checkpointer, creates service/controller/scheduler, registers routes + SPA, boots the bot. |
-| `chatbot.controller.ts` | grammY handlers: `/start /help /app /exercise`, text, photo, audio. Wraps calls in `MessageLoader` (reaction + typing + loader). |
+| `chatbot.controller.ts` | grammY handlers: `/start`, text, photo, document, audio/voice, inline-button callbacks and Telegram Business messages. Wraps calls in `MessageLoader` (reaction + typing + loader). |
 | `chatbot.service.ts` | The brain. Builds the model, summarization middleware, and agent service; `processMessage()` is the single entry point. |
-| `agent/agent.ts` | The **AgentDescriptor**: name, general-behavior system prompt, and the array of 27 tools. |
+| `agent/agent.ts` | The **AgentDescriptor**: name, general-behavior system prompt, and the array of 31 tools. |
 | `agent/factory.ts` | `createAgentService()` — calls LangChain `createAgent()` and wraps the compiled graph. |
 | `agent/service.ts` | `AiService` — thin wrapper over the compiled graph: `invoke`/`stream`/`getState`, builds `RunnableConfig` (thread_id, callbacks, recursion limit). |
 | `agent/checkpointer.ts` | `createChatbotCheckpointer()` — Mongo-backed persistence (`PruningMongoDBSaver`), db `Chatbot`, 30-day TTL, keeps only the 2 newest checkpoints per thread. |
@@ -145,7 +145,7 @@ Conventions worth calling out:
 - **Retries** — tools that do throw go through `createToolRetryMiddleware()` (`agent/tool-retry.ts`). Read-only calls listed in `READ_ONLY_TOOL_ACTIONS` (tool name → `true` or a list of read-only `action` values, e.g. `gmail: ['list']`) are retried up to twice with exponential backoff (500ms, 1s, capped at 4s) on transient errors: timeouts, dropped connections (`ECONNRESET`, `ETIMEDOUT`, undici socket errors, `fetch failed` with such a cause), HTTP 408/425/429 and 5xx except 501. Calls with side effects and unlisted tools never are, so they can't run twice. Every exception becomes an error `ToolMessage`: non-transient errors keep LangChain's default text (`Error: …\n Please fix your mistakes.`); transient ones tell the model "temporarily unavailable, don't call it again this turn" (read-only) or "unknown whether it went through, don't repeat it" (side effects). That conversion matters: once a middleware wraps tool calls, LangChain re-raises tool exceptions and the whole turn would fail. Tools that catch their own errors and return `{ success: false }` are invisible to the middleware.
 - **Zod = validation + schema** — the same schema both validates args and is converted to the JSON schema sent to the model for function calling.
 
-Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 27 registered tools group into: personal/productivity (calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics), media/social (spotify, spotify-podcast, tiktok, twitter, youtube, telegram-channels), information (weather, earthquake), sports/games (competitions, match summary/prediction, makavdia, wolt, worldly), markets (polymarket), dev (github).
+Tools live in `src/shared/ai/tools/{name}/`, are re-exported from a barrel, and registered in `agent.ts`. The 31 registered tools group into: personal/productivity (calendar, gmail, reminders, contacts, meetups, recipes, exercise, exercise-analytics), media/social (spotify, spotify-podcast, social), information/web (weather, earthquake, web-search, browse-url, places), travel (hotel-watcher), sports/games (competitions, match summary/prediction, makavdia, wolt, worldly, game-releases, game-price-watcher, game-scores), markets (polymarket), dev (github).
 
 ## 8. Memory — the MongoDB checkpointer
 
@@ -314,7 +314,7 @@ The chatbot follows accounts on 4 platforms and DMs one daily digest instead of 
 - **Collect (silent).** `schedulers/social-media-collect.ts` — `socialMediaCollect(platforms)` runs on per-platform crons (twitter + youtube `30 11,15,19,23`, tiktok `30 18`, telegram `30 11-23`). It diffs new posts against the subscription's `lastSeenId` / `lastSeenAt` and stores them in db `SocialFollower`, collection `PendingPost`; nothing is sent. Pending rows are inserted **before** `lastSeen` advances, and `createPendingPosts` dedupes by `platform + username + chatId + postId`, so a crash re-collects rather than loses posts.
 - **Diffing rules.** Twitter/TikTok ids are chronological snowflakes, compared with `BigInt(id) > BigInt(lastSeenId)` (this also neutralizes pinned posts). Telegram post ids are sequential per channel and compared numerically. YouTube video ids are not chronological, so YouTube diffs by `lastSeenAt` against the official RSS feed (`getVideosFromRSS`, free, no quota).
 - **Digest.** `schedulers/social-media-digest.ts`, cron `45 22 * * *`. Pending posts are grouped per chat and per followed account. Telegram and Twitter get an AI key-points summary (`getResponse` with `CHAT_MODEL`; `targetKeyPointsCount` gives about 1 bullet per 10 posts, min 2, max 10), written in the posts' own language, with a raw listing as fallback if the AI call fails. YouTube and TikTok are listed one line per post with a link. One combined Markdown message is sent, then exactly the rows it sent are deleted: posts collected after 22:45 roll into the next day, an empty day sends nothing, and a send failure keeps everything for tomorrow. TikTok video attachments and tweet image albums follow the text (see the table above).
-- **Subscriptions.** `shared/social-follower/` holds the `Subscription` and `PendingPost` collections and their repository functions (`SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`). They are managed through the `tiktok`, `twitter`, `youtube` and `telegram_channels` tools, each with subscribe / unsubscribe / list actions keyed to `MY_USER_ID`.
+- **Subscriptions.** `shared/social-follower/` holds the `Subscription` and `PendingPost` collections and their repository functions (`SocialPlatform = 'tiktok' | 'twitter' | 'youtube' | 'telegram'`). They are managed through the single `social` tool (`platform` = `twitter` / `tiktok` / `youtube` / `telegram`) via its subscribe / unsubscribe / list actions, keyed to `MY_USER_ID`.
 - **Data sources.** Telegram → `@services/telegram-scraper` (t.me/s web preview, no auth). Twitter → `@services/twitter-scraper` (anonymous GraphQL, then an optional logged-in session via `X_AUTH_TOKEN` / `X_CT0` cookies, then a Nitter fallback; no key). YouTube → RSS for collecting, Supadata-backed `@services/youtube` for tool actions. TikTok → RapidAPI `@services/tiktok` (metered free tier, mind the quota).
 - The digest summary goes through the raw `@services/openai` helper, so it is not usage-metered.
 
@@ -334,7 +334,7 @@ Only boots in prod, or locally when `LOCAL_ACTIVE_BOT_ID=CHATBOT`.
 
 | Decision | Why / tradeoff |
 |----------|----------------|
-| Single agent, 27 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by explicit, per-tool rules in each tool's description. |
+| Single agent, 31 tools | Simpler than a multi-agent orchestrator (the type system supports an `OrchestratorDescriptor`, but the chatbot uses one flat agent). Risk: a huge system prompt & tool list can confuse routing — mitigated by explicit, per-tool rules in each tool's description. |
 | Summarize vs. truncate | Summarizing preserves long-term facts at the cost of an extra LLM call. Chosen because it's a *personal* assistant where remembering user facts matters. |
 | Mongo checkpointer + 30-day TTL + pruning | Durable across deploys; TTL bounds storage & respects privacy; pruning keeps 2 snapshots per thread. Tradeoff: memory of very old conversations is intentionally lost, and checkpoint history (time travel/replay) isn't kept. |
 | Fire-and-forget usage writes | Observability must never slow or break a user reply; accept rare lost records. |

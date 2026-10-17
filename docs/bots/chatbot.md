@@ -1,10 +1,10 @@
 # Chatbot
 
-**AI-Powered Conversational Assistant** - The flagship bot with advanced features and 20+ integrated tools.
+**AI-Powered Conversational Assistant** - The flagship bot with advanced features and 30+ integrated tools.
 
 ## Overview
 
-The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropic's Claude. It provides intelligent conversation with access to external tools like weather, reminders, calendar integration, GitHub, and more.
+The Chatbot is MMPS's most advanced bot, powered by OpenAI models via LangChain/LangGraph. It provides intelligent conversation with access to external tools like weather, reminders, calendar integration, GitHub, and more.
 
 ::: tip Deep dive
 For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoDB checkpointer, summarization, and token/cost observability — see the [Chatbot Deep Dive](/bots/chatbot-deep-dive).
@@ -14,7 +14,7 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 
 ### Core Features
 - **Conversational AI** - Natural language understanding and generation
-- **Tool Integration** - 27 tools for extending capabilities
+- **Tool Integration** - 31 tools for extending capabilities
 - **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
 - **Observability** - Cross-bot token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
 - **Error Handling** - Graceful degradation and fallbacks
@@ -27,8 +27,7 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 - 🔍 **Web Search** - Search the internet
 - 🌐 **Browse URL** - Open a link and read its main text (no JavaScript or clicking)
 - 🎮 **Game Scores** - Metacritic score, user score and details for a game, with fuzzy name matching and suggestions (IGDB fallback)
-- ✅ **Todo Lists** - Task management
-- And 13+ more tools
+- And 24 more tools (see [AI Tools](/development/ai-tools#available-tools))
 
 ## Configuration
 
@@ -54,13 +53,10 @@ GOOGLE_CALENDAR_REFRESH_TOKEN=... # OAuth refresh token (calendar scope, minted 
 ```typescript
 export const BOT_CONFIG = {
   id: 'CHATBOT',
-  name: 'Chatbot',
+  name: 'Chatbot 🤖',
   token: 'CHATBOT_TELEGRAM_BOT_TOKEN',
   commands: {
-    START: { command: '/start', description: 'Start chatbot' },
-    HELP: { command: '/help', description: 'Get help' },
-    STATUS: { command: '/status', description: 'Check status' },
-    CLEAR: { command: '/clear', description: 'Clear conversation' },
+    START: { command: '/start', description: 'Start over', hide: true },
   },
 };
 ```
@@ -118,7 +114,6 @@ Open Telegram and search for your bot. Send `/start` to begin!
 | Command | Description |
 |---------|-------------|
 | `/start` | Start the bot |
-| `/exercise` | Log a workout |
 
 ## Architecture
 
@@ -185,13 +180,13 @@ Collections:
 - LangGraph checkpoint collections (`checkpoints`, `checkpoint_writes`) - Durable conversation memory with 30-day TTL; pruned to the 2 newest checkpoints per thread (backfill: `npx tsx src/features/chatbot/scripts/prune-checkpoints.ts [--apply]`)
 - `usage` - Per-turn token/cost records with 90-day TTL
 
-Chatbot tools also connect to shared databases such as `Reminders`, `CalendarEvents`, `Trainer`, `Coach`, `Wolt`, `Worldly`, `Cooker`, and related follower/friends databases.
+Shared domains used by the tools (reminders, calendar events, trainer, cooker, friends, followers, watchers) also live in the `Chatbot` database; the tools additionally read the `Coach`, `Wolt` and `Worldly` databases.
 
 ## Tool Development
 
 To add a new tool to the chatbot:
 
-1. Create a tool file in `shared/ai/tools/{name}/{name}.tool.ts`
+1. Create a tool file in `src/shared/ai/tools/{name}/{name}.tool.ts`
 2. Define schema with Zod:
 
 ```typescript
@@ -213,7 +208,7 @@ export const myTool = tool(runner, {
 });
 ```
 
-3. Add to `features/chatbot/agent/index.ts`
+3. Export it from `src/shared/ai/tools/index.ts` and register it in `src/features/chatbot/agent/agent.ts`
 4. Test thoroughly
 
 ## Troubleshooting
@@ -238,7 +233,7 @@ If you get rate limit errors:
 If the bot uses too much memory:
 - Lower `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_KEEP_TOKENS` so threads are summarized sooner and kept shorter
 - Old conversations expire automatically via the checkpointer's 30-day TTL
-- Monitor with `npm run start:debug`
+- Monitor with `npm run dev:debug`
 
 ## Performance Tips
 
