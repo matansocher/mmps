@@ -47,9 +47,6 @@ Without Telegram, the API falls back to the `MY_USER_ID` user when `NODE_ENV` is
 ```bash
 # Required
 COACH_TELEGRAM_BOT_TOKEN=your-token
-SCORES_365_API_KEY=your-api-key
-
-# Optional
 MONGO_DB_URL=mongodb://...
 ```
 

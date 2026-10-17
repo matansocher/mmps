@@ -42,7 +42,7 @@ Chilli has no commands. Regular text messages are sent to the Chilli persona age
 
 ## Database
 
-Chilli does not use a database.
+Chilli has no database of its own. Its token usage is recorded in the shared `Chatbot` `usage` collection (see [usage metering](/bots/chatbot-deep-dive)).
 
 ## Scheduled Tasks
 

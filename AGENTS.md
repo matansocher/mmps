@@ -92,8 +92,7 @@ mmps/
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # Vite mini-apps (npm workspaces)
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
-├── scripts/            # Standalone scripts
-├── test/               # integration/ and e2e/ suites
+├── test/               # integration/, e2e/ and eval/ suites
 ├── .github/workflows/  # ci, ai (Codex), docs-deploy, heroku-deploy, pr-notify
 └── .agents/skills/     # MMPS skills (.claude/skills is a symlink)
 ```
@@ -137,7 +136,7 @@ src/services/{name}/
 | `COACH` | `src/features/coach/` | [coach](docs/bots/coach.md) |
 | `WOLT` | `src/features/wolt/` | [wolt](docs/bots/wolt.md) |
 | `WORLDLY` | `src/features/worldly/` | [worldly](docs/bots/worldly.md); also serves the [Earth](docs/bots/earth.md) globe quiz mini app at `/earth/*` |
-| `LEARNER` | `src/features/learner/` | [overview](docs/bots/overview.md) |
+| `LEARNER` | `src/features/learner/` | [learner](docs/bots/learner.md) |
 
 Token env var for each bot: `{ID}_TELEGRAM_BOT_TOKEN`.
 

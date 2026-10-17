@@ -7,7 +7,7 @@ MongoDB database patterns and best practices in MMPS.
 ### Setting Up Connections
 
 ```typescript
-// core/utils/mongo.ts
+// src/core/mongo/mongo-connection.ts (simplified)
 const connections: Map<string, Db> = new Map();
 
 export async function createMongoConnection(dbName: string): Promise<void> {
@@ -47,14 +47,14 @@ export async function initChatbot(): Promise<void> {
 }
 ```
 
-Each bot/domain gets its own PascalCase database (defined in each module's `mongo/constants.ts`):
-- `Chatbot`
-- `Chilli`
+Databases are PascalCase and named in each module's `mongo/constants.ts` or `constants.ts`:
+- `Chatbot` - checkpoints and usage, plus the shared domains the chatbot tools use (reminders, calendar events, friends, trainer, cooker, followers, watchers, …)
 - `Coach`
+- `Learner`
 - `Savings`
+- `Whatsapp`
 - `Wolt`
 - `Worldly`
-- Plus shared domains: `Reminders`, `Friends`, `Trainer`, and more
 
 ## Type-Safe Collections
 

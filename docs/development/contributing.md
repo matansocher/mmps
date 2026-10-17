@@ -34,7 +34,7 @@ npm run lint:fix
 npm test
 
 # Watch tests
-npm test:watch
+npm run test:watch
 
 # Build TypeScript
 npm run build
@@ -80,7 +80,7 @@ Key points:
 
 Creating a new bot:
 
-1. Copy existing bot structure to `features/{newbot}/`
+1. Copy existing bot structure to `src/features/{newbot}/`
 2. Create required files:
    - `{bot}.init.ts` - Initialization
    - `{bot}.controller.ts` - Telegram handlers
@@ -88,7 +88,7 @@ Creating a new bot:
    - `{bot}.config.ts` - Configuration
    - `types.ts` - Type definitions
    - `index.ts` - Barrel exports
-3. Add bot config to `src/index.ts`
+3. Add an `initBot(config, init)` call in `src/index.ts`
 4. Create corresponding MongoDB database entry
 5. Add to documentation
 
@@ -115,7 +115,7 @@ Run tests:
 
 ```bash
 npm test              # Run all
-npm test:watch       # Watch mode
+npm run test:watch   # Watch mode
 npm test -- <file>   # Specific file
 ```
 
