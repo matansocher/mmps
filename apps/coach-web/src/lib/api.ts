@@ -1,4 +1,4 @@
-import type { CompetitionOption, DashboardResponse, Preferences, TeamOption } from '../types';
+import type { CompetitionDetail, CompetitionOption, DashboardResponse, GameDetail, PlayerDetail, Preferences, TeamDetail, TeamOption } from '../types';
 import { getInitData } from './telegram';
 
 const TOKEN_STORAGE_KEY = 'coach:dashboard-token';
@@ -65,4 +65,8 @@ export const api = {
   savePreferences: (preferences: Preferences) => request<Preferences>('/api/coach/preferences', { method: 'PUT', body: JSON.stringify(preferences) }),
   competitions: () => request<CompetitionOption[]>('/api/coach/competitions'),
   searchTeams: (query: string) => request<TeamOption[]>(`/api/coach/teams/search?q=${encodeURIComponent(query)}`),
+  game: (id: number) => request<GameDetail>(`/api/coach/games/${id}`),
+  team: (id: number) => request<TeamDetail>(`/api/coach/teams/${id}`),
+  player: (id: number) => request<PlayerDetail>(`/api/coach/players/${id}`),
+  competition: (id: number) => request<CompetitionDetail>(`/api/coach/competitions/${id}`),
 };

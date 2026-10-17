@@ -3,12 +3,37 @@ import express from 'express';
 import { getErrorMessage, Logger } from '@core/utils';
 import { coachAuthMiddleware, getCoachUser } from './auth.middleware';
 import type { CoachDashboardService } from './dashboard.service';
+import type { CoachDetailsService } from './details.service';
 import { parsePreferencesBody } from './dto';
 import type { ApiError, CompetitionOption, DashboardPreferencesDto, DashboardResponse, TeamOption } from './types';
 
 const logger = new Logger('coach:api');
 
-export function registerCoachApiRoutes(app: Express, dashboardService: CoachDashboardService): void {
+function parseId(value: unknown): number | null {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+// Wraps a GET-by-id detail route: validates the id, maps null to 404 and errors to 500.
+function detailRoute<T>(name: string, load: (id: number, req: Request) => Promise<T | null>) {
+  return async (req: Request, res: Response<T | ApiError>) => {
+    const id = parseId(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: 'invalid_id' });
+      return;
+    }
+    try {
+      const result = await load(id, req);
+      if (result) res.json(result);
+      else res.status(404).json({ error: `${name}_not_found` });
+    } catch (err) {
+      logger.error(`Failed to load ${name} ${id}: ${getErrorMessage(err)}`);
+      res.status(502).json({ error: `${name}_failed` });
+    }
+  };
+}
+
+export function registerCoachApiRoutes(app: Express, dashboardService: CoachDashboardService, detailsService: CoachDetailsService): void {
   app.use('/api/coach', express.json({ limit: '64kb' }));
   app.use('/api/coach', (_req: Request, res: Response, next) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -69,4 +94,9 @@ export function registerCoachApiRoutes(app: Express, dashboardService: CoachDash
       res.status(500).json({ error: 'search_failed' });
     }
   });
+
+  app.get('/api/coach/games/:id', detailRoute('game', (id, req) => detailsService.getGame(getCoachUser(req).telegramUserId, id)));
+  app.get('/api/coach/teams/:id', detailRoute('team', (id) => detailsService.getTeam(id)));
+  app.get('/api/coach/players/:id', detailRoute('player', (id) => detailsService.getPlayer(id)));
+  app.get('/api/coach/competitions/:id', detailRoute('competition', (id) => detailsService.getCompetition(id)));
 }

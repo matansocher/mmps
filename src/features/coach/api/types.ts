@@ -25,7 +25,10 @@ export type DashboardEvent = {
   readonly minuteDisplay: string;
   readonly side: DashboardSide;
   readonly playerName?: string;
+  readonly playerAthleteId?: number;
+  // For goals this is the assist; for substitutions it is the player who went off.
   readonly assistName?: string;
+  readonly assistAthleteId?: number;
   readonly detail?: string;
 };
 
@@ -40,23 +43,16 @@ export type DashboardGame = {
   readonly home: DashboardTeam;
   readonly away: DashboardTeam;
   readonly isFavorite: boolean;
+  readonly channels: string[];
   readonly events: DashboardEvent[];
   readonly stats?: DashboardStats;
-};
-
-export type DashboardFeedItem = DashboardEvent & {
-  readonly competitionId: number;
-  readonly competitionName: string;
-  readonly home: DashboardTeam;
-  readonly away: DashboardTeam;
-  readonly gameStatus: DashboardGameStatus;
-  readonly estimatedAt: string;
 };
 
 export type DashboardPreferencesDto = {
   readonly competitionIds: number[];
   readonly favoriteTeams: DashboardFavoriteTeam[];
   readonly eventTypes: DashboardEventType[];
+  readonly refreshIntervalSec: number;
 };
 
 export type DashboardResponse = {
@@ -64,7 +60,6 @@ export type DashboardResponse = {
   readonly updatedAt: string;
   readonly preferences: DashboardPreferencesDto;
   readonly games: DashboardGame[];
-  readonly feed: DashboardFeedItem[];
 };
 
 export type CompetitionOption = {
@@ -76,6 +71,139 @@ export type CompetitionOption = {
 export type TeamOption = {
   readonly id: number;
   readonly name: string;
+};
+
+export type GameStatRow = {
+  readonly id: number;
+  readonly name: string;
+  readonly home: string;
+  readonly away: string;
+  readonly isMajor: boolean;
+};
+
+export type LineupPlayer = {
+  readonly athleteId?: number;
+  readonly name: string;
+  readonly shortName?: string;
+  readonly jerseyNumber?: number;
+  readonly position?: string;
+  readonly rating?: number;
+  // 0-100 from own goal line to opponent goal line, and 0-100 across the pitch.
+  readonly fieldLine?: number;
+  readonly fieldSide?: number;
+  readonly subbedOffAt?: number;
+  readonly subbedOnAt?: number;
+  readonly stats: { readonly name: string; readonly value: string }[];
+};
+
+export type TeamLineup = {
+  readonly status?: string;
+  readonly formation?: string;
+  readonly starting: LineupPlayer[];
+  readonly bench: LineupPlayer[];
+  readonly missing: LineupPlayer[];
+  readonly coach?: string;
+};
+
+export type GameDetailResponse = {
+  readonly game: DashboardGame;
+  readonly venue?: string;
+  readonly referee?: string;
+  readonly round?: string;
+  readonly hasStandings: boolean;
+  readonly halftimeScore?: readonly [number, number];
+  readonly timeline: DashboardEvent[];
+  readonly stats: GameStatRow[];
+  readonly lineups?: { readonly home: TeamLineup; readonly away: TeamLineup };
+};
+
+export type FormResult = 'W' | 'D' | 'L';
+
+export type GameSummary = {
+  readonly id: number;
+  readonly competitionId: number;
+  readonly competitionName: string;
+  readonly startTime: string;
+  readonly status: DashboardGameStatus;
+  readonly statusText: string;
+  readonly home: DashboardTeam;
+  readonly away: DashboardTeam;
+  readonly result?: FormResult;
+};
+
+export type SquadPlayer = {
+  readonly athleteId: number;
+  readonly name: string;
+  readonly jerseyNumber?: number;
+  readonly age?: number;
+  readonly position: string;
+};
+
+export type TeamDetailResponse = {
+  readonly id: number;
+  readonly name: string;
+  readonly longName?: string;
+  readonly color?: string;
+  readonly mainCompetitionId?: number;
+  readonly mainCompetitionName?: string;
+  readonly recent: GameSummary[];
+  readonly upcoming: GameSummary[];
+  readonly squad: SquadPlayer[];
+};
+
+export type PlayerDetailResponse = {
+  readonly id: number;
+  readonly name: string;
+  readonly position?: string;
+  readonly jerseyNumber?: number;
+  readonly age?: number;
+  readonly nationality?: string;
+  readonly clubId?: number;
+  readonly contractUntil?: string;
+  readonly bio?: string;
+  readonly details: { readonly title: string; readonly value: string }[];
+  readonly seasonStats: { readonly competitionName: string; readonly stats: { readonly name: string; readonly value: string }[] }[];
+  readonly recentGames: (GameSummary & { readonly stats: { readonly name: string; readonly value: string }[] })[];
+};
+
+export type StandingsRow = {
+  readonly position: number;
+  readonly team: { readonly id: number; readonly name: string };
+  readonly played: number;
+  readonly won: number;
+  readonly drawn: number;
+  readonly lost: number;
+  readonly goalsFor: number;
+  readonly goalsAgainst: number;
+  readonly points: number;
+  readonly form: FormResult[];
+  readonly zoneColor?: string;
+  readonly isLive: boolean;
+};
+
+export type StandingsTable = {
+  readonly name?: string;
+  readonly rows: StandingsRow[];
+};
+
+export type KnockoutMatchup = {
+  readonly teams: { readonly id: number; readonly name: string; readonly isQualified: boolean }[];
+  readonly aggregate?: readonly [number, number];
+  readonly legs: { readonly gameId: number; readonly startTime?: string; readonly status: DashboardGameStatus; readonly homeId?: number; readonly homeScore?: number; readonly awayScore?: number }[];
+};
+
+export type KnockoutStage = {
+  readonly name: string;
+  readonly matchups: KnockoutMatchup[];
+};
+
+export type CompetitionDetailResponse = {
+  readonly id: number;
+  readonly name: string;
+  readonly icon: string;
+  readonly tables: StandingsTable[];
+  readonly zones: { readonly name: string; readonly color: string }[];
+  readonly knockout: KnockoutStage[];
 };
 
 export type ApiError = { readonly error: string };

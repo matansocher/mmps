@@ -201,6 +201,39 @@ export type ScoresCompetitorRef = {
   readonly symbolicName?: string;
   readonly score?: number;
   readonly color?: string;
+  readonly countryId?: number;
+  readonly isWinner?: boolean;
+};
+
+export type ScoresNamedRef = {
+  readonly id: number;
+  readonly name: string;
+  readonly shortName?: string;
+};
+
+export type ScoresLineupMember = {
+  readonly id: number;
+  // 1 = starting, 2 = substitute; statusText also covers "Missing" and "Management".
+  readonly status?: number;
+  readonly statusText?: string;
+  readonly position?: ScoresNamedRef;
+  readonly formation?: ScoresNamedRef;
+  // fieldLine: 0 (own goal) to 100 (opponent goal); fieldSide: 0 to 100 across the pitch.
+  readonly yardFormation?: { readonly line?: number; readonly fieldPosition?: number; readonly fieldLine?: number; readonly fieldSide?: number };
+  readonly substitution?: { readonly playerId?: number; readonly time?: number };
+  readonly ranking?: number;
+  readonly stats?: readonly { readonly type: number; readonly name: string; readonly value: string; readonly isTop?: boolean }[];
+};
+
+export type ScoresLineup = {
+  readonly status?: string;
+  readonly formation?: string;
+  readonly members?: readonly ScoresLineupMember[];
+};
+
+export type ScoresGameCompetitor = ScoresCompetitorRef & {
+  readonly lineups?: ScoresLineup;
+  readonly recentMatches?: readonly number[];
 };
 
 export type ScoresGame = {
@@ -234,13 +267,25 @@ export type ScoresGameEvent = {
 export type ScoresGameMember = {
   readonly id: number;
   readonly athleteId?: number;
+  readonly competitorId?: number;
   readonly name: string;
   readonly shortName?: string;
+  readonly jerseyNumber?: number;
 };
 
-export type ScoresGameDetails = ScoresGame & {
+export type ScoresGameDetails = Omit<ScoresGame, 'homeCompetitor' | 'awayCompetitor'> & {
+  readonly homeCompetitor: ScoresGameCompetitor;
+  readonly awayCompetitor: ScoresGameCompetitor;
   readonly events?: readonly ScoresGameEvent[];
   readonly members?: readonly ScoresGameMember[];
+  readonly tvNetworks?: readonly ScoresNamedRef[];
+  readonly venue?: { readonly name?: string; readonly capacity?: number };
+  readonly officials?: readonly { readonly name: string }[];
+  readonly stageNum?: number;
+  readonly seasonNum?: number;
+  readonly hasStandings?: boolean;
+  readonly hasBrackets?: boolean;
+  readonly stages?: readonly { readonly id: number; readonly name: string; readonly homeCompetitorScore?: number; readonly awayCompetitorScore?: number; readonly isEnded?: boolean }[];
 };
 
 export type ScoresGameStat = {
@@ -248,6 +293,101 @@ export type ScoresGameStat = {
   readonly name: string;
   readonly competitorId: number;
   readonly value: string;
+  readonly isMajor?: boolean;
+  readonly order?: number;
+};
+
+export type ScoresCompetitorDetails = ScoresCompetitorRef & {
+  readonly longName?: string;
+  readonly mainCompetitionId?: number;
+  readonly awayColor?: string;
+};
+
+export type ScoresSquadAthlete = {
+  readonly id: number;
+  readonly name: string;
+  readonly shortName?: string;
+  readonly age?: number;
+  readonly jerseyNum?: number;
+  readonly height?: number;
+  readonly position?: ScoresNamedRef;
+  readonly formationPosition?: ScoresNamedRef;
+};
+
+export type ScoresAthleteStat = {
+  readonly type: number;
+  readonly name: string;
+  readonly value: string;
+  readonly isTop?: boolean;
+};
+
+export type ScoresAthleteDetails = {
+  readonly id: number;
+  readonly name: string;
+  readonly shortName?: string;
+  readonly age?: number;
+  readonly jerseyNum?: number;
+  readonly clubId?: number;
+  readonly nationalityName?: string;
+  readonly contractUntil?: string;
+  readonly shortBio?: string;
+  readonly position?: ScoresNamedRef;
+  readonly formationPosition?: ScoresNamedRef;
+  readonly playerDetails?: readonly { readonly title: string; readonly value: string }[];
+  readonly highlightStats?: readonly { readonly competitionId: number; readonly name: string; readonly stats?: readonly ScoresAthleteStat[] }[];
+  readonly lastMatches?: {
+    readonly games?: readonly {
+      readonly game: ScoresGame;
+      readonly relatedCompetitor?: number;
+      readonly played?: boolean;
+      readonly athleteStats?: readonly { readonly type?: number; readonly value?: string }[];
+    }[];
+  };
+};
+
+export type ScoresStandingsRow = {
+  readonly competitor: ScoresCompetitorRef;
+  readonly position?: number;
+  readonly groupNum?: number | null;
+  readonly gamePlayed?: number;
+  readonly gamesWon?: number;
+  readonly gamesEven?: number;
+  readonly gamesLost?: number;
+  readonly for?: number;
+  readonly against?: number;
+  readonly points: number;
+  readonly destinationNum?: number;
+  // Newest first. 1 = win, 2 = draw, 0 = loss.
+  readonly recentForm?: readonly number[];
+  readonly liveGameId?: number;
+};
+
+export type ScoresStandings = {
+  readonly competitionId: number;
+  readonly seasonNum?: number;
+  readonly displayName?: string;
+  readonly groups?: readonly { readonly num: number; readonly name: string }[] | null;
+  readonly rows: readonly ScoresStandingsRow[];
+  readonly destinations?: readonly { readonly num: number; readonly name: string; readonly color?: string }[];
+};
+
+export type ScoresBracketGroup = {
+  readonly num: number;
+  readonly participants?: readonly { readonly competitorId: number; readonly name: string; readonly isQualified?: boolean }[];
+  readonly games?: readonly {
+    readonly gameId: number;
+    readonly game?: {
+      readonly startTime?: string;
+      readonly statusGroup?: number;
+      readonly homeCompetitor?: { readonly id?: number; readonly score?: number };
+      readonly awayCompetitor?: { readonly id?: number; readonly score?: number };
+    };
+  }[];
+  readonly score?: readonly number[];
+};
+
+export type ScoresBracket = {
+  readonly stages?: readonly { readonly num: number; readonly name: string; readonly hasStandings?: boolean; readonly groups?: readonly ScoresBracketGroup[] }[];
 };
 
 export type ScoresCompetitorSearchResult = {

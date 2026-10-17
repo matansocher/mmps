@@ -1,8 +1,8 @@
 import { COMPETITIONS } from '@services/scores-365';
 import type { ScoresCompetitorRef, ScoresGame, ScoresGameDetails, ScoresGameEvent, ScoresGameStat } from '@services/scores-365';
 import type { DashboardEventType } from '@shared/coach';
-import { MAX_FEED_ITEMS } from './constants';
-import type { DashboardEvent, DashboardFeedItem, DashboardGame, DashboardGameStatus, DashboardStatPair, DashboardStats, DashboardTeam } from './types';
+import { COMPETITION_NAMES } from './constants';
+import type { DashboardEvent, DashboardGame, DashboardGameStatus, DashboardStatPair, DashboardStats, DashboardTeam, FormResult, GameSummary } from './types';
 
 const EVENT_TYPE_BY_ID: Record<number, DashboardEventType> = {
   1: 'goal',
@@ -36,11 +36,11 @@ export function mapEventType(event: ScoresGameEvent): DashboardEventType | null 
   if (id !== undefined && EVENT_TYPE_BY_ID[id]) return EVENT_TYPE_BY_ID[id];
   const name = `${event.eventType?.name ?? ''} ${event.eventType?.subTypeName ?? ''}`.toLowerCase();
   if (name.includes('var')) return 'var';
-  if (name.includes('אדום') || name.includes('red')) return 'redCard';
+  if (name.includes('red')) return 'redCard';
   return null;
 }
 
-function toTeam(competitor: ScoresCompetitorRef, status: DashboardGameStatus): DashboardTeam {
+export function toTeam(competitor: ScoresCompetitorRef, status: DashboardGameStatus): DashboardTeam {
   const hasScore = status !== 'scheduled' && typeof competitor.score === 'number' && competitor.score >= 0;
   return {
     id: competitor.id,
@@ -69,7 +69,9 @@ export function toDashboardEvents(details: ScoresGameDetails | null): DashboardE
       minuteDisplay: event.gameTimeDisplay || `${Math.round(event.gameTime ?? 0)}'`,
       side: event.competitorId === homeId ? 'home' : 'away',
       ...(player ? { playerName: player.shortName || player.name } : {}),
+      ...(player?.athleteId ? { playerAthleteId: player.athleteId } : {}),
       ...(extra ? { assistName: extra.shortName || extra.name } : {}),
+      ...(extra?.athleteId ? { assistAthleteId: extra.athleteId } : {}),
       ...(detail && type !== 'var' ? { detail } : {}),
       ...(type === 'var' ? { detail: event.eventType?.name } : {}),
     });
@@ -102,10 +104,13 @@ export type ToDashboardGameInput = {
   readonly details: ScoresGameDetails | null;
   readonly stats: readonly ScoresGameStat[] | null;
   readonly favoriteTeamIds: ReadonlySet<number>;
-  readonly competitionNames: ReadonlyMap<number, string>;
 };
 
-export function toDashboardGame({ game, details, stats, favoriteTeamIds, competitionNames }: ToDashboardGameInput): DashboardGame {
+export function getCompetitionName(competitionId: number, fallback?: string): string {
+  return COMPETITION_NAMES[competitionId] || fallback || '';
+}
+
+export function toDashboardGame({ game, details, stats, favoriteTeamIds }: ToDashboardGameInput): DashboardGame {
   // The /game details response is fresher than the list response, so prefer it when present.
   const source = details ?? game;
   const status = classifyGameStatus(source.statusGroup);
@@ -115,7 +120,7 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds, competi
   return {
     id: game.id,
     competitionId: game.competitionId,
-    competitionName: competitionNames.get(game.competitionId) || game.competitionDisplayName || '',
+    competitionName: getCompetitionName(game.competitionId, game.competitionDisplayName),
     startTime: game.startTime,
     status,
     statusText: source.shortStatusText || source.statusText || '',
@@ -123,6 +128,7 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds, competi
     home,
     away,
     isFavorite: favoriteTeamIds.has(home.id) || favoriteTeamIds.has(away.id),
+    channels: [...new Set((details?.tvNetworks ?? []).map((tv) => tv.name).filter(Boolean))],
     events: toDashboardEvents(details),
     ...(gameStats ? { stats: gameStats } : {}),
   };
@@ -141,33 +147,27 @@ export function sortDashboardGames(games: readonly DashboardGame[]): DashboardGa
   });
 }
 
-// Events only carry the match minute, so wall-clock time is estimated from kickoff plus breaks (half-time, before extra time).
-export function estimateEventTime(startTime: string, minute: number, minuteDisplay?: string): Date {
-  // Stoppage time keeps the period's base minute in the display ("45+8'"), so breaks are decided by it, not by the raw minute.
-  const periodMinute = parseInt(minuteDisplay ?? '', 10) || minute;
-  let elapsed = minute;
-  if (periodMinute > 45) elapsed += 15;
-  if (periodMinute > 90) elapsed += 5;
-  if (periodMinute > 120) elapsed += 5;
-  return new Date(new Date(startTime).getTime() + elapsed * 60_000);
+export function toFormResult(teamId: number, home: DashboardTeam, away: DashboardTeam): FormResult | undefined {
+  if (home.score === null || away.score === null || (teamId !== home.id && teamId !== away.id)) return undefined;
+  const [own, other] = teamId === home.id ? [home.score, away.score] : [away.score, home.score];
+  if (own > other) return 'W';
+  return own === other ? 'D' : 'L';
 }
 
-export function buildFeed(games: readonly DashboardGame[]): DashboardFeedItem[] {
-  const items: DashboardFeedItem[] = [];
-  for (const game of games) {
-    for (const event of game.events) {
-      items.push({
-        ...event,
-        competitionId: game.competitionId,
-        competitionName: game.competitionName,
-        home: game.home,
-        away: game.away,
-        gameStatus: game.status,
-        estimatedAt: estimateEventTime(game.startTime, event.minute, event.minuteDisplay).toISOString(),
-      });
-    }
-  }
-  // ISO timestamps sort lexicographically in chronological order.
-  items.sort((a, b) => b.estimatedAt.localeCompare(a.estimatedAt) || b.minute - a.minute);
-  return items.slice(0, MAX_FEED_ITEMS);
+export function toGameSummary(game: ScoresGame, teamId?: number): GameSummary {
+  const status = classifyGameStatus(game.statusGroup);
+  const home = toTeam(game.homeCompetitor, status);
+  const away = toTeam(game.awayCompetitor, status);
+  const result = status === 'finished' && teamId ? toFormResult(teamId, home, away) : undefined;
+  return {
+    id: game.id,
+    competitionId: game.competitionId,
+    competitionName: getCompetitionName(game.competitionId, game.competitionDisplayName),
+    startTime: game.startTime,
+    status,
+    statusText: game.shortStatusText || game.statusText || '',
+    home,
+    away,
+    ...(result ? { result } : {}),
+  };
 }

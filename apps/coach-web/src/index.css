@@ -8,7 +8,8 @@
   --color-text-primary: #ffffff;
   --color-text-secondary: #94a3b8;
   --color-text-muted: #64748b;
-  --color-accent-live: #ff3b3b;
+  --color-accent-live: #00d26a;
+  --color-accent-red: #ff3b3b;
   --color-accent-win: #00e676;
   --color-accent-draw: #ffd600;
   --color-accent-brand: #3b82f6;
@@ -37,7 +38,7 @@
     margin: 0;
     background: var(--color-bg-base);
     color: var(--color-text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Heebo', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 }
@@ -53,4 +54,19 @@
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.notification-in {
+  animation: notification-in 0.25s ease-out;
+}
+
+@keyframes notification-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

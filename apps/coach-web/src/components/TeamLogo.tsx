@@ -10,5 +10,5 @@ export function TeamLogo({ teamId, name, size = 24 }: { readonly teamId: number;
       </span>
     );
   }
-  return <img src={teamLogo(teamId)} alt="" width={size} height={size} loading="lazy" className="shrink-0 object-contain" style={{ width: size, height: size }} onError={() => setFailed(true)} />;
+  return <img src={teamLogo(teamId, Math.max(40, size * 2))} alt="" width={size} height={size} loading="lazy" className="shrink-0 object-contain" style={{ width: size, height: size }} onError={() => setFailed(true)} />;
 }

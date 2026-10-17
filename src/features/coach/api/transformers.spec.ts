@@ -1,6 +1,6 @@
 import type { ScoresGame, ScoresGameDetails, ScoresGameStat } from '@services/scores-365';
-import { parsePreferencesBody } from './dto';
-import { buildFeed, classifyGameStatus, estimateEventTime, mapEventType, sortDashboardGames, toDashboardEvents, toDashboardGame, toDashboardStats } from './transformers';
+import { parsePreferencesBody, parseRefreshInterval } from './dto';
+import { classifyGameStatus, mapEventType, sortDashboardGames, toDashboardEvents, toDashboardGame, toDashboardStats, toGameSummary } from './transformers';
 import type { DashboardGame } from './types';
 
 const baseGame: ScoresGame = {
@@ -9,7 +9,7 @@ const baseGame: ScoresGame = {
   competitionDisplayName: 'Premier League',
   startTime: '2026-10-17T17:00:00+03:00',
   statusGroup: 3,
-  shortStatusText: "מח' 2",
+  shortStatusText: '2nd Half',
   gameTimeDisplay: "67'",
   homeCompetitor: { id: 110, name: 'Man City', score: 2 },
   awayCompetitor: { id: 9, name: 'Ipswich', score: 1 },
@@ -17,15 +17,16 @@ const baseGame: ScoresGame = {
 
 const details: ScoresGameDetails = {
   ...baseGame,
+  tvNetworks: [{ id: 1, name: 'Sport 1' }, { id: 2, name: 'Sport 1' }, { id: 3, name: 'Sport 2' }],
   members: [
     { id: 1, name: 'Phil Foden', shortName: 'Foden' },
     { id: 2, name: 'Erling Haaland' },
     { id: 3, name: 'Kevin De Bruyne', shortName: 'De Bruyne' },
   ],
   events: [
-    { competitorId: 110, order: 1, gameTime: 19, gameTimeDisplay: "19'", playerId: 1, extraPlayers: [3], eventType: { id: 1, name: 'גול', subTypeId: 1, subTypeName: 'שער שדה' } },
-    { competitorId: 9, order: 2, gameTime: 30, gameTimeDisplay: "30'", eventType: { id: 2, name: 'כרטיס צהוב' } },
-    { competitorId: 9, order: 3, gameTime: 50, gameTimeDisplay: "50'", eventType: { id: 11, name: 'השער נפסל', subTypeId: 25, subTypeName: 'Var' } },
+    { competitorId: 110, order: 1, gameTime: 19, gameTimeDisplay: "19'", playerId: 1, extraPlayers: [3], eventType: { id: 1, name: 'Goal', subTypeId: 1, subTypeName: 'Field Goal' } },
+    { competitorId: 9, order: 2, gameTime: 30, gameTimeDisplay: "30'", eventType: { id: 2, name: 'Yellow Card' } },
+    { competitorId: 9, order: 3, gameTime: 50, gameTimeDisplay: "50'", eventType: { id: 11, name: 'Goal Disallowed', subTypeId: 25, subTypeName: 'Var' } },
     { competitorId: 110, order: 4, gameTime: 60, gameTimeDisplay: "60'", playerId: 2, eventType: { id: 999, name: 'unknown' } },
   ],
 };
@@ -48,6 +49,7 @@ function makeGame(overrides: Partial<DashboardGame>): DashboardGame {
     home: { id: 1, name: 'A', score: 0 },
     away: { id: 2, name: 'B', score: 0 },
     isFavorite: false,
+    channels: [],
     events: [],
     ...overrides,
   };
@@ -66,14 +68,14 @@ describe('classifyGameStatus()', () => {
 
 describe('mapEventType()', () => {
   test.each([
-    { id: 1, name: 'גול', expected: 'goal' },
-    { id: 2, name: 'כרטיס צהוב', expected: 'yellowCard' },
-    { id: 3, name: 'כרטיס אדום', expected: 'redCard' },
-    { id: 6, name: 'החמצת פנדל', expected: 'missedPenalty' },
-    { id: 11, name: 'השער נפסל', expected: 'var' },
+    { id: 1, name: 'Goal', expected: 'goal' },
+    { id: 2, name: 'Yellow Card', expected: 'yellowCard' },
+    { id: 3, name: 'Red Card', expected: 'redCard' },
+    { id: 6, name: 'Missed Penalty', expected: 'missedPenalty' },
+    { id: 11, name: 'Goal Disallowed', expected: 'var' },
     { id: 12, name: 'Woodwork', expected: 'woodwork' },
     { id: 1000, name: 'Substitution', expected: 'substitution' },
-    { id: 77, name: 'כרטיס אדום שני', expected: 'redCard' },
+    { id: 77, name: 'Second Yellow Red Card', expected: 'redCard' },
     { id: 78, name: 'something', expected: null },
   ])('should map event $id ($name) to $expected', ({ id, name, expected }) => {
     expect(mapEventType({ competitorId: 1, gameTime: 1, eventType: { id, name } })).toEqual(expected);
@@ -84,9 +86,9 @@ describe('toDashboardEvents()', () => {
   it('should map players, assists, sides and drop unknown events', () => {
     const events = toDashboardEvents(details);
     expect(events.map((e) => e.type)).toEqual(['goal', 'yellowCard', 'var']);
-    expect(events[0]).toEqual({ key: '100:1:1', gameId: 100, type: 'goal', minute: 19, minuteDisplay: "19'", side: 'home', playerName: 'Foden', assistName: 'De Bruyne', detail: 'שער שדה' });
+    expect(events[0]).toEqual({ key: '100:1:1', gameId: 100, type: 'goal', minute: 19, minuteDisplay: "19'", side: 'home', playerName: 'Foden', assistName: 'De Bruyne', detail: 'Field Goal' });
     expect(events[1].side).toEqual('away');
-    expect(events[2].detail).toEqual('השער נפסל');
+    expect(events[2].detail).toEqual('Goal Disallowed');
   });
 
   it('should return an empty list without details', () => {
@@ -105,13 +107,12 @@ describe('toDashboardStats()', () => {
 });
 
 describe('toDashboardGame()', () => {
-  const competitionNames = new Map([[7, 'פרמייר ליג']]);
-
   it('should build a live game with stats and favorite flag', () => {
-    const game = toDashboardGame({ game: baseGame, details, stats, favoriteTeamIds: new Set([9]), competitionNames });
+    const game = toDashboardGame({ game: baseGame, details, stats, favoriteTeamIds: new Set([9]) });
     expect(game.status).toEqual('live');
     expect(game.minuteDisplay).toEqual("67'");
-    expect(game.competitionName).toEqual('פרמייר ליג');
+    expect(game.competitionName).toEqual('Premier League');
+    expect(game.channels).toEqual(['Sport 1', 'Sport 2']);
     expect(game.home.score).toEqual(2);
     expect(game.isFavorite).toEqual(true);
     expect(game.stats?.possession).toEqual(['70%', '30%']);
@@ -119,7 +120,7 @@ describe('toDashboardGame()', () => {
 
   it('should hide scores and stats for scheduled games', () => {
     const scheduled = { ...baseGame, statusGroup: 2, homeCompetitor: { id: 1, name: 'A', score: -1 }, awayCompetitor: { id: 2, name: 'B', score: -1 } };
-    const game = toDashboardGame({ game: scheduled, details: null, stats, favoriteTeamIds: new Set(), competitionNames });
+    const game = toDashboardGame({ game: scheduled, details: null, stats, favoriteTeamIds: new Set() });
     expect(game.home.score).toEqual(null);
     expect(game.stats).toEqual(undefined);
     expect(game.minuteDisplay).toEqual(undefined);
@@ -138,26 +139,18 @@ describe('sortDashboardGames()', () => {
   });
 });
 
-describe('estimateEventTime()', () => {
+describe('toGameSummary()', () => {
   test.each([
-    { minute: 10, expected: '2026-10-17T14:10:00.000Z' },
-    { minute: 60, expected: '2026-10-17T15:15:00.000Z' },
-    { minute: 100, expected: '2026-10-17T16:00:00.000Z' },
-    { minute: 53, minuteDisplay: "45'", expected: '2026-10-17T14:53:00.000Z' },
-    { minute: 53, minuteDisplay: "53'", expected: '2026-10-17T15:08:00.000Z' },
-  ])('should estimate minute $minute ($minuteDisplay) as $expected', ({ minute, minuteDisplay, expected }) => {
-    expect(estimateEventTime('2026-10-17T14:00:00Z', minute, minuteDisplay).toISOString()).toEqual(expected);
+    { home: 2, away: 1, teamId: 110, expected: 'W' },
+    { home: 2, away: 1, teamId: 9, expected: 'L' },
+    { home: 1, away: 1, teamId: 9, expected: 'D' },
+  ])('should mark a $home-$away finished game as $expected for team $teamId', ({ home, away, teamId, expected }) => {
+    const game = { ...baseGame, statusGroup: 4, homeCompetitor: { id: 110, name: 'A', score: home }, awayCompetitor: { id: 9, name: 'B', score: away } };
+    expect(toGameSummary(game, teamId).result).toEqual(expected);
   });
-});
 
-describe('buildFeed()', () => {
-  it('should merge events across games, newest first', () => {
-    const early = makeGame({ id: 1, startTime: '2026-10-17T14:00:00Z', events: [{ key: 'a', gameId: 1, type: 'goal', minute: 80, minuteDisplay: "80'", side: 'home' }] });
-    const late = makeGame({ id: 2, startTime: '2026-10-17T15:00:00Z', events: [{ key: 'b', gameId: 2, type: 'goal', minute: 10, minuteDisplay: "10'", side: 'away' }] });
-    const feed = buildFeed([early, late]);
-    expect(feed.map((f) => f.key)).toEqual(['a', 'b']);
-    expect(feed[0].estimatedAt).toEqual('2026-10-17T15:35:00.000Z');
-    expect(feed[1].home).toEqual(late.home);
+  it('should not set a result for live games', () => {
+    expect(toGameSummary(baseGame, 110).result).toEqual(undefined);
   });
 });
 
@@ -168,10 +161,22 @@ describe('parsePreferencesBody()', () => {
       favoriteTeams: [{ id: 110, name: ' Man City ' }, { id: -1, name: 'bad' }, { id: 5 }],
       eventTypes: ['goal', 'nope', 'goal', 'var'],
     });
-    expect(parsed).toEqual({ competitionIds: [7], favoriteTeams: [{ id: 110, name: 'Man City' }], eventTypes: ['goal', 'var'] });
+    expect(parsed).toEqual({ competitionIds: [7], favoriteTeams: [{ id: 110, name: 'Man City' }], eventTypes: ['goal', 'var'], refreshIntervalSec: 30 });
   });
 
   test.each([{ body: null }, { body: {} }, { body: { competitionIds: [], favoriteTeams: [] } }])('should reject invalid body $body', ({ body }) => {
     expect(parsePreferencesBody(body)).toEqual(null);
+  });
+});
+
+describe('parseRefreshInterval()', () => {
+  test.each([
+    { value: 5, expected: 15 },
+    { value: 45, expected: 45 },
+    { value: 9999, expected: 300 },
+    { value: 'x', expected: 30 },
+    { value: undefined, expected: 30 },
+  ])('should parse $value as $expected', ({ value, expected }) => {
+    expect(parseRefreshInterval(value)).toEqual(expected);
   });
 });

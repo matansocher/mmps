@@ -1,12 +1,17 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { PageHeader } from '../components/PageHeader';
 import { TeamLogo } from '../components/TeamLogo';
+import { Loading } from '../components/ui';
+import { useDashboard } from '../hooks/useDashboard';
 import { api } from '../lib/api';
 import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
 import { leagueColor } from '../lib/league-themes';
-import { hapticSelect, showBackButton } from '../lib/telegram';
+import { hapticSelect } from '../lib/telegram';
 import type { CompetitionOption, EventType, FavoriteTeam, Preferences, TeamOption } from '../types';
 
 const MAX_FAVORITE_TEAMS = 30;
+const REFRESH_INTERVAL_OPTIONS = [15, 20, 30, 45, 60, 120] as const;
+const DEFAULT_REFRESH_INTERVAL_SEC = 30;
 
 function toggle<T>(list: readonly T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -57,10 +62,10 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="חפש קבוצה (למשל: מכבי חיפה, Arsenal)"
+        placeholder="Search a team (e.g. Maccabi Haifa, Arsenal)"
         className="w-full rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-sm outline-none placeholder:text-text-muted focus:border-accent-brand"
       />
-      {searching && <p className="text-xs text-text-muted">מחפש…</p>}
+      {searching && <p className="text-xs text-text-muted">Searching…</p>}
       {results.length > 0 && (
         <ul className="flex max-h-64 flex-col overflow-y-auto rounded-lg border border-border-subtle">
           {results.map((team) => {
@@ -77,7 +82,7 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
                 >
                   <TeamLogo teamId={team.id} name={team.name} size={20} />
                   <span className="flex-1 truncate">{team.name}</span>
-                  <span className="text-xs text-accent-brand">{added ? 'נוסף' : '+ הוסף'}</span>
+                  <span className="text-xs text-accent-brand">{added ? 'Added' : '+ Add'}</span>
                 </button>
               </li>
             );
@@ -88,14 +93,18 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
   );
 }
 
-export function SettingsPage({ onBack }: { readonly onBack: () => void }) {
+function formatInterval(sec: number): string {
+  return sec < 60 ? `${sec}s` : `${sec / 60} min`;
+}
+
+export function SettingsPage() {
+  const { refresh } = useDashboard();
   const [prefs, setPrefs] = useState<Preferences | null>(null);
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
-
-  useEffect(() => showBackButton(onBack), [onBack]);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -113,15 +122,18 @@ export function SettingsPage({ onBack }: { readonly onBack: () => void }) {
     hapticSelect();
     setPrefs(next);
     setDirty(true);
+    setSaved(false);
   };
 
   const save = async () => {
     if (!prefs) return;
     setSaving(true);
+    setError(false);
     try {
       setPrefs(await api.savePreferences(prefs));
       setDirty(false);
-      onBack();
+      setSaved(true);
+      refresh();
     } catch {
       setError(true);
     } finally {
@@ -129,24 +141,18 @@ export function SettingsPage({ onBack }: { readonly onBack: () => void }) {
     }
   };
 
-  return (
-    <div className="min-h-screen pb-28">
-      <header className="sticky top-0 z-20 border-b border-border-subtle bg-bg-base/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          <button onClick={onBack} className="text-sm text-accent-brand">
-            → חזרה
-          </button>
-          <h1 className="flex-1 text-center text-base font-bold">הגדרות דשבורד</h1>
-          <span className="w-12" />
-        </div>
-      </header>
+  const interval = prefs?.refreshIntervalSec ?? DEFAULT_REFRESH_INTERVAL_SEC;
 
-      {error && <p className="mx-auto mt-4 max-w-2xl px-4 text-sm text-accent-live">משהו השתבש, נסה שוב</p>}
-      {!prefs && !error && <p className="mt-16 text-center text-sm text-text-muted">טוען…</p>}
+  return (
+    <div className="min-h-screen pb-40 md:pb-28">
+      <PageHeader title="Settings" subtitle="What shows up on your live dashboard" />
+
+      {error && <p className="mx-auto mt-4 max-w-2xl px-4 text-sm text-accent-red">Something went wrong, please try again</p>}
+      {!prefs && !error && <Loading />}
 
       {prefs && (
         <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 pt-4">
-          <Card title="ליגות" subtitle="משחקי היום בליגות האלה יופיעו בדשבורד">
+          <Card title="Leagues" subtitle="Today's games from these leagues appear on the dashboard">
             <div className="flex flex-wrap gap-2">
               {competitions.map((c) => {
                 const on = prefs.competitionIds.includes(c.id);
@@ -165,7 +171,7 @@ export function SettingsPage({ onBack }: { readonly onBack: () => void }) {
             </div>
           </Card>
 
-          <Card title="הקבוצות שלי" subtitle="מוצמדות למעלה ומוצגות גם אם הליגה שלהן לא נבחרה">
+          <Card title="My teams" subtitle="Pinned to the top, and shown even when their league isn't selected">
             {prefs.favoriteTeams.length > 0 && (
               <ul className="flex flex-wrap gap-2">
                 {prefs.favoriteTeams.map((team) => (
@@ -174,8 +180,8 @@ export function SettingsPage({ onBack }: { readonly onBack: () => void }) {
                     {team.name}
                     <button
                       onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((t) => t.id !== team.id) })}
-                      aria-label={`הסר ${team.name}`}
-                      className="ms-1 text-text-muted hover:text-accent-live"
+                      aria-label={`Remove ${team.name}`}
+                      className="ms-1 text-text-muted hover:text-accent-red"
                     >
                       ✕
                     </button>
@@ -186,7 +192,7 @@ export function SettingsPage({ onBack }: { readonly onBack: () => void }) {
             <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
           </Card>
 
-          <Card title="אירועים להצגה" subtitle="מה יופיע בכרטיסי המשחקים ובפיד">
+          <Card title="Events" subtitle="Which events show on game cards and pop up as notifications">
             <div className="grid grid-cols-2 gap-2">
               {EVENT_TYPE_ORDER.map((type: EventType) => {
                 const on = prefs.eventTypes.includes(type);
@@ -204,18 +210,35 @@ export function SettingsPage({ onBack }: { readonly onBack: () => void }) {
               })}
             </div>
           </Card>
+
+          <Card title="Refresh interval" subtitle="How often the dashboard checks for new events">
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {REFRESH_INTERVAL_OPTIONS.map((sec) => (
+                <button
+                  key={sec}
+                  onClick={() => update({ ...prefs, refreshIntervalSec: sec })}
+                  className={`rounded-lg border py-2 text-sm font-semibold transition ${interval === sec ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                >
+                  {formatInterval(sec)}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs leading-relaxed text-text-muted">
+              ℹ️ Minimum is 15 seconds. 365Scores doesn't publish a rate limit, but live data is cached on the server for about 15 seconds, so refreshing faster wouldn't show anything newer.
+            </p>
+          </Card>
         </main>
       )}
 
       {prefs && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border-subtle bg-bg-base/95 p-3 backdrop-blur-md">
+        <div className="fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-20 border-t border-border-subtle bg-bg-base/95 p-3 backdrop-blur-md md:bottom-0">
           <div className="mx-auto max-w-2xl">
             <button
               onClick={save}
               disabled={!dirty || saving || prefs.competitionIds.length + prefs.favoriteTeams.length === 0}
               className="w-full rounded-xl bg-accent-brand py-3 text-sm font-bold transition disabled:opacity-40"
             >
-              {saving ? 'שומר…' : 'שמור'}
+              {saving ? 'Saving…' : saved && !dirty ? 'Saved ✓' : 'Save'}
             </button>
           </div>
         </div>

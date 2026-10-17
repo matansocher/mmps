@@ -1,5 +1,7 @@
 import { EVENT_META, eventDetail, eventText, formatKickoff } from '../lib/format';
 import { leagueColor } from '../lib/league-themes';
+import { navigate } from '../lib/router';
+import { hapticSelect } from '../lib/telegram';
 import type { Game, GameEvent, GameStats, Team } from '../types';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
@@ -23,12 +25,12 @@ function StatusBadge({ game }: { readonly game: Game }) {
     return (
       <span className="flex items-center gap-1.5 rounded-md bg-accent-live/15 px-2 py-0.5 text-xs font-bold text-accent-live">
         <LiveDot />
-        <span dir="ltr">{game.minuteDisplay || game.statusText || 'LIVE'}</span>
+        <span>{game.minuteDisplay || game.statusText || 'LIVE'}</span>
       </span>
     );
   }
   if (game.status === 'scheduled') return <span className="score-font rounded-md bg-bg-elevated px-2 py-0.5 text-xs text-text-primary">{formatKickoff(game.startTime)}</span>;
-  return <span className="rounded-md bg-bg-elevated px-2 py-0.5 text-xs text-text-secondary">{game.statusText || 'הסתיים'}</span>;
+  return <span className="rounded-md bg-bg-elevated px-2 py-0.5 text-xs text-text-secondary">{game.statusText || 'FT'}</span>;
 }
 
 function EventLine({ event }: { readonly event: GameEvent }) {
@@ -36,8 +38,8 @@ function EventLine({ event }: { readonly event: GameEvent }) {
   const detail = eventDetail(event);
   const isHome = event.side === 'home';
   return (
-    <li className={`flex items-center gap-1.5 text-xs ${isHome ? '' : 'flex-row-reverse text-left'}`}>
-      <span className="score-font w-9 shrink-0 text-center text-[11px] text-text-muted" dir="ltr">
+    <li className={`flex items-center gap-1.5 text-xs ${isHome ? '' : 'flex-row-reverse text-right'}`}>
+      <span className="score-font w-9 shrink-0 text-center text-[11px] text-text-muted">
         {event.minuteDisplay}
       </span>
       <span className="shrink-0">{meta.icon}</span>
@@ -77,9 +79,23 @@ function StatsStrip({ stats }: { readonly stats: GameStats }) {
   return (
     <div className="grid grid-cols-3 gap-3 border-t border-border-subtle pt-2">
       {stats.expectedGoals ? <StatBar label="xG" pair={stats.expectedGoals} /> : <span />}
-      {stats.shotsOnTarget ? <StatBar label="למסגרת" pair={stats.shotsOnTarget} /> : <span />}
-      {stats.possession ? <StatBar label="החזקה" pair={[stats.possession[0].replace('%', ''), stats.possession[1].replace('%', '')]} highlightBar /> : <span />}
+      {stats.shotsOnTarget ? <StatBar label="On target" pair={stats.shotsOnTarget} /> : <span />}
+      {stats.possession ? <StatBar label="Possession" pair={[stats.possession[0].replace('%', ''), stats.possession[1].replace('%', '')]} highlightBar /> : <span />}
     </div>
+  );
+}
+
+export function openGame(id: number) {
+  hapticSelect();
+  navigate({ name: 'game', id });
+}
+
+export function Channels({ channels, compact }: { readonly channels: readonly string[]; readonly compact?: boolean }) {
+  return (
+    <p className={`flex min-w-0 items-center gap-1 text-text-muted ${compact ? 'text-[10px]' : 'border-t border-border-subtle pt-2 text-[11px]'}`} title={channels.join(', ')}>
+      <span aria-hidden>📺</span>
+      <span className="truncate">{channels.join(' · ')}</span>
+    </p>
   );
 }
 
@@ -90,7 +106,13 @@ export function GameCard({ game }: { readonly game: Game }) {
   const events = game.events.slice(-MAX_CARD_EVENTS);
   const hiddenEvents = game.events.length - events.length;
   return (
-    <article className={`relative flex flex-col gap-2.5 overflow-hidden rounded-xl bg-bg-card p-3 ps-4 ${game.status === 'live' ? 'ring-1 ring-accent-live/30' : ''}`}>
+    <article
+      role="link"
+      tabIndex={0}
+      onClick={() => openGame(game.id)}
+      onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
+      className={`relative flex cursor-pointer flex-col gap-2.5 overflow-hidden rounded-xl bg-bg-card p-3 ps-4 transition hover:bg-bg-elevated/60 ${game.status === 'live' ? 'ring-1 ring-accent-live/30' : ''}`}
+    >
       <span className="absolute inset-y-0 start-0 w-1" style={{ backgroundColor: color }} aria-hidden />
       <header className="flex items-center justify-between gap-2">
         <span className="min-w-0 truncate text-[11px] font-medium text-text-secondary">
@@ -105,13 +127,14 @@ export function GameCard({ game }: { readonly game: Game }) {
       </div>
       {events.length > 0 && (
         <ul className="flex flex-col gap-1 border-t border-border-subtle pt-2">
-          {hiddenEvents > 0 && <li className="text-center text-[10px] text-text-muted">+{hiddenEvents} אירועים מוקדמים</li>}
+          {hiddenEvents > 0 && <li className="text-center text-[10px] text-text-muted">+{hiddenEvents} earlier events</li>}
           {events.map((event) => (
             <EventLine key={event.key} event={event} />
           ))}
         </ul>
       )}
       {game.status === 'live' && game.stats && <StatsStrip stats={game.stats} />}
+      {game.channels.length > 0 && <Channels channels={game.channels} />}
     </article>
   );
 }

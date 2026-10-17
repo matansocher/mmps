@@ -4,7 +4,7 @@ import { createMongoConnection } from '@core/mongo';
 import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from '@shared/coach';
-import { CoachDashboardService, registerCoachApiRoutes } from './api';
+import { CoachDashboardService, CoachDetailsService, registerCoachApiRoutes } from './api';
 import { CoachBotSchedulerService } from './coach-scheduler.service';
 import { BOT_CONFIG } from './coach.config';
 import { CoachController } from './coach.controller';
@@ -15,7 +15,7 @@ const logger = new Logger('coach:init');
 export async function initCoach(app: Express): Promise<void> {
   await createMongoConnection(DB_NAME);
 
-  registerCoachApiRoutes(app, new CoachDashboardService());
+  registerCoachApiRoutes(app, new CoachDashboardService(), new CoachDetailsService());
 
   const spaDist = path.resolve('apps/coach-web/dist');
   app.use('/coach', express.static(spaDist));

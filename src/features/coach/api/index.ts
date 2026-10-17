@@ -2,6 +2,8 @@ export * from './auth.middleware';
 export * from './coach.api.controller';
 export * from './constants';
 export * from './dashboard.service';
+export * from './detail-transformers';
+export * from './details.service';
 export * from './dto';
 export * from './transformers';
 export * from './types';

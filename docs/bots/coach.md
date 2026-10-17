@@ -19,10 +19,14 @@ Coach is a specialized bot for sports enthusiasts, providing real-time match upd
 
 A 365Scores-style mini-app (`apps/coach-web`) served at `/coach`, backed by `/api/coach/*`.
 
-- **What it shows** - Today's games from the selected leagues plus favorite teams (pinned on top even if their league isn't selected), ordered live → upcoming → finished. Live games include xG, shots on target and possession. A unified feed lists the latest events across all games.
-- **Views** - Cards grid (default on desktop) or a compact list (default on mobile); the feed is a side column on desktop and a tab on mobile.
-- **Refresh** - Every 30 seconds while the page is visible.
-- **Settings** - Leagues, favorite teams (search), and which event types appear (default: goals, red cards, missed penalties, VAR; yellow cards, woodwork and substitutions optional). Stored per user.
+- **What it shows** - Today's games from the selected leagues plus favorite teams (pinned on top even if their league isn't selected), ordered live → upcoming → finished. Each card shows the live minute, key events, live stats (xG, shots on target, possession) and the TV channels.
+- **Views** - Cards grid (default on desktop) or a compact list (default on mobile). The UI is in English.
+- **Notifications** - On every refresh, new events (per the selected event types), kick-offs and full-times pop up as notification cards (top-right on desktop, top on mobile). They stay until the next refresh; tapping one opens the game.
+- **Game page** - Scoreboard, info (competition, round, kick-off, TV, venue, referee), events timeline, stats, lineups on a pitch with ratings plus bench/missing players, and the league table.
+- **Team & player pages** - Team: form, upcoming/recent matches and squad. Player: details, season stats per competition and recent games.
+- **Leagues tab** - Per-league page with today's games, the table (or groups) and the knockout bracket when there is one.
+- **Refresh** - Configurable in Settings (15s-2min, default 30s) while the page is visible. 365Scores publishes no rate limit; the API caches live data for 15s, so 15s is the minimum.
+- **Settings** - Leagues, favorite teams (search), event types (default: goals, red cards, missed penalties, VAR; yellow cards, woodwork and substitutions optional) and refresh interval. Stored per user.
 - **Access** - `/dashboard` sends a mini-app button (authenticated with Telegram init data) and a private browser link (`/coach/?t=<token>`) for opening it on a computer.
 
 Local development:
@@ -82,7 +86,7 @@ LOCAL_ACTIVE_BOT_ID=COACH npm run dev
 Collections:
 - `User` - Telegram user details
 - `Subscription` - Daily update settings and custom league selections
-- `DashboardPreferences` - Live dashboard leagues, favorite teams, event types and browser access token
+- `DashboardPreferences` - Live dashboard leagues, favorite teams, event types, refresh interval and browser access token
 
 ## Scheduled Tasks
 

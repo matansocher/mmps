@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import type { ScoresGame } from '../interface';
-import { APP_TYPE_ID, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
+import { APP_TYPE_ID, COUNTRY_ID, ENGLISH_LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 import { scores365Get } from './scores-365-get';
 
 export type GetGamesByDateOptions = {
@@ -16,7 +16,7 @@ export async function getGamesByDate({ date, competitionIds = [], competitorIds 
   const day = format(date, 'dd/MM/yyyy');
   const queryParams = {
     appTypeId: `${APP_TYPE_ID}`,
-    langId: `${LANGUAGE_ID}`,
+    langId: `${ENGLISH_LANGUAGE_ID}`,
     timezoneName: DEFAULT_TIMEZONE,
     userCountryId: `${COUNTRY_ID}`,
     startDate: day,
