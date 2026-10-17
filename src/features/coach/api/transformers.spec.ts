@@ -54,6 +54,7 @@ function makeGame(overrides: Partial<DashboardGame>): DashboardGame {
     home: { id: 1, name: 'A', score: 0 },
     away: { id: 2, name: 'B', score: 0 },
     isFavorite: false,
+    lineupsConfirmed: false,
     channels: [],
     events: [],
     ...overrides,
