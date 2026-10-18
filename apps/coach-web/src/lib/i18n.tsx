@@ -170,6 +170,11 @@ const en = {
     table: 'Table',
     groups: 'Groups',
     knockout: 'Knockout',
+    matchdays: 'Matchdays',
+    matchday: (n: number) => `Matchday ${n}`,
+    matchdayKind: { previous: 'Last', current: 'In play', next: 'Next' } as Record<'previous' | 'current' | 'next', string>,
+    playedOf: (played: number, total: number) => `${played} of ${total} games played`,
+    gamesCount: (n: number) => `${n} games`,
     empty: 'No table or bracket available yet',
   },
   standings: {
@@ -381,6 +386,11 @@ const he: Messages = {
     table: 'טבלה',
     groups: 'בתים',
     knockout: 'נוקאאוט',
+    matchdays: 'מחזורים',
+    matchday: (n) => `מחזור ${n}`,
+    matchdayKind: { previous: 'אחרון', current: 'מתקיים', next: 'הבא' },
+    playedOf: (played, total) => `${played} מתוך ${total} משחקים שוחקו`,
+    gamesCount: (n) => `${n} משחקים`,
     empty: 'עדיין אין טבלה או עץ גביע',
   },
   standings: {

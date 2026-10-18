@@ -1,9 +1,9 @@
 import { getErrorMessage, Logger } from '@core/utils';
-import { COMPETITIONS, getAthleteDetails, getBrackets, getCompetitorDetails, getCompetitorGames, getCompetitorSquad, getStandings } from '@services/scores-365';
+import { COMPETITIONS, getAthleteDetails, getBrackets, getCompetitionGames, getCompetitorDetails, getCompetitorGames, getCompetitorSquad, getStandings } from '@services/scores-365';
 import { getDashboardPreferences } from '@shared/coach';
 import type { DashboardLanguage } from '@shared/coach';
 import { LANGUAGE_IDS, LIVE_DATA_TTL_SEC } from './constants';
-import { toGameDetail, toKnockoutStages, toPlayerDetail, toStandingsTables, toTeamDetail } from './detail-transformers';
+import { toGameDetail, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables, toTeamDetail } from './detail-transformers';
 import { getCachedGameDetails, getCachedGameStats, getCachedHeadToHead } from './scores-cache';
 import { classifyGameStatus, getCompetitionName, toDashboardGame } from './transformers';
 import { TtlCache } from './ttl-cache';
@@ -63,20 +63,39 @@ export class CoachDetailsService {
     if (!competition) return null;
     return this.competitionCache.get(
       `${lang}:${competitionId}`,
-      (competition) => (competition?.tables.some((t) => t.rows.some((r) => r.isLive)) ? LIVE_COMPETITION_TTL_MS : COMPETITION_TTL_MS),
+      (competition) =>
+        competition?.tables.some((t) => t.rows.some((r) => r.isLive)) || competition?.matchdays.some((m) => m.games.some((g) => g.status === 'live')) ? LIVE_COMPETITION_TTL_MS : COMPETITION_TTL_MS,
       async () => {
-        const [standings, brackets] = await Promise.all([
-          getStandings(competitionId, LANGUAGE_IDS[lang]).catch((err) => {
+        const langId = LANGUAGE_IDS[lang];
+        const [standings, brackets, results, fixtures] = await Promise.all([
+          getStandings(competitionId, langId).catch((err) => {
             this.logger.warn(`Failed to load standings ${competitionId}: ${getErrorMessage(err)}`);
             return null;
           }),
-          getBrackets(competitionId, LANGUAGE_IDS[lang]).catch((err) => {
+          getBrackets(competitionId, langId).catch((err) => {
             this.logger.warn(`Failed to load brackets ${competitionId}: ${getErrorMessage(err)}`);
+            return [];
+          }),
+          // One extra page of results so the previous round is complete even when the latest round is half played.
+          getCompetitionGames(competitionId, 'results', langId, 1).catch((err) => {
+            this.logger.warn(`Failed to load results ${competitionId}: ${getErrorMessage(err)}`);
+            return [];
+          }),
+          getCompetitionGames(competitionId, 'fixtures', langId).catch((err) => {
+            this.logger.warn(`Failed to load fixtures ${competitionId}: ${getErrorMessage(err)}`);
             return [];
           }),
         ]);
         const { tables, zones } = toStandingsTables(standings);
-        return { id: competitionId, name: getCompetitionName(competitionId, lang), icon: competition.icon, tables, zones, knockout: toKnockoutStages(brackets) };
+        return {
+          id: competitionId,
+          name: getCompetitionName(competitionId, lang),
+          icon: competition.icon,
+          tables,
+          zones,
+          knockout: toKnockoutStages(brackets),
+          matchdays: toMatchdays(results, fixtures, lang),
+        };
       },
     );
   }

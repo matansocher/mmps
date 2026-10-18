@@ -210,6 +210,13 @@ export type CompetitionDetail = {
   readonly tables: StandingsTable[];
   readonly zones: { readonly name: string; readonly color: string }[];
   readonly knockout: KnockoutStage[];
+  readonly matchdays: Matchday[];
+};
+
+export type Matchday = {
+  readonly roundNum: number;
+  readonly kind: 'previous' | 'current' | 'next';
+  readonly games: GameSummary[];
 };
 
 export type TvChannel = {

@@ -245,6 +245,16 @@ export type CompetitionDetailResponse = {
   readonly tables: StandingsTable[];
   readonly zones: { readonly name: string; readonly color: string }[];
   readonly knockout: KnockoutStage[];
+  readonly matchdays: Matchday[];
+};
+
+// 'previous' = the last fully played round, 'current' = partly played, 'next' = not started yet.
+export type MatchdayKind = 'previous' | 'current' | 'next';
+
+export type Matchday = {
+  readonly roundNum: number;
+  readonly kind: MatchdayKind;
+  readonly games: GameSummary[];
 };
 
 export type ApiError = { readonly error: string };

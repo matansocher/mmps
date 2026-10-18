@@ -4,12 +4,13 @@ import { BracketView } from '../components/BracketView';
 import { GameRow } from '../components/GameRow';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
+import { MatchdayView } from '../components/MatchdayView';
 import { LiveTableNote, StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
 import { ErrorState, Loading, Section, Tabs } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { useLiveCompetition } from '../hooks/useLiveCompetition';
 
-type LeagueTab = 'table' | 'knockout';
+type LeagueTab = 'table' | 'matchdays' | 'knockout';
 
 export function LeaguePage({ id }: { readonly id: number }) {
   const resource = useLiveCompetition(id);
@@ -21,6 +22,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
 
   const tabs: { id: LeagueTab; label: string }[] = [];
   if (competition?.tables.length) tabs.push({ id: 'table', label: competition.tables.length > 1 ? messages().league.groups : messages().league.table });
+  if (competition?.matchdays?.length) tabs.push({ id: 'matchdays', label: messages().league.matchdays });
   if (competition?.knockout.length) tabs.push({ id: 'knockout', label: messages().league.knockout });
   const activeTab = tab && tabs.some((t) => t.id === tab) ? tab : tabs[0]?.id;
 
@@ -66,6 +68,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
               </div>
             </div>
           )}
+          {activeTab === 'matchdays' && <MatchdayView matchdays={competition.matchdays} favoriteIds={favoriteIds} />}
           {activeTab === 'knockout' && <BracketView stages={competition.knockout} />}
         </main>
       )}
