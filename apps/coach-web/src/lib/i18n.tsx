@@ -50,7 +50,7 @@ const en = {
   ownGoalShort: 'OG',
   dashboard: {
     title: 'Live',
-    subtitle: (date: string, time: string) => `${date} · updated ${time}`,
+    updated: (time: string) => `updated ${time}`,
     listView: 'List view',
     cardView: 'Card view',
     viewMode: 'View',
@@ -193,6 +193,7 @@ const en = {
     goalDiff: 'GD',
     points: 'Pts',
     form: 'Form',
+    title: 'League table',
   },
   bracket: {
     leg: (n: number) => `Leg ${n}`,
@@ -267,7 +268,7 @@ const he: Messages = {
   ownGoalShort: 'עצמי',
   dashboard: {
     title: 'לייב',
-    subtitle: (date, time) => `${date} · עודכן ב-${time}`,
+    updated: (time) => `עודכן ב-${time}`,
     listView: 'תצוגת רשימה',
     cardView: 'תצוגת כרטיסים',
     viewMode: 'תצוגה',
@@ -410,6 +411,7 @@ const he: Messages = {
     goalDiff: 'הפרש',
     points: 'נק׳',
     form: 'כושר',
+    title: 'טבלת הליגה',
   },
   bracket: {
     leg: (n) => `משחק ${n}`,

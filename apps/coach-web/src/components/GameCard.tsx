@@ -3,7 +3,7 @@ import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/f
 import { messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
-import type { FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
+import type { DashboardStandingRow, FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
 import { ChannelLogo } from './ChannelLogo';
 import { CompetitionLogo } from './CompetitionLogo';
 import { GameHeadlineLine } from './GameHeadline';
@@ -162,6 +162,58 @@ function FormPills({ entries }: { readonly entries: readonly FormEntry[] }) {
   );
 }
 
+function StandingLine({ team, row }: { readonly team: Team; readonly row: DashboardStandingRow }) {
+  return (
+    <>
+      <span role="cell" className="flex items-center gap-1.5">
+        <span className="h-3 w-[3px] rounded-full" style={{ backgroundColor: row.zoneColor ?? 'transparent' }} aria-hidden />
+        <span className="score-font w-4 text-center text-text-primary">{row.position}</span>
+      </span>
+      <span role="cell" className="flex min-w-0 items-center gap-1.5">
+        <TeamLogo teamId={team.id} name={team.name} size={14} />
+        <span className="truncate text-text-secondary">{team.shortName || team.name}</span>
+      </span>
+      <span role="cell" className="score-font text-center text-text-muted">{row.played}</span>
+      <span role="cell" className="score-font ltr-num text-center text-text-muted">{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</span>
+      <span role="cell" className="score-font text-center text-text-primary">{row.points}</span>
+    </>
+  );
+}
+
+// Both teams' rows from the league table, ordered by position.
+function StandingsSnippet({ game }: { readonly game: Game }) {
+  const t = useT().standings;
+  if (!game.standings) return null;
+  const rows = [
+    { team: game.home, row: game.standings.home },
+    { team: game.away, row: game.standings.away },
+  ].sort((a, b) => a.row.position - b.row.position);
+  return (
+    <div role="table" aria-label={t.title} className="grid grid-cols-[auto_minmax(0,1fr)_2rem_2.5rem_2rem] items-center gap-x-2 gap-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
+      <span role="row" className="contents text-[10px] font-medium text-text-muted">
+        <span role="columnheader" className="text-center">
+          #
+        </span>
+        <span role="columnheader">{t.team}</span>
+        <span role="columnheader" className="text-center">
+          {t.played}
+        </span>
+        <span role="columnheader" className="text-center">
+          {t.goalDiff}
+        </span>
+        <span role="columnheader" className="text-center">
+          {t.points}
+        </span>
+      </span>
+      {rows.map(({ team, row }) => (
+        <span role="row" key={team.id} className="contents">
+          <StandingLine team={team} row={row} />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function formatCountdown(ms: number): string | null {
   if (ms <= 0 || ms > COUNTDOWN_WINDOW_MS) return null;
   const totalMinutes = Math.ceil(ms / 60_000);
@@ -231,6 +283,11 @@ export function GameCard({ game }: { readonly game: Game }) {
       {game.status === 'live' && (
         <div className="mt-auto">
           <MatchTimeline game={game} />
+        </div>
+      )}
+      {game.status === 'scheduled' && game.standings && (
+        <div className="mt-auto">
+          <StandingsSnippet game={game} />
         </div>
       )}
       {game.status === 'finished' && game.headline && (

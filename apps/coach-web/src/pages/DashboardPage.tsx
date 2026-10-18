@@ -5,6 +5,7 @@ import { Icon, type IconName } from '../components/Icon';
 import { LiveDot } from '../components/LiveDot';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
+import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatClock, formatDateTitle } from '../lib/format';
@@ -26,7 +27,8 @@ function readViewMode(): ViewMode {
   } catch {
     // ignore unavailable storage
   }
-  return window.matchMedia('(min-width: 1024px)').matches ? 'cards' : 'list';
+  // Until the user picks one: the compact list on phones, the detailed cards on wider screens.
+  return window.matchMedia('(min-width: 768px)').matches ? 'cards' : 'list';
 }
 
 type LeagueGroup = { readonly competitionId: number; readonly name: string; readonly games: Game[] };
@@ -237,7 +239,18 @@ export function DashboardPage() {
             )}
           </>
         }
-        subtitle={data ? t.dashboard.subtitle(formatDateTitle(data.date), formatClock(data.updatedAt)) : t.common.loading}
+        subtitle={
+          data ? (
+            <>
+              {formatDateTitle(data.date)} ·{' '}
+              <span className="whitespace-nowrap">
+                {t.dashboard.updated(formatClock(data.updatedAt))} · <TimeAgo iso={data.updatedAt} />
+              </span>
+            </>
+          ) : (
+            t.common.loading
+          )
+        }
         actions={
           <>
             <ViewToggle value={viewMode} onChange={changeViewMode} />

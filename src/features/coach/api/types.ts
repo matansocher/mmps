@@ -65,7 +65,13 @@ export type DashboardGame = {
   readonly stats?: DashboardStats;
   readonly form?: DashboardForm;
   readonly headline?: GameHeadline;
+  // Both teams' rows in the league table, for upcoming league games.
+  readonly standings?: DashboardStandings;
 };
+
+export type DashboardStandingRow = Pick<StandingsRow, 'position' | 'played' | 'points' | 'zoneColor'> & { readonly goalDiff: number };
+
+export type DashboardStandings = { readonly home: DashboardStandingRow; readonly away: DashboardStandingRow };
 
 export type GameHeadlineType = 'champions' | 'relegated' | 'top' | 'lostTop' | 'zoneIn' | 'zoneOut' | 'dangerIn' | 'dangerOut' | 'moveUp' | 'qualified';
 

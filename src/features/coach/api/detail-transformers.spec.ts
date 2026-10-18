@@ -1,5 +1,5 @@
 import type { ScoresAthleteDetails, ScoresBracket, ScoresGame, ScoresGameDetails, ScoresHeadToHead, ScoresStandings } from '@services/scores-365';
-import { toDashboardForm, toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables } from './detail-transformers';
+import { toDashboardForm, toDashboardStandings, toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables } from './detail-transformers';
 import { toDashboardGame } from './transformers';
 
 const details: ScoresGameDetails = {
@@ -305,5 +305,32 @@ describe('toMatchdays()', () => {
   it('should return only the first round before the season starts and nothing without rounds', () => {
     expect(summarize(toMatchdays([], [game(2, 2, 2, 9), game(1, 1, 2, 2)], 'en'))).toEqual([{ roundNum: 1, kind: 'next', ids: [1] }]);
     expect(toMatchdays([], [], 'en')).toEqual([]);
+  });
+});
+
+describe('toDashboardStandings()', () => {
+  const row = (id: number, position: number, groupNum = 0) => ({
+    competitor: { id, name: `T${id}` },
+    position,
+    groupNum,
+    gamePlayed: 7,
+    for: 10,
+    against: 4,
+    points: 15,
+    destinationNum: position === 1 ? 1 : undefined,
+  });
+  const standings: ScoresStandings = { competitionId: 7, rows: [row(1, 1), row(2, 2), row(3, 1, 1)], destinations: [{ num: 1, name: 'UCL', color: '#00f' }] };
+
+  it('should return both rows from the shared table', () => {
+    expect(toDashboardStandings(standings, 2, 1)).toEqual({
+      home: { position: 2, played: 7, points: 15, goalDiff: 6 },
+      away: { position: 1, played: 7, points: 15, goalDiff: 6, zoneColor: '#00f' },
+    });
+  });
+
+  it('should return undefined when the teams are in different tables or missing', () => {
+    expect(toDashboardStandings(standings, 1, 3)).toBeUndefined();
+    expect(toDashboardStandings(standings, 1, 99)).toBeUndefined();
+    expect(toDashboardStandings(null, 1, 2)).toBeUndefined();
   });
 });

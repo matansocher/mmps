@@ -32,6 +32,16 @@ export type GameEvent = {
   readonly ownGoal?: boolean;
 };
 
+export type DashboardStandingRow = {
+  readonly position: number;
+  readonly played: number;
+  readonly points: number;
+  readonly goalDiff: number;
+  readonly zoneColor?: string;
+};
+
+export type DashboardStandings = { readonly home: DashboardStandingRow; readonly away: DashboardStandingRow };
+
 export type Game = {
   readonly id: number;
   readonly competitionId: number;
@@ -50,6 +60,7 @@ export type Game = {
   readonly stats?: GameStats;
   readonly form?: DashboardForm;
   readonly headline?: GameHeadline;
+  readonly standings?: DashboardStandings;
 };
 
 export type FormEntry = { readonly result: FormResult; readonly opponent: string; readonly score: string };

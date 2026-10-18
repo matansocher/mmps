@@ -17,6 +17,7 @@ import type {
   DashboardForm,
   DashboardFormEntry,
   DashboardGame,
+  DashboardStandings,
   FormResult,
   GameDetailResponse,
   GameStatRow,
@@ -238,6 +239,19 @@ export function toStandingsTables(standings: ScoresStandings | null): { tables: 
   const usedZones = new Set(standings.rows.map((r) => r.destinationNum));
   const zones = (standings.destinations ?? []).filter((d) => d.color && usedZones.has(d.num)).map((d) => ({ name: d.name, color: d.color }));
   return { tables, zones };
+}
+
+// Rows of both teams, only when they sit in the same table (so group-stage tables match and cups are skipped).
+export function toDashboardStandings(standings: ScoresStandings | null, homeId: number, awayId: number): DashboardStandings | undefined {
+  for (const table of toStandingsTables(standings).tables) {
+    const home = table.rows.find((r) => r.team.id === homeId);
+    const away = table.rows.find((r) => r.team.id === awayId);
+    if (home && away) {
+      const pick = (r: typeof home) => ({ position: r.position, played: r.played, points: r.points, goalDiff: r.goalsFor - r.goalsAgainst, ...(r.zoneColor ? { zoneColor: r.zoneColor } : {}) });
+      return { home: pick(home), away: pick(away) };
+    }
+  }
+  return undefined;
 }
 
 type RoundGames = { readonly roundNum: number; readonly games: ScoresGame[] };
