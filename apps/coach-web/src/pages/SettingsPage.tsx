@@ -6,7 +6,7 @@ import { TeamLogo } from '../components/TeamLogo';
 import { Loading } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { api } from '../lib/api';
-import { isGoalSoundEnabled, setGoalSoundEnabled } from '../lib/goal-sound';
+import { isGoalSoundEnabled, previewGoalSound, setGoalSoundEnabled } from '../lib/goal-sound';
 import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
 import { LANGUAGE_NAMES, useLanguage, useT } from '../lib/i18n';
 import { leagueColor, leagueTextColor } from '../lib/league-themes';
@@ -263,6 +263,7 @@ export function SettingsPage() {
                     hapticSelect();
                     setGoalSound(value);
                     setGoalSoundEnabled(value);
+                    if (value && !goalSound) void previewGoalSound().catch((error) => console.warn('Could not preview goal sound', error));
                   }}
                   aria-pressed={goalSound === value}
                   className={`rounded-lg border px-3 py-2 text-sm transition ${goalSound === value ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}

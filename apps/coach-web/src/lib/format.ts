@@ -36,10 +36,6 @@ export function formatKickoff(iso: string): string {
   return new Date(iso).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-export function formatClock(iso: string): string {
-  return new Date(iso).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-}
-
 export function formatDateTitle(date: string): string {
   return new Date(`${date}T12:00:00`).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 }

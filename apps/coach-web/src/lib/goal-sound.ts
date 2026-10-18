@@ -34,33 +34,45 @@ export function installAudioUnlock(): () => void {
   return () => events.forEach((name) => window.removeEventListener(name, unlock, true));
 }
 
-// A soft rising three-note chime (C6 → E6 → G6) with a bell-like decay.
+// Two warm pickup notes resolve into a short C-major chord.
 function playChime(ctx: AudioContext): void {
   const start = ctx.currentTime + 0.02;
   const master = ctx.createGain();
-  master.gain.value = 0.18;
-  master.connect(ctx.destination);
-  [1046.5, 1318.5, 1568].forEach((frequency, i) => {
-    const at = start + i * 0.11;
+  const filter = ctx.createBiquadFilter();
+  master.gain.value = 0.16;
+  filter.type = 'lowpass';
+  filter.frequency.value = 2200;
+  filter.Q.value = 0.5;
+  master.connect(filter).connect(ctx.destination);
+  const notes = [
+    { frequency: 523.25, offset: 0, duration: 0.16, volume: 0.7 },
+    { frequency: 659.25, offset: 0.12, duration: 0.16, volume: 0.75 },
+    { frequency: 783.99, offset: 0.24, duration: 0.48, volume: 0.8 },
+    { frequency: 523.25, offset: 0.24, duration: 0.48, volume: 0.45 },
+    { frequency: 659.25, offset: 0.24, duration: 0.48, volume: 0.35 },
+  ];
+  let remaining = notes.length;
+  notes.forEach(({ frequency, offset, duration, volume }) => {
+    const at = start + offset;
     const osc = ctx.createOscillator();
-    const overtone = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
-    overtone.type = 'triangle';
+    osc.type = 'triangle';
     osc.frequency.value = frequency;
-    overtone.frequency.value = frequency * 2;
     gain.gain.setValueAtTime(0.0001, at);
-    gain.gain.exponentialRampToValueAtTime(1, at + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.6);
-    const overtoneGain = ctx.createGain();
-    overtoneGain.gain.value = 0.12;
-    osc.connect(gain);
-    overtone.connect(overtoneGain).connect(gain);
-    gain.connect(master);
-    [osc, overtone].forEach((node) => {
-      node.start(at);
-      node.stop(at + 0.65);
-    });
+    gain.gain.exponentialRampToValueAtTime(volume, at + 0.012);
+    gain.gain.exponentialRampToValueAtTime(volume * 0.45, at + 0.07);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+    osc.connect(gain).connect(master);
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+      if (--remaining === 0) {
+        master.disconnect();
+        filter.disconnect();
+      }
+    };
+    osc.start(at);
+    osc.stop(at + duration + 0.01);
   });
 }
 
@@ -68,4 +80,11 @@ export function celebrateGoal(): void {
   if (!isGoalSoundEnabled()) return;
   hapticSuccess();
   if (context?.state === 'running') playChime(context);
+}
+
+export async function previewGoalSound(): Promise<void> {
+  if (typeof AudioContext === 'undefined') return;
+  context ??= new AudioContext();
+  await context.resume();
+  playChime(context);
 }

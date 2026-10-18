@@ -5,7 +5,7 @@ import { api } from '../lib/api';
 import { formatKickoff, formatLongDate, formatShortDate } from '../lib/format';
 import { useT } from '../lib/i18n';
 import type { FormResult, Game, GameDetail, GameSummary, LineupPlayer, Team } from '../types';
-import { ChannelLogo } from './ChannelLogo';
+import { ChannelBadge } from './ChannelBadge';
 import { openGame, StandingsSnippet } from './GameCard';
 import { Icon } from './Icon';
 import { TeamLogo } from './TeamLogo';
@@ -236,10 +236,8 @@ export function PreMatchModal({ game, trigger, onClose }: Props) {
             {channels.length > 0 && (
               <>
                 <dt className="text-text-secondary">{t.game.tv}</dt>
-                <dd className="flex flex-wrap items-center gap-1.5">
-                  {channels.map((c) => (
-                    <ChannelLogo key={c.id} channel={c} height={18} />
-                  ))}
+                <dd className="flex min-w-0">
+                  <ChannelBadge channels={channels} />
                 </dd>
               </>
             )}

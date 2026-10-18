@@ -53,8 +53,7 @@ const en = {
   ownGoalShort: 'OG',
   dashboard: {
     title: 'Live',
-    updated: (time: string) => `updated ${time}`,
-    liveData: 'Live data',
+    liveGames: (count: number) => (count === 1 ? '1 game live' : `${count} games live`),
     listView: 'List view',
     cardView: 'Card view',
     viewMode: 'View',
@@ -62,9 +61,6 @@ const en = {
     filterByLeague: 'Filter by league',
     all: 'All',
     myTeams: 'My teams',
-    pin: (teams: string) => `Pin ${teams}`,
-    unpin: (teams: string) => `Unpin ${teams}`,
-    pinLimit: (max: number) => `You can pin up to ${max} games. Unpin one to make room.`,
     hot: {
       label: (reason: string) => `Hot game: ${reason}`,
       reasons: { lateDrama: 'Late drama', comeback: 'Comeback', goalFest: 'Goal fest', redCardTension: 'Red card drama' } as Record<HotReason, string>,
@@ -100,9 +96,10 @@ const en = {
     sections: { live: 'Live now', scheduled: 'Later today', other: 'Other', finished: 'Finished' },
   },
   card: {
+    winPercentage: (percent: number) => `(${percent}%)`,
+    winProbability: (team: string, percent: number) => `${team}: ${percent}% odds-implied chance to win, adjusted for bookmaker margin`,
     timeline: (status: string) => `Match timeline, ${status}`,
     redCards: (n: number) => (n > 1 ? `${n} red cards` : '1 red card'),
-    countdown: (hours: number, minutes: number) => (hours === 0 ? `in ${minutes}m` : minutes === 0 ? `in ${hours}h` : `in ${hours}h ${minutes}m`),
     fullTime: 'FT',
     headlines: {
       champions: (team: string) => `${team} are champions!`,
@@ -309,8 +306,7 @@ const he: Messages = {
   ownGoalShort: 'עצמי',
   dashboard: {
     title: 'לייב',
-    updated: (time) => `עודכן ב-${time}`,
-    liveData: 'נתונים חיים',
+    liveGames: (count) => (count === 1 ? 'משחק אחד בלייב' : `${count} משחקים בלייב`),
     listView: 'תצוגת רשימה',
     cardView: 'תצוגת כרטיסים',
     viewMode: 'תצוגה',
@@ -318,9 +314,6 @@ const he: Messages = {
     filterByLeague: 'סינון לפי ליגה',
     all: 'הכל',
     myTeams: 'הקבוצות שלי',
-    pin: (teams) => `הצמדת ${teams}`,
-    unpin: (teams) => `ביטול הצמדה של ${teams}`,
-    pinLimit: (max) => `אפשר להצמיד עד ${max} משחקים. בטלו הצמדה כדי לפנות מקום.`,
     hot: {
       label: (reason) => `משחק לוהט: ${reason}`,
       reasons: { lateDrama: 'דרמה בסיום', comeback: 'מהפך', goalFest: 'חגיגת שערים', redCardTension: 'דרמת כרטיס אדום' },
@@ -356,9 +349,10 @@ const he: Messages = {
     sections: { live: 'משחקים עכשיו', scheduled: 'בהמשך היום', other: 'אחר', finished: 'הסתיימו' },
   },
   card: {
+    winPercentage: (percent) => `(${percent}%)`,
+    winProbability: (team, percent) => `${team}: סיכוי ניצחון של ${percent}% לפי יחסי ההימורים, בניכוי מרווח סוכנות ההימורים`,
     timeline: (status) => `ציר המשחק, ${status}`,
     redCards: (n) => (n > 1 ? `${n} כרטיסים אדומים` : 'כרטיס אדום'),
-    countdown: (hours, minutes) => (hours === 0 ? `בעוד ${minutes} ד׳` : minutes === 0 ? `בעוד ${hours} ש׳` : `בעוד ${hours} ש׳ ${minutes} ד׳`),
     fullTime: 'הסתיים',
     headlines: {
       champions: (team) => `${team} אלופה!`,

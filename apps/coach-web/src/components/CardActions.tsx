@@ -6,12 +6,10 @@ import type { Game } from '../types';
 import { Icon } from './Icon';
 
 export type CardActions = {
-  readonly isPinned: (id: number) => boolean;
-  readonly togglePin: (game: Game) => void;
   readonly openPreMatch: (game: Game, trigger: HTMLElement) => void;
 };
 
-// Provided by the dashboard only; cards elsewhere (league pages) render without pin / pre-match buttons.
+// Provided by the dashboard only; cards elsewhere (league pages) render without pre-match buttons.
 export const CardActionsContext = createContext<CardActions | null>(null);
 
 // The buttons sit inside a clickable card, so they must not trigger its navigation.
@@ -22,30 +20,6 @@ function teams(game: Game): string {
 }
 
 const BUTTON = 'flex size-7 shrink-0 items-center justify-center rounded-full transition duration-150 ease-out hover:bg-white/[0.08] active:scale-90';
-
-export function PinButton({ game }: { readonly game: Game }) {
-  const actions = useContext(CardActionsContext);
-  const t = useT().dashboard;
-  if (!actions) return null;
-  const pinned = actions.isPinned(game.id);
-  const label = pinned ? t.unpin(teams(game)) : t.pin(teams(game));
-  return (
-    <button
-      type="button"
-      aria-pressed={pinned}
-      aria-label={label}
-      title={label}
-      onClick={(e) => {
-        stop(e);
-        actions.togglePin(game);
-      }}
-      onKeyDown={stop}
-      className={`${BUTTON} ${pinned ? 'bg-accent-brand/15 text-accent-brand' : 'text-text-muted hover:text-text-primary'}`}
-    >
-      <Icon name="pin" size={15} />
-    </button>
-  );
-}
 
 export function PreMatchButton({ game }: { readonly game: Game }) {
   const actions = useContext(CardActionsContext);

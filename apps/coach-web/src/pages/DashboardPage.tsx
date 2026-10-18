@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { type CardActions, CardActionsContext } from '../components/CardActions';
 import { GameCard, GameCardSkeleton } from '../components/GameCard';
 import { GameRow } from '../components/GameRow';
@@ -11,10 +11,9 @@ import { RefreshBanner } from '../components/RefreshBanner';
 import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
-import { formatClock, formatDateTitle } from '../lib/format';
+import { formatDateTitle } from '../lib/format';
 import { leagueColor, leagueTextColor } from '../lib/league-themes';
 import { type Messages, useT } from '../lib/i18n';
-import { MAX_PINS, readPins, togglePin, writePins } from '../lib/pins';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { Game } from '../types';
@@ -35,37 +34,41 @@ function readViewMode(): ViewMode {
   return window.matchMedia('(min-width: 768px)').matches ? 'cards' : 'list';
 }
 
-type LeagueGroup = { readonly competitionId: number; readonly name: string; readonly games: Game[] };
+// competitionId is absent for the favourite-teams group.
+type LeagueGroup = { readonly key: string; readonly competitionId?: number; readonly name: string; readonly games: Game[] };
 type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean; readonly leagues?: LeagueGroup[] };
 type PreMatchTarget = { readonly game: Game; readonly trigger: HTMLElement };
 
-// Pinned games lead, then favourite teams' games, then the rest.
-function priority(game: Game, pinnedIds: readonly number[]): number {
-  return pinnedIds.includes(game.id) ? 2 : game.isFavorite ? 1 : 0;
-}
-
-// Leagues holding a pinned or favourite game come first; otherwise leagues keep the server order. Games run by priority, then kick-off.
-function groupByLeague(games: readonly Game[], pinnedIds: readonly number[]): LeagueGroup[] {
+// Favourite leagues come first; games run by favourite team, then kick-off.
+function groupByLeague(games: readonly Game[]): LeagueGroup[] {
   const groups = new Map<number, LeagueGroup>();
   for (const game of games) {
-    const group = groups.get(game.competitionId) ?? { competitionId: game.competitionId, name: game.competitionName, games: [] };
+    const group = groups.get(game.competitionId) ?? { key: `${game.competitionId}`, competitionId: game.competitionId, name: game.competitionName, games: [] };
     group.games.push(game);
     groups.set(game.competitionId, group);
   }
-  const byPriority = (a: Game, b: Game) => priority(b, pinnedIds) - priority(a, pinnedIds) || a.startTime.localeCompare(b.startTime) || a.id - b.id;
-  const top = (group: LeagueGroup) => Math.max(...group.games.map((g) => priority(g, pinnedIds)));
+  const byPriority = (a: Game, b: Game) => Number(b.isFavorite) - Number(a.isFavorite) || a.startTime.localeCompare(b.startTime) || a.id - b.id;
+  const top = (group: LeagueGroup) => Number(group.games.some((g) => g.isFavorite));
   return [...groups.values()].map((g) => ({ ...g, games: [...g.games].sort(byPriority) })).sort((a, b) => top(b) - top(a));
 }
 
-function buildSections(games: Game[], pinnedIds: readonly number[], t: Messages['dashboard']['sections']): GameSection[] {
+// Favourite teams' games get their own group by kick-off, ahead of the leagues.
+function groupWithFavorites(games: readonly Game[], title: string): LeagueGroup[] {
+  const favorites = games.filter((g) => g.isFavorite).sort((a, b) => a.startTime.localeCompare(b.startTime) || a.id - b.id);
+  const leagues = groupByLeague(games.filter((g) => !g.isFavorite));
+  return favorites.length ? [{ key: 'favorites', name: title, games: favorites }, ...leagues] : leagues;
+}
+
+function buildSections(games: Game[], t: Messages['dashboard']['sections'], myTeams: string): GameSection[] {
   // The sort is stable, so games of equal priority keep the server order.
-  const rest = [...games].sort((a, b) => priority(b, pinnedIds) - priority(a, pinnedIds));
+  const rest = [...games].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
+  const scheduled = rest.filter((g) => g.status === 'scheduled');
   const finished = games.filter((g) => g.status === 'finished');
   return [
     { key: 'live', title: t.live, games: rest.filter((g) => g.status === 'live'), live: true },
-    { key: 'scheduled', title: t.scheduled, games: rest.filter((g) => g.status === 'scheduled') },
+    { key: 'scheduled', title: t.scheduled, games: scheduled, leagues: groupWithFavorites(scheduled, myTeams) },
     { key: 'other', title: t.other, games: rest.filter((g) => g.status === 'other') },
-    { key: 'finished', title: t.finished, games: finished, leagues: groupByLeague(finished, pinnedIds) },
+    { key: 'finished', title: t.finished, games: finished, leagues: groupByLeague(finished) },
   ].filter((s) => s.games.length > 0);
 }
 
@@ -204,21 +207,7 @@ export function DashboardPage() {
   const t = useT();
   const [competitionFilter, setCompetitionFilter] = useState<number | typeof FAVORITES_FILTER | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
-  const [pins, setPins] = useState<{ date: string | null; ids: readonly number[] }>({ date: null, ids: [] });
-  const [pinLimitShown, setPinLimitShown] = useState(false);
   const [preMatch, setPreMatch] = useState<PreMatchTarget | null>(null);
-  const date = data?.date ?? null;
-  const pinnedIds = useMemo(() => (pins.date === date ? pins.ids : []), [pins, date]);
-
-  useEffect(() => {
-    if (date) setPins({ date, ids: readPins(date) });
-  }, [date]);
-
-  useEffect(() => {
-    if (!pinLimitShown) return;
-    const timer = window.setTimeout(() => setPinLimitShown(false), 3500);
-    return () => window.clearTimeout(timer);
-  }, [pinLimitShown]);
 
   const changeViewMode = (next: ViewMode) => {
     hapticSelect();
@@ -242,33 +231,18 @@ export function DashboardPage() {
     return [...map.values()];
   }, [games]);
 
-  const gameIds = useMemo(() => new Set(games.map((g) => g.id)), [games]);
-  const togglePinned = useCallback(
-    (game: Game) => {
-      if (!date) return;
-      const result = togglePin(pinnedIds, game.id, gameIds);
-      setPinLimitShown(result.limitReached);
-      if (result.limitReached) return;
-      hapticSelect();
-      writePins(date, result.ids);
-      setPins({ date, ids: result.ids });
-    },
-    [date, pinnedIds, gameIds],
-  );
   const cardActions = useMemo<CardActions>(
     () => ({
-      isPinned: (id) => pinnedIds.includes(id),
-      togglePin: togglePinned,
       openPreMatch: (game, trigger) => setPreMatch({ game, trigger }),
     }),
-    [pinnedIds, togglePinned],
+    [],
   );
 
   const favoriteGames = games.filter((g) => g.isFavorite);
   const filterAvailable = competitionFilter === FAVORITES_FILTER ? favoriteGames.length > 0 : competitions.some((c) => c.id === competitionFilter);
   const activeFilter = competitionFilter !== null && filterAvailable ? competitionFilter : null;
   const visibleGames = activeFilter === null ? games : activeFilter === FAVORITES_FILTER ? favoriteGames : games.filter((g) => g.competitionId === activeFilter);
-  const sections = buildSections(visibleGames, pinnedIds, t.dashboard.sections);
+  const sections = buildSections(visibleGames, t.dashboard.sections, t.dashboard.myTeams);
   const stale = errorStatus !== null && !!data;
 
   const liveCount = games.filter((g) => g.status === 'live').length;
@@ -280,9 +254,8 @@ export function DashboardPage() {
           <>
             {t.dashboard.title}
             {liveCount > 0 && (
-              <span className="score-font flex h-6 items-center gap-1.5 rounded-full bg-accent-live/12 px-2.5 text-xs font-bold text-accent-live">
+              <span className="flex items-center" role="img" aria-label={t.dashboard.liveGames(liveCount)} title={t.dashboard.liveGames(liveCount)}>
                 <LiveDot />
-                {liveCount}
               </span>
             )}
           </>
@@ -291,15 +264,7 @@ export function DashboardPage() {
           data ? (
             <>
               {formatDateTitle(data.date)} ·{' '}
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                {errorStatus === null && (
-                  <span className="relative inline-flex size-2" role="img" aria-label={t.dashboard.liveData} title={t.dashboard.liveData}>
-                    <span className="absolute inset-0 animate-ping rounded-full bg-accent-live/60 motion-reduce:hidden" />
-                    <span className="relative size-2 rounded-full bg-accent-live" />
-                  </span>
-                )}
-                {t.dashboard.updated(formatClock(data.updatedAt))} · <TimeAgo iso={data.updatedAt} />
-              </span>
+              <TimeAgo iso={data.updatedAt} />
             </>
           ) : (
             t.common.loading
@@ -378,9 +343,9 @@ export function DashboardPage() {
               {section.leagues && section.leagues.length > 1 ? (
                 <div className="flex flex-col gap-5">
                   {section.leagues.map((league) => (
-                    <div key={league.competitionId} className="flex flex-col gap-2.5">
+                    <div key={league.key} className="flex flex-col gap-2.5">
                       <h3 className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                        <CompetitionLogo competitionId={league.competitionId} size={16} />
+                        {league.competitionId === undefined ? <Icon name="star" size={16} className="text-accent-draw" /> : <CompetitionLogo competitionId={league.competitionId} size={16} />}
                         {league.name}
                         <span className="score-font text-[11px] font-medium text-text-muted">{league.games.length}</span>
                       </h3>
@@ -395,14 +360,6 @@ export function DashboardPage() {
           ))}
         </main>
         {preMatch && <PreMatchModal game={games.find((g) => g.id === preMatch.game.id) ?? preMatch.game} trigger={preMatch.trigger} onClose={() => setPreMatch(null)} />}
-        <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 md:bottom-8">
-          {pinLimitShown && (
-            <p className="banner-in pointer-events-auto flex items-center gap-2 rounded-full border border-border-subtle bg-bg-elevated px-4 py-2 text-sm text-text-primary shadow-xl">
-              <Icon name="pin" size={14} className="text-accent-brand" />
-              {t.dashboard.pinLimit(MAX_PINS)}
-            </p>
-          )}
-        </div>
         </CardActionsContext.Provider>
       )}
     </div>
