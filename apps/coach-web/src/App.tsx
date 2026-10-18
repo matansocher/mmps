@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { BottomNav } from './components/Nav';
+import { BottomNav, TopBar } from './components/Nav';
 import { Notifications } from './components/Notifications';
 import { DashboardProvider } from './hooks/useDashboard';
 import { captureTokenFromUrl } from './lib/api';
@@ -70,6 +70,7 @@ export function App() {
   return (
     <LanguageProvider>
       <DashboardProvider>
+        <TopBar />
         <Page route={route} />
         <Notifications />
         <BottomNav />

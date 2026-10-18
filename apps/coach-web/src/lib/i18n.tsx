@@ -13,7 +13,7 @@ function ordinal(n: number): string {
 }
 
 const en = {
-  nav: { live: 'Live', leagues: 'Leagues', settings: 'Settings' },
+  nav: { brand: 'Coach Live', label: 'Main', live: 'Live', leagues: 'Leagues', settings: 'Settings' },
   common: {
     back: 'Back',
     close: 'Close',
@@ -228,7 +228,7 @@ const en = {
 export type Messages = typeof en;
 
 const he: Messages = {
-  nav: { live: 'לייב', leagues: 'ליגות', settings: 'הגדרות' },
+  nav: { brand: 'Coach Live', label: 'ראשי', live: 'לייב', leagues: 'ליגות', settings: 'הגדרות' },
   common: {
     back: 'חזרה',
     close: 'סגירה',

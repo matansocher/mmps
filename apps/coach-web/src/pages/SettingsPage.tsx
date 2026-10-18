@@ -152,7 +152,7 @@ export function SettingsPage() {
 
   return (
     <div className="min-h-screen pb-40 md:pb-28">
-      <PageHeader title={t.settings.title} subtitle={t.settings.subtitle} />
+      <PageHeader title={t.settings.title} subtitle={t.settings.subtitle} maxWidth="max-w-2xl" />
 
       {error && <p className="mx-auto mt-4 max-w-2xl px-4 text-sm text-accent-red">{t.settings.error}</p>}
       {!prefs && !error && <Loading />}
