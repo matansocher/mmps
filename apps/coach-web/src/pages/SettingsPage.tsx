@@ -213,20 +213,18 @@ export function SettingsPage() {
                 {t.settings.noFavorites}
               </p>
             ) : (
-              <ul className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-lg border border-border-subtle">
+              <ul className="flex flex-wrap gap-2">
                 {prefs.favoriteTeams.map((team) => (
-                  <li key={team.id} className="flex items-center">
-                    <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-sm">
-                      <TeamLogo teamId={team.id} name={team.name} size={22} />
-                      <span className="truncate">{team.name}</span>
-                    </div>
+                  <li key={team.id} className="flex max-w-full items-center gap-1.5 rounded-full border border-border-subtle bg-bg-elevated py-1 ps-1.5 pe-1 text-sm">
+                    <TeamLogo teamId={team.id} name={team.name} size={18} />
+                    <span className="truncate">{team.name}</span>
                     <button
                       onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((f) => f.id !== team.id) })}
                       aria-label={t.settings.remove(team.name)}
                       title={t.settings.remove(team.name)}
-                      className="flex size-10 shrink-0 items-center justify-center text-text-muted transition hover:text-accent-red"
+                      className="flex size-6 shrink-0 items-center justify-center rounded-full text-text-muted transition hover:bg-accent-red/15 hover:text-accent-red"
                     >
-                      <Icon name="close" size={14} />
+                      <Icon name="close" size={12} />
                     </button>
                   </li>
                 ))}
