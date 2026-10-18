@@ -4,11 +4,12 @@ Testing guide for MMPS.
 
 ## Overview
 
-MMPS uses Vitest 4.x for testing. TypeScript runs natively via the Vite pipeline — no `ts-jest` setup required. Three suites live side by side:
+MMPS uses Vitest 4.x for testing. TypeScript runs natively via the Vite pipeline — no `ts-jest` setup required. These suites live side by side:
 
 - **Unit** — `src/**/*.spec.ts`, run with `npm test`.
 - **Integration** — `test/integration/**/*.spec.ts`, run with `npm run test:integration`.
 - **E2E bot** — `test/e2e/**/*.spec.ts`, run with `npm run test:e2e` (uses the grammY mock harness in `test/e2e/harness/`).
+- **Chatbot evals** — `test/eval/**/*.eval.ts`, run with `npm run eval:chatbot` (`vitest.eval.config.ts`). These call the real model and cost tokens, so they are kept out of `npm test`.
 
 ## Running Tests
 
@@ -17,7 +18,7 @@ MMPS uses Vitest 4.x for testing. TypeScript runs natively via the Vite pipeline
 npm test
 
 # Watch mode
-npm test:watch
+npm run test:watch
 
 # Specific file
 npm test -- chatbot.service.spec.ts
