@@ -1,5 +1,6 @@
 import type { KeyboardEvent, ReactNode } from 'react';
 import { messages } from '../lib/i18n';
+import { Icon } from './Icon';
 import { hapticSelect } from '../lib/telegram';
 
 export function Section({ title, right, children, className = '' }: { readonly title?: ReactNode; readonly right?: ReactNode; readonly children: ReactNode; readonly className?: string }) {
@@ -66,16 +67,20 @@ export function Loading() {
 export function ErrorState({ status, onRetry }: { readonly status: number; readonly onRetry?: () => void }) {
   const unauthorized = status === 401 || status === 403;
   const notFound = status === 404;
+  const offline = !unauthorized && !notFound && typeof navigator !== 'undefined' && !navigator.onLine;
   const t = messages().errors;
+  const icon = unauthorized ? 'lock' : notFound ? 'search' : offline ? 'wifiOff' : 'serverOff';
+  const title = unauthorized ? t.unauthorizedTitle : notFound ? t.notFoundTitle : offline ? t.offlineTitle : t.failedTitle;
+  const text = unauthorized ? t.unauthorizedText : notFound ? t.notFoundText : offline ? t.offlineText : t.failedText;
   return (
     <div className="mx-auto mt-16 flex max-w-sm flex-col items-center gap-3 px-6 text-center">
-      <span className="text-4xl">{unauthorized ? '🔒' : notFound ? '🤷' : '📡'}</span>
-      <p className="text-base font-semibold">{unauthorized ? t.unauthorizedTitle : notFound ? t.notFoundTitle : t.failedTitle}</p>
-      <p className="text-sm text-text-secondary">
-        {unauthorized ? t.unauthorizedText : notFound ? t.notFoundText : t.failedText}
-      </p>
+      <span aria-hidden className="flex size-14 items-center justify-center rounded-full bg-white/[0.04] text-text-muted">
+        <Icon name={icon} size={24} />
+      </span>
+      <p className="text-base font-semibold">{title}</p>
+      <p className="text-sm text-text-secondary">{text}</p>
       {onRetry && !unauthorized && !notFound && (
-        <button onClick={onRetry} className="mt-2 rounded-lg bg-accent-brand px-4 py-2 text-sm font-semibold">
+        <button onClick={onRetry} className="mt-2 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-semibold transition hover:bg-white/[0.1]">
           {messages().common.tryAgain}
         </button>
       )}

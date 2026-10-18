@@ -280,6 +280,10 @@ export type ScoresGameMember = {
 };
 
 export type ScoresGameDetails = Omit<ScoresGame, 'homeCompetitor' | 'awayCompetitor'> & {
+  readonly bestOdds?: readonly {
+    readonly lineTypeId: number;
+    readonly options: readonly { readonly num: number; readonly rate?: { readonly decimal?: number } }[];
+  }[];
   readonly homeCompetitor: ScoresGameCompetitor;
   readonly awayCompetitor: ScoresGameCompetitor;
   readonly events?: readonly ScoresGameEvent[];

@@ -124,6 +124,45 @@ describe('toDashboardStats()', () => {
 });
 
 describe('toDashboardGame()', () => {
+  const bestOdds = [
+    { lineTypeId: 1, options: [{ num: 1, rate: { decimal: 2 } }, { num: 2, rate: { decimal: 3 } }, { num: 3, rate: { decimal: 4 } }] },
+  ];
+
+  test.each([2, 3])('should normalize home and away win probabilities for status %s including the draw', (statusGroup) => {
+    const game = toDashboardGame({ game: baseGame, details: { ...details, statusGroup, bestOdds }, stats: null, favoriteTeamIds: new Set(), lang: 'en' });
+    expect(game.home.winProbability).toBeCloseTo(46.153846);
+    expect(game.away.winProbability).toBeCloseTo(23.076923);
+  });
+
+  test.each([4, 5])('should omit win probabilities for status %s', (statusGroup) => {
+    const game = toDashboardGame({ game: baseGame, details: { ...details, statusGroup, bestOdds }, stats: null, favoriteTeamIds: new Set(), lang: 'en' });
+    expect(game.home.winProbability).toEqual(undefined);
+    expect(game.away.winProbability).toEqual(undefined);
+  });
+
+  test.each([
+    { name: 'missing markets', markets: undefined },
+    { name: 'another market', markets: [{ ...bestOdds[0], lineTypeId: 3 }] },
+    { name: 'missing draw', markets: [{ lineTypeId: 1, options: [bestOdds[0].options[0], bestOdds[0].options[2]] }] },
+    ...[0, 1, -2, NaN, Infinity].map((decimal) => ({ name: `invalid rate ${decimal}`, markets: [{ lineTypeId: 1, options: [...bestOdds[0].options.slice(0, 2), { num: 3, rate: { decimal } }] }] })),
+  ])('should omit probabilities with $name', ({ markets }) => {
+    const game = toDashboardGame({ game: baseGame, details: { ...details, bestOdds: markets }, stats: null, favoriteTeamIds: new Set(), lang: 'en' });
+    expect(game.home.winProbability).toEqual(undefined);
+    expect(game.away.winProbability).toEqual(undefined);
+  });
+
+  it('should match outcomes by number rather than their order', () => {
+    const game = toDashboardGame({
+      game: baseGame,
+      details: { ...details, bestOdds: [{ lineTypeId: 1, options: [...bestOdds[0].options].reverse() }] },
+      stats: null,
+      favoriteTeamIds: new Set(),
+      lang: 'en',
+    });
+    expect(game.home.winProbability).toBeCloseTo(46.153846);
+    expect(game.away.winProbability).toBeCloseTo(23.076923);
+  });
+
   it('should build a live game with stats and favorite flag', () => {
     const game = toDashboardGame({ game: baseGame, details, stats, favoriteTeamIds: new Set([9]), lang: 'en' });
     expect(game.status).toEqual('live');

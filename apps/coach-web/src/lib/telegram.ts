@@ -13,6 +13,7 @@ type TgWebApp = {
   };
   HapticFeedback?: {
     selectionChanged(): void;
+    notificationOccurred(type: 'error' | 'success' | 'warning'): void;
   };
 };
 
@@ -65,4 +66,17 @@ export function hapticSelect(): void {
   } catch {
     // haptics are best-effort
   }
+}
+
+// Telegram's success haptic inside the mini app; a short vibration pattern in plain browsers that support it.
+export function hapticSuccess(): void {
+  if (supports('6.1')) {
+    try {
+      getWebApp()?.HapticFeedback?.notificationOccurred('success');
+      return;
+    } catch {
+      // fall through to the browser vibration
+    }
+  }
+  navigator.vibrate?.([40, 60, 40]);
 }

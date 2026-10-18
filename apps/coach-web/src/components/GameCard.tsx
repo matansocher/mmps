@@ -1,10 +1,10 @@
-import { useNow } from '../hooks/useNow';
 import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
 import { messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
-import type { DashboardStandingRow, FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
-import { ChannelLogo } from './ChannelLogo';
+import type { DashboardStandingRow, FormEntry, Game, GameEvent, Team } from '../types';
+import { HotBadge, PreMatchButton } from './CardActions';
+import { ChannelBadge } from './ChannelBadge';
 import { CompetitionLogo } from './CompetitionLogo';
 import { GameHeadlineLine } from './GameHeadline';
 import { Icon } from './Icon';
@@ -15,7 +15,6 @@ import { FormBadge } from './ui';
 const MAX_SCORERS = 3;
 const REGULATION_MINUTES = 90;
 const EXTRA_TIME_MINUTES = 120;
-const COUNTDOWN_WINDOW_MS = 24 * 60 * 60_000;
 
 type ScorerLine = { readonly name: string; readonly minutes: string[] };
 
@@ -32,13 +31,28 @@ function scorerLines(events: readonly GameEvent[]): ScorerLine[] {
   return [...byPlayer.values()];
 }
 
+export function WinProbability({ team, status }: { readonly team: Team; readonly status: Game['status'] }) {
+  const t = useT().card;
+  if ((status !== 'scheduled' && status !== 'live') || team.winProbability === undefined) return null;
+  const percent = Math.round(team.winProbability);
+  const label = t.winProbability(team.name, percent);
+  return (
+    <span className="score-font shrink-0 text-[11px] font-normal text-text-secondary" title={label} aria-label={label} dir="ltr">
+      {t.winPercentage(percent)}
+    </span>
+  );
+}
+
 function TeamRow({ team, game, isWinner, form }: { readonly team: Team; readonly game: Game; readonly isWinner: boolean; readonly form?: readonly FormEntry[] }) {
   const showScore = game.status !== 'scheduled' && team.score !== null;
   const dim = game.status === 'finished' && !isWinner;
   return (
     <div className="flex items-center gap-3">
       <TeamLogo teamId={team.id} name={team.name} size={24} />
-      <span className={`min-w-0 flex-1 truncate text-[15px] tracking-[-0.01em] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
+      <span className="flex min-w-0 flex-1 items-baseline gap-1">
+        <span className={`min-w-0 truncate text-[15px] tracking-[-0.01em] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
+        <WinProbability team={team} status={game.status} />
+      </span>
       {form && form.length > 0 && <FormPills entries={form} />}
       {showScore && <span className={`score-font min-w-6 text-end text-[22px] leading-none tracking-[-0.02em] ${dim ? 'text-text-muted' : 'text-text-primary'}`}>{team.score}</span>}
     </div>
@@ -95,7 +109,7 @@ function StatusBadge({ game }: { readonly game: Game }) {
     return (
       <span className="flex h-6 items-center gap-1.5 rounded-full bg-accent-live/12 px-2.5 text-xs font-bold text-accent-live">
         <LiveDot />
-        <span className="score-font ltr-num">{game.minuteDisplay || game.statusText || t.common.live}</span>
+        <span className="live-minute score-font ltr-num">{game.minuteDisplay || game.statusText || t.common.live}</span>
       </span>
     );
   }
@@ -140,7 +154,7 @@ function MatchTimeline({ game }: { readonly game: Game }) {
       <TimelineLane events={events.filter((e) => e.side === 'home')} scale={scale} side="top" />
       <span />
       <div className="relative my-1 h-[3px] rounded-full bg-white/[0.08]">
-        <div className="h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
+        <div className="live-progress h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
         <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ insetInlineStart: `${(45 / scale) * 100}%` }} aria-hidden />
       </div>
       <TeamLogo teamId={game.away.id} name={game.away.name} size={14} />
@@ -181,7 +195,7 @@ function StandingLine({ team, row }: { readonly team: Team; readonly row: Dashbo
 }
 
 // Both teams' rows from the league table, ordered by position.
-function StandingsSnippet({ game }: { readonly game: Game }) {
+export function StandingsSnippet({ game }: { readonly game: Game }) {
   const t = useT().standings;
   if (!game.standings) return null;
   const rows = [
@@ -214,31 +228,19 @@ function StandingsSnippet({ game }: { readonly game: Game }) {
   );
 }
 
-function formatCountdown(ms: number): string | null {
-  if (ms <= 0 || ms > COUNTDOWN_WINDOW_MS) return null;
-  const totalMinutes = Math.ceil(ms / 60_000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return messages().card.countdown(hours, minutes);
-}
-
-function Countdown({ startTime }: { readonly startTime: string }) {
-  const now = useNow(60_000);
-  const text = formatCountdown(new Date(startTime).getTime() - now);
-  return text ? <span className="score-font text-[11px] text-text-muted">{text}</span> : null;
-}
-
 export function openGame(id: number) {
   hapticSelect();
   navigate({ name: 'game', id });
 }
 
-function HeaderChannel({ channels }: { readonly channels: readonly TvChannel[] }) {
+function GameFooter({ game }: { readonly game: Game }) {
   return (
-    <span className="flex shrink-0 items-center gap-1" title={channels.map((c) => c.name).join(', ')}>
-      <ChannelLogo channel={channels[0]} height={14} />
-      {channels.length > 1 && <span className="text-[10px] font-medium text-text-muted">+{channels.length - 1}</span>}
-    </span>
+    <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
+      <div className="flex min-w-0 flex-1">
+        <ChannelBadge channels={game.channels} />
+      </div>
+      <StatusBadge game={game} />
+    </div>
   );
 }
 
@@ -252,7 +254,7 @@ export function GameCard({ game }: { readonly game: Game }) {
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
+      className="game-card group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
     >
       <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
@@ -260,10 +262,13 @@ export function GameCard({ game }: { readonly game: Game }) {
           <span className="truncate">{game.competitionName}</span>
           {game.isFavorite && <Icon name="star" size={12} className="text-accent-draw" title={t.common.favouriteTeam} />}
         </span>
-        <span className="flex shrink-0 items-center gap-2">
-          {game.channels.length > 0 && <HeaderChannel channels={game.channels} />}
-          {game.status === 'scheduled' && <Countdown startTime={game.startTime} />}
-          <StatusBadge game={game} />
+        <span className="flex min-w-0 items-center justify-end gap-2">
+          {game.status === 'live' && <ChannelBadge channels={game.channels} />}
+          <HotBadge game={game} />
+          {game.status !== 'scheduled' && <StatusBadge game={game} />}
+          <span className="-me-1.5 flex items-center empty:hidden">
+            <PreMatchButton game={game} />
+          </span>
         </span>
       </div>
       {game.status === 'scheduled' ? (
@@ -279,15 +284,14 @@ export function GameCard({ game }: { readonly game: Game }) {
           <KeyEvents game={game} side="away" />
         </div>
       )}
-      {/* Pinned to the bottom so it lines up across a stretched grid row. */}
       {game.status === 'live' && (
         <div className="mt-auto">
           <MatchTimeline game={game} />
         </div>
       )}
-      {game.status === 'scheduled' && game.standings && (
+      {game.status === 'scheduled' && (
         <div className="mt-auto">
-          <StandingsSnippet game={game} />
+          <GameFooter game={game} />
         </div>
       )}
       {game.status === 'finished' && game.headline && (

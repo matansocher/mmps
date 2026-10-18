@@ -96,7 +96,61 @@
   }
 }
 
+/* Stale data after a failed refresh: keep it visible but quieter, and freeze the live cues. */
+[data-stale] .game-card {
+  opacity: 0.92;
+  filter: saturate(0.55);
+}
+[data-stale] .animate-live-pulse {
+  animation: none;
+  background-color: var(--color-text-muted);
+}
+[data-stale] .live-minute {
+  color: var(--color-text-secondary);
+}
+[data-stale] .live-progress {
+  background-color: var(--color-text-muted);
+}
+
+.banner-in {
+  animation: banner-in 0.25s ease-out;
+}
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.backdrop-in {
+  animation: notification-fade 0.2s ease-out;
+}
+.sheet-in {
+  animation: sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@media (min-width: 48rem) {
+  .sheet-in {
+    animation: dialog-in 0.2s ease-out;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .banner-in,
+  .sheet-in,
+  .backdrop-in {
+    animation: notification-fade 0.15s linear;
+  }
   /* Keep the live dot and refresh spinner as static state, and swap slides and lifts for instant changes. */
   .animate-live-pulse,
   .animate-spin {

@@ -1,6 +1,6 @@
 import { messages } from '../lib/i18n';
 import { type ReactNode, useEffect, useState } from 'react';
-import { ChannelLogo } from '../components/ChannelLogo';
+import { ChannelBadge } from '../components/ChannelBadge';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { EventsTimeline } from '../components/EventsTimeline';
 import { HeadToHeadView } from '../components/HeadToHeadView';
@@ -50,11 +50,9 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         {formatLongDate(game.startTime)} · {formatKickoff(game.startTime)}
       </InfoRow>
       {game.channels.length > 0 && (
-        <InfoRow icon={<Icon name="tv" size={16} className="text-text-muted" />} label={messages().game.tv}>
-          <span className="flex flex-wrap items-center gap-1.5">
-            {game.channels.map((c) => (
-              <ChannelLogo key={c.id} channel={c} height={16} />
-            ))}
+        <InfoRow icon={null} label={messages().game.tv}>
+          <span className="flex min-w-0">
+            <ChannelBadge channels={game.channels} />
           </span>
         </InfoRow>
       )}

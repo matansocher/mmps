@@ -5,6 +5,7 @@ export type StatPair = readonly [string, string];
 export type FormResult = 'W' | 'D' | 'L';
 
 export type Team = {
+  readonly winProbability?: number;
   readonly id: number;
   readonly name: string;
   readonly shortName?: string;

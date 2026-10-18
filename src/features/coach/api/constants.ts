@@ -19,6 +19,8 @@ export const DEFAULT_COMPETITION_IDS: number[] = [
 export const MAX_FAVORITE_TEAMS = 30;
 
 export const LIVE_DATA_TTL_SEC = 15;
+// 365Scores country whose feed carries in-play odds (England, Bet365).
+export const LIVE_ODDS_COUNTRY_ID = 1;
 
 export const DASHBOARD_LANGUAGES: readonly DashboardLanguage[] = ['he', 'en'];
 export const DEFAULT_LANGUAGE: DashboardLanguage = 'he';

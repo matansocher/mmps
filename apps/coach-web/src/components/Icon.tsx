@@ -25,7 +25,14 @@ export type IconName =
   | 'stadium'
   | 'moon'
   | 'trendUp'
-  | 'trendDown';
+  | 'trendDown'
+  | 'flame'
+  | 'info'
+  | 'wifiOff'
+  | 'serverOff'
+  | 'lock'
+  | 'search'
+  | 'check';
 
 // 24×24 grid, 1.75 stroke, currentColor — one vocabulary across the app.
 const PATHS: Record<IconName, ReactNode> = {
@@ -119,6 +126,29 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
+  flame: <path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.3 2.3-5.4 3.6-7.9.4 1.6 1.2 2.7 2.3 3.3.2-2.7 1.4-5.2 3.4-7.2.2 2.8 1.5 4.6 2.7 6.3 1.1 1.5 1.9 3.1 1.9 5.2 0 3.8-3.1 6.5-7.4 6.5zm0 0c-1.7 0-2.9-1.2-2.9-2.8 0-1.5 1.1-2.4 1.8-3.6.3.8.8 1.3 1.4 1.5.2-1 .7-1.9 1.4-2.6.3 1.2 1.2 2.1 1.2 3.5 0 2.4-1.5 4-2.9 4z" />,
+  info: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.5M12 7.75h.01" strokeWidth="2.25" />
+    </>
+  ),
+  wifiOff: <path d="M3 3l18 18M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 4.2-2.5M14.8 10.4A10 10 0 0 1 19 12.9M2 9.4a15 15 0 0 1 4-2.6M10.5 5.6A15 15 0 0 1 22 9.4M12 20h.01" />,
+  serverOff: (
+    <>
+      <rect x="3.5" y="4" width="17" height="6.5" rx="2" />
+      <rect x="3.5" y="13.5" width="17" height="6.5" rx="2" />
+      <path d="M7 7.25h.01M7 16.75h.01M11 16.75h6" strokeWidth="2" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5" y="10.5" width="14" height="10" rx="2.5" />
+      <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2" />
+    </>
+  ),
+  search: <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM16 16l4.5 4.5" />,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
 };
 
 type Props = { readonly name: IconName; readonly size?: number; readonly className?: string; readonly title?: string };
