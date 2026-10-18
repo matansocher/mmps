@@ -234,12 +234,18 @@ export function openGame(id: number) {
   navigate({ name: 'game', id });
 }
 
-function HeaderChannel({ channels }: { readonly channels: readonly TvChannel[] }) {
+function ChannelFooter({ channels }: { readonly channels: readonly TvChannel[] }) {
+  const t = useT();
   return (
-    <span className="flex shrink-0 items-center gap-1" title={channels.map((c) => c.name).join(', ')}>
-      <ChannelLogo channel={channels[0]} height={14} />
-      {channels.length > 1 && <span className="text-[10px] font-medium text-text-muted">+{channels.length - 1}</span>}
-    </span>
+    <div className="flex items-center gap-2 border-t border-white/[0.06] pt-3 text-[11px] text-text-muted">
+      <Icon name="tv" size={13} />
+      <span className="sr-only">{t.game.tv}</span>
+      <span className="flex min-w-0 flex-wrap items-center gap-2">
+        {channels.map((channel) => (
+          <ChannelLogo key={channel.id} channel={channel} height={16} />
+        ))}
+      </span>
+    </div>
   );
 }
 
@@ -262,7 +268,6 @@ export function GameCard({ game }: { readonly game: Game }) {
           {game.isFavorite && <Icon name="star" size={12} className="text-accent-draw" title={t.common.favouriteTeam} />}
         </span>
         <span className="flex shrink-0 items-center gap-2">
-          {game.channels.length > 0 && <HeaderChannel channels={game.channels} />}
           {game.status === 'scheduled' && <Countdown startTime={game.startTime} />}
           <HotBadge game={game} />
           <StatusBadge game={game} />
@@ -291,9 +296,9 @@ export function GameCard({ game }: { readonly game: Game }) {
           <MatchTimeline game={game} />
         </div>
       )}
-      {game.status === 'scheduled' && game.standings && (
+      {game.status === 'scheduled' && game.channels.length > 0 && (
         <div className="mt-auto">
-          <StandingsSnippet game={game} />
+          <ChannelFooter channels={game.channels} />
         </div>
       )}
       {game.status === 'finished' && game.headline && (
