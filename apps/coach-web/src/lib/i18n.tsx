@@ -65,11 +65,6 @@ const en = {
     pin: (teams: string) => `Pin ${teams} to the top`,
     unpin: (teams: string) => `Unpin ${teams}`,
     pinLimit: (max: number) => `You can pin up to ${max} games. Unpin one to make room.`,
-    heatmap: "Today's kick-offs by hour",
-    heatmapSlot: (range: string, games: number, live: number) => `${range}: ${games === 1 ? '1 game' : `${games} games`}${live ? `, ${live} live` : ''}`,
-    nowMarker: 'Now',
-    showingSlot: (range: string) => `Games playing ${range}`,
-    clearSlot: 'Show all games',
     hot: {
       label: (reason: string) => `Hot game: ${reason}`,
       reasons: { lateDrama: 'Late drama', comeback: 'Comeback', goalFest: 'Goal fest', redCardTension: 'Red card drama' } as Record<HotReason, string>,
@@ -328,11 +323,6 @@ const he: Messages = {
     pin: (teams) => `הצמדת ${teams} לראש הלוח`,
     unpin: (teams) => `ביטול הצמדה של ${teams}`,
     pinLimit: (max) => `אפשר להצמיד עד ${max} משחקים. בטלו הצמדה כדי לפנות מקום.`,
-    heatmap: 'שעות הפתיחה של היום',
-    heatmapSlot: (range, games, live) => `${range}: ${games === 1 ? 'משחק אחד' : `${games} משחקים`}${live ? `, ${live} בלייב` : ''}`,
-    nowMarker: 'עכשיו',
-    showingSlot: (range) => `משחקים בשעות ${range}`,
-    clearSlot: 'הצגת כל המשחקים',
     hot: {
       label: (reason) => `משחק לוהט: ${reason}`,
       reasons: { lateDrama: 'דרמה בסיום', comeback: 'מהפך', goalFest: 'חגיגת שערים', redCardTension: 'דרמת כרטיס אדום' },

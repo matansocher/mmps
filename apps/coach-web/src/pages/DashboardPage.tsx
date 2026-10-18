@@ -4,7 +4,6 @@ import { GameCard, GameCardSkeleton } from '../components/GameCard';
 import { GameRow } from '../components/GameRow';
 import { Icon, type IconName } from '../components/Icon';
 import { LiveDot } from '../components/LiveDot';
-import { MatchdayHeatmap, slotRange } from '../components/MatchdayHeatmap';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
 import { PreMatchModal } from '../components/PreMatchModal';
@@ -13,7 +12,6 @@ import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatClock, formatDateTitle } from '../lib/format';
-import { isInSlot } from '../lib/heatmap';
 import { leagueColor, leagueTextColor } from '../lib/league-themes';
 import { type Messages, useT } from '../lib/i18n';
 import { MAX_PINS, readPins, togglePin, writePins } from '../lib/pins';
@@ -201,7 +199,6 @@ export function DashboardPage() {
   const { data, loading, refreshing, errorStatus, refresh, lastSuccessAt, nextRetryAt, online, recovered } = useDashboard();
   const t = useT();
   const [competitionFilter, setCompetitionFilter] = useState<number | typeof FAVORITES_FILTER | null>(null);
-  const [slotFilter, setSlotFilter] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
   const [pins, setPins] = useState<{ date: string | null; ids: readonly number[] }>({ date: null, ids: [] });
   const [pinLimitShown, setPinLimitShown] = useState(false);
@@ -267,23 +264,17 @@ export function DashboardPage() {
   const filterAvailable = competitionFilter === FAVORITES_FILTER ? favoriteGames.length > 0 : competitions.some((c) => c.id === competitionFilter);
   const activeFilter = competitionFilter !== null && filterAvailable ? competitionFilter : null;
   const visibleGames = activeFilter === null ? games : activeFilter === FAVORITES_FILTER ? favoriteGames : games.filter((g) => g.competitionId === activeFilter);
-  const activeSlot = slotFilter !== null && visibleGames.some((g) => isInSlot(g, slotFilter)) ? slotFilter : null;
-  const slotGames = activeSlot === null ? visibleGames : visibleGames.filter((g) => isInSlot(g, activeSlot));
   // Pinned games always lead the page, whatever filter is on, and leave their usual section.
   const pinnedGames = pinnedIds.map((id) => games.find((g) => g.id === id)).filter((g): g is Game => !!g);
   const sections = [
     ...(pinnedGames.length ? [{ key: 'pinned', title: t.dashboard.sections.pinned, games: pinnedGames, pinned: true }] : []),
     ...buildSections(
-      slotGames.filter((g) => !pinnedIds.includes(g.id)),
+      visibleGames.filter((g) => !pinnedIds.includes(g.id)),
       t.dashboard.sections,
     ),
   ];
   const stale = errorStatus !== null && !!data;
 
-  const selectSlot = (slot: number | null) => {
-    hapticSelect();
-    setSlotFilter(slot);
-  };
   const liveCount = games.filter((g) => g.status === 'live').length;
 
   return (
@@ -362,24 +353,6 @@ export function DashboardPage() {
         <CardActionsContext.Provider value={cardActions}>
         <RefreshBanner failed={stale} online={online} refreshing={refreshing} lastSuccessAt={lastSuccessAt} nextRetryAt={nextRetryAt} recovered={recovered} onRetry={refresh} />
         <main data-stale={stale || undefined} className="mx-auto flex max-w-[1500px] flex-col gap-8 px-4 pt-5">
-          {!loading && visibleGames.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <MatchdayHeatmap games={visibleGames} activeSlot={activeSlot} onSelect={selectSlot} />
-              {activeSlot !== null && (
-                <div className="flex items-center gap-2 text-xs text-text-secondary">
-                  <span>{t.dashboard.showingSlot(slotRange(activeSlot))}</span>
-                  <button
-                    type="button"
-                    onClick={() => selectSlot(null)}
-                    className="flex items-center gap-1 rounded-full bg-white/[0.06] px-2.5 py-1 font-semibold text-text-primary transition hover:bg-white/[0.1]"
-                  >
-                    <Icon name="close" size={12} />
-                    {t.dashboard.clearSlot}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
           {loading && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 6 }, (_, i) => (
