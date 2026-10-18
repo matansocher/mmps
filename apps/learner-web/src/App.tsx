@@ -11,6 +11,9 @@ import { BrowsePage } from './pages/BrowsePage';
 import { QuizPage } from './pages/QuizPage';
 import { ReviewPage } from './pages/ReviewPage';
 import { KnowledgeMapPage } from './pages/KnowledgeMapPage';
+import { PracticeChatPage } from './pages/PracticeChatPage';
+import { PracticeHistoryPage } from './pages/PracticeHistoryPage';
+import { PracticeSetupPage } from './pages/PracticeSetupPage';
 import { ScenarioPage } from './pages/ScenarioPage';
 import { SparkPage } from './pages/SparkPage';
 import { TodayPage } from './pages/TodayPage';
@@ -78,6 +81,9 @@ function Shell() {
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/map" element={<KnowledgeMapPage />} />
           <Route path="/spark" element={<SparkPage />} />
+          <Route path="/practice" element={<PracticeSetupPage />} />
+          <Route path="/practice/history" element={<PracticeHistoryPage />} />
+          <Route path="/practice/:attemptId" element={<PracticeChatPage />} />
           <Route path="/bite/:biteId" element={<BitePage />} />
           <Route path="/quiz/:biteId" element={<QuizPage />} />
           <Route path="/scenario/:biteId" element={<ScenarioPage />} />

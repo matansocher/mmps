@@ -8,4 +8,5 @@ export { createImage } from './utils/create-image';
 export { generateEmbedding } from './utils/generate-embedding';
 export { getChatCompletion } from './utils/get-chat-completion';
 export { getTranscriptFromAudio } from './utils/get-transcript-from-audio';
+export { getTranscriptFromBuffer } from './utils/get-transcript-from-buffer';
 export { streamResponse } from './utils/stream-response';
