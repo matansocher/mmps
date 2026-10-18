@@ -243,7 +243,13 @@ export function DashboardPage() {
           data ? (
             <>
               {formatDateTitle(data.date)} ·{' '}
-              <span className="whitespace-nowrap">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                {errorStatus === null && (
+                  <span className="relative inline-flex size-2" role="img" aria-label={t.dashboard.liveData} title={t.dashboard.liveData}>
+                    <span className="absolute inset-0 animate-ping rounded-full bg-accent-live/60 motion-reduce:hidden" />
+                    <span className="relative size-2 rounded-full bg-accent-live" />
+                  </span>
+                )}
                 {t.dashboard.updated(formatClock(data.updatedAt))} · <TimeAgo iso={data.updatedAt} />
               </span>
             </>

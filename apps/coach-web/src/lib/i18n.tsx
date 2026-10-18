@@ -51,6 +51,7 @@ const en = {
   dashboard: {
     title: 'Live',
     updated: (time: string) => `updated ${time}`,
+    liveData: 'Live data',
     listView: 'List view',
     cardView: 'Card view',
     viewMode: 'View',
@@ -269,6 +270,7 @@ const he: Messages = {
   dashboard: {
     title: 'לייב',
     updated: (time) => `עודכן ב-${time}`,
+    liveData: 'נתונים חיים',
     listView: 'תצוגת רשימה',
     cardView: 'תצוגת כרטיסים',
     viewMode: 'תצוגה',
