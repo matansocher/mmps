@@ -182,7 +182,7 @@ function StandingLine({ team, row }: { readonly team: Team; readonly row: Dashbo
 }
 
 // Both teams' rows from the league table, ordered by position.
-function StandingsSnippet({ game }: { readonly game: Game }) {
+export function StandingsSnippet({ game }: { readonly game: Game }) {
   const t = useT().standings;
   if (!game.standings) return null;
   const rows = [

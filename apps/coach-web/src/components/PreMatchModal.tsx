@@ -6,7 +6,7 @@ import { formatKickoff, formatLongDate, formatShortDate } from '../lib/format';
 import { useT } from '../lib/i18n';
 import type { FormResult, Game, GameDetail, GameSummary, LineupPlayer, Team } from '../types';
 import { ChannelLogo } from './ChannelLogo';
-import { openGame } from './GameCard';
+import { openGame, StandingsSnippet } from './GameCard';
 import { Icon } from './Icon';
 import { TeamLogo } from './TeamLogo';
 import { FormBadge, ForwardArrow } from './ui';
@@ -105,15 +105,7 @@ function Content({ game, detail }: { readonly game: Game; readonly detail: GameD
           ))}
         </Block>
       )}
-      {standings && (
-        <Block title={p.table}>
-          {sides.map(({ side, team }) => (
-            <TeamLine key={side} team={team}>
-              <span className="text-xs text-text-secondary tabular-nums">{p.position(standings[side].position, standings[side].points)}</span>
-            </TeamLine>
-          ))}
-        </Block>
-      )}
+      {standings && <StandingsSnippet game={{ ...game, standings }} />}
       <Block title={p.h2h}>
         {total > 0 && h2h ? (
           <div className="flex flex-col gap-1.5">
