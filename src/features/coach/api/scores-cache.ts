@@ -2,7 +2,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { getGameStats, getGameWithEvents, getHeadToHead, getStandings } from '@services/scores-365';
 import type { ScoresGameDetails, ScoresGameStat, ScoresStandings } from '@services/scores-365';
 import type { DashboardLanguage } from '@shared/coach';
-import { LANGUAGE_IDS, LIVE_DATA_TTL_SEC } from './constants';
+import { LANGUAGE_IDS, LIVE_DATA_TTL_SEC, LIVE_ODDS_COUNTRY_ID } from './constants';
 import { toHeadToHead } from './detail-transformers';
 import { classifyGameStatus } from './transformers';
 import { TtlCache } from './ttl-cache';
@@ -12,6 +12,7 @@ const LIVE_TTL_MS = LIVE_DATA_TTL_SEC * 1000;
 const STATIC_TTL_MS = 10 * 60_000;
 
 const gameCache = new TtlCache<ScoresGameDetails | null>();
+const liveOddsCache = new TtlCache<ScoresGameDetails['bestOdds'] | null>();
 const statsCache = new TtlCache<ScoresGameStat[]>();
 const headToHeadCache = new TtlCache<HeadToHead | null>();
 const standingsCache = new TtlCache<ScoresStandings | null>();
@@ -45,6 +46,16 @@ export async function getCachedGameDetails(gameId: number, lang: DashboardLangua
   const cached = gameCache.peek(key);
   if (cached && expectedStatus && classifyGameStatus(cached.statusGroup) !== expectedStatus) gameCache.delete(key);
   return gameCache.get(key, ttlForGame, () => getGameWithEvents(gameId, LANGUAGE_IDS[lang]));
+}
+
+// Israeli bookmakers offer no in-play odds, so live games read the 1X2 market from another country's feed.
+export async function getCachedLiveOdds(gameId: number): Promise<ScoresGameDetails['bestOdds'] | null> {
+  return liveOddsCache
+    .get(`${gameId}`, LIVE_TTL_MS, async () => (await getGameWithEvents(gameId, LANGUAGE_IDS.en, LIVE_ODDS_COUNTRY_ID))?.bestOdds ?? null)
+    .catch((err) => {
+      logger.warn(`Failed to load live odds ${gameId}: ${getErrorMessage(err)}`);
+      return null;
+    });
 }
 
 export async function getCachedGameStats(gameId: number, status: DashboardGameStatus, lang: DashboardLanguage): Promise<ScoresGameStat[]> {

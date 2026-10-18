@@ -5,6 +5,7 @@ export type DashboardSide = 'home' | 'away';
 export type DashboardStatPair = readonly [string, string];
 
 export type DashboardTeam = {
+  readonly winProbability?: number;
   readonly id: number;
   readonly name: string;
   readonly shortName?: string;

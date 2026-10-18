@@ -8,7 +8,7 @@ import type { DashboardLanguage, DashboardPreferences, DashboardPreferencesUpdat
 import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_LANGUAGE, LANGUAGE_IDS, LIVE_DATA_TTL_SEC, SEASON_GAMES } from './constants';
 import { toDashboardForm, toDashboardStandings } from './detail-transformers';
 import { getGameHeadline } from './game-headline';
-import { getCachedCompetitionTeamIds, getCachedGameDetails, getCachedGameStats, getCachedHeadToHead, getCachedStandings } from './scores-cache';
+import { getCachedCompetitionTeamIds, getCachedGameDetails, getCachedGameStats, getCachedHeadToHead, getCachedLiveOdds, getCachedStandings } from './scores-cache';
 import { classifyGameStatus, sortDashboardGames, toDashboardGame } from './transformers';
 import { TtlCache } from './ttl-cache';
 import type { CompetitionOption, DashboardForm, DashboardPreferencesDto, DashboardResponse, DashboardStandings, GameHeadline, TeamOption } from './types';
@@ -142,7 +142,7 @@ export class CoachDashboardService {
   // Every game needs its details for the TV channels; live games need stats and upcoming ones recent form.
   private async enrichGame(game: ScoresGame, lang: DashboardLanguage): Promise<EnrichedGame> {
     const status = classifyGameStatus(game.statusGroup);
-    const [details, stats, headToHead] = await Promise.all([
+    const [baseDetails, stats, headToHead, liveOdds] = await Promise.all([
       getCachedGameDetails(game.id, lang, status).catch((err) => {
         this.logger.warn(`Failed to load game ${game.id}: ${getErrorMessage(err)}`);
         return null;
@@ -154,7 +154,9 @@ export class CoachDashboardService {
           })
         : Promise.resolve(null),
       status === 'scheduled' ? getCachedHeadToHead(game.id, lang) : Promise.resolve(null),
+      status === 'live' ? getCachedLiveOdds(game.id) : Promise.resolve(null),
     ]);
+    const details = baseDetails && !baseDetails.bestOdds?.length && liveOdds?.length ? { ...baseDetails, bestOdds: liveOdds } : baseDetails;
     const form = toDashboardForm(headToHead, game.homeCompetitor.id, game.awayCompetitor.id);
     const headline = status === 'finished' ? await this.getHeadline(game, details, lang) : undefined;
     const standings =

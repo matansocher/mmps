@@ -133,6 +133,7 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds, lang }:
   const status = classifyGameStatus(source.statusGroup);
   const home = toTeam(source.homeCompetitor, status);
   const away = toTeam(source.awayCompetitor, status);
+  const probabilities = status === 'scheduled' || status === 'live' ? winProbabilities(details) : undefined;
   const gameStats = status === 'live' ? toDashboardStats(stats, home.id, away.id) : undefined;
   return {
     id: game.id,
@@ -143,8 +144,8 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds, lang }:
     statusText: source.shortStatusText || source.statusText || '',
     ...(status === 'live' && source.gameTimeDisplay ? { minuteDisplay: source.gameTimeDisplay } : {}),
     ...(status === 'live' && typeof source.gameTime === 'number' && source.gameTime >= 0 ? { minute: source.gameTime } : {}),
-    home,
-    away,
+    home: { ...home, ...(probabilities ? { winProbability: probabilities.home } : {}) },
+    away: { ...away, ...(probabilities ? { winProbability: probabilities.away } : {}) },
     isFavorite: favoriteTeamIds.has(home.id) || favoriteTeamIds.has(away.id),
     channels: uniqueChannels(details?.tvNetworks ?? []),
     // The list response is refreshed more often than scheduled games' details, so either source confirming is enough.
@@ -152,6 +153,19 @@ export function toDashboardGame({ game, details, stats, favoriteTeamIds, lang }:
     events: toDashboardEvents(details, lang),
     ...(gameStats ? { stats: gameStats } : {}),
   };
+}
+
+function winProbabilities(details: ScoresGameDetails | null): { readonly home: number; readonly away: number } | undefined {
+  // Full-time 1X2 market: home, draw, away. Normalize all three inverse odds to remove the bookmaker margin.
+  for (const market of details?.bestOdds ?? []) {
+    if (market.lineTypeId !== 1 || market.options.length !== 3) continue;
+    const rates = [1, 2, 3].map((num) => market.options.find((option) => option.num === num)?.rate?.decimal);
+    if (!rates.every((rate): rate is number => typeof rate === 'number' && Number.isFinite(rate) && rate > 1)) continue;
+    const inverse = rates.map((rate) => 1 / rate);
+    const total = inverse.reduce((sum, value) => sum + value, 0);
+    return { home: (inverse[0] / total) * 100, away: (inverse[2] / total) * 100 };
+  }
+  return undefined;
 }
 
 export function sortDashboardGames(games: readonly DashboardGame[]): DashboardGame[] {
