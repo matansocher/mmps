@@ -3,7 +3,7 @@ import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/f
 import { messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
-import type { FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
+import type { DashboardStandingRow, FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
 import { ChannelLogo } from './ChannelLogo';
 import { CompetitionLogo } from './CompetitionLogo';
 import { GameHeadlineLine } from './GameHeadline';
@@ -32,13 +32,14 @@ function scorerLines(events: readonly GameEvent[]): ScorerLine[] {
   return [...byPlayer.values()];
 }
 
-function TeamRow({ team, game, isWinner }: { readonly team: Team; readonly game: Game; readonly isWinner: boolean }) {
+function TeamRow({ team, game, isWinner, form }: { readonly team: Team; readonly game: Game; readonly isWinner: boolean; readonly form?: readonly FormEntry[] }) {
   const showScore = game.status !== 'scheduled' && team.score !== null;
   const dim = game.status === 'finished' && !isWinner;
   return (
     <div className="flex items-center gap-3">
       <TeamLogo teamId={team.id} name={team.name} size={24} />
       <span className={`min-w-0 flex-1 truncate text-[15px] tracking-[-0.01em] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
+      {form && form.length > 0 && <FormPills entries={form} />}
       {showScore && <span className={`score-font min-w-6 text-end text-[22px] leading-none tracking-[-0.02em] ${dim ? 'text-text-muted' : 'text-text-primary'}`}>{team.score}</span>}
     </div>
   );
@@ -148,11 +149,10 @@ function MatchTimeline({ game }: { readonly game: Game }) {
   );
 }
 
-function FormPills({ entries, align }: { readonly entries: readonly FormEntry[]; readonly align: 'start' | 'end' }) {
+function FormPills({ entries }: { readonly entries: readonly FormEntry[] }) {
   const t = useT();
-  if (entries.length === 0) return <span className={`text-xs text-text-muted ${align === 'end' ? 'text-end' : ''}`}>—</span>;
   return (
-    <div className={`flex gap-1 ${align === 'end' ? 'justify-end' : ''}`}>
+    <div className="flex shrink-0 gap-1" role="group" aria-label={t.common.form}>
       {entries.map((entry, i) => (
         <span key={i} title={t.formTitle(entry.result, entry.score, entry.opponent)}>
           <FormBadge result={entry.result} />
@@ -162,14 +162,54 @@ function FormPills({ entries, align }: { readonly entries: readonly FormEntry[];
   );
 }
 
-function FormStrip({ game }: { readonly game: Game }) {
-  const t = useT();
-  if (!game.form || (game.form.home.length === 0 && game.form.away.length === 0)) return null;
+function StandingLine({ team, row }: { readonly team: Team; readonly row: DashboardStandingRow }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/[0.06] pt-3">
-      <FormPills entries={game.form.home} align="start" />
-      <span className="text-[11px] text-text-muted">{t.common.form}</span>
-      <FormPills entries={game.form.away} align="end" />
+    <>
+      <span role="cell" className="flex items-center gap-1.5">
+        <span className="h-3 w-[3px] rounded-full" style={{ backgroundColor: row.zoneColor ?? 'transparent' }} aria-hidden />
+        <span className="score-font w-4 text-center text-text-primary">{row.position}</span>
+      </span>
+      <span role="cell" className="flex min-w-0 items-center gap-1.5">
+        <TeamLogo teamId={team.id} name={team.name} size={14} />
+        <span className="truncate text-text-secondary">{team.shortName || team.name}</span>
+      </span>
+      <span role="cell" className="score-font text-center text-text-muted">{row.played}</span>
+      <span role="cell" className="score-font ltr-num text-center text-text-muted">{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</span>
+      <span role="cell" className="score-font text-center text-text-primary">{row.points}</span>
+    </>
+  );
+}
+
+// Both teams' rows from the league table, ordered by position.
+function StandingsSnippet({ game }: { readonly game: Game }) {
+  const t = useT().standings;
+  if (!game.standings) return null;
+  const rows = [
+    { team: game.home, row: game.standings.home },
+    { team: game.away, row: game.standings.away },
+  ].sort((a, b) => a.row.position - b.row.position);
+  return (
+    <div role="table" aria-label={t.title} className="grid grid-cols-[auto_minmax(0,1fr)_2rem_2.5rem_2rem] items-center gap-x-2 gap-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
+      <span role="row" className="contents text-[10px] font-medium text-text-muted">
+        <span role="columnheader" className="text-center">
+          #
+        </span>
+        <span role="columnheader">{t.team}</span>
+        <span role="columnheader" className="text-center">
+          {t.played}
+        </span>
+        <span role="columnheader" className="text-center">
+          {t.goalDiff}
+        </span>
+        <span role="columnheader" className="text-center">
+          {t.points}
+        </span>
+      </span>
+      {rows.map(({ team, row }) => (
+        <span role="row" key={team.id} className="contents">
+          <StandingLine team={team} row={row} />
+        </span>
+      ))}
     </div>
   );
 }
@@ -207,14 +247,14 @@ export function GameCard({ game }: { readonly game: Game }) {
   const awayScore = game.away.score ?? 0;
   const t = useT();
   return (
-    <article
+    <div
       role="link"
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
       className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
     >
-      <header className="flex h-6 items-center justify-between gap-3">
+      <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
           <span className="truncate">{game.competitionName}</span>
@@ -225,11 +265,11 @@ export function GameCard({ game }: { readonly game: Game }) {
           {game.status === 'scheduled' && <Countdown startTime={game.startTime} />}
           <StatusBadge game={game} />
         </span>
-      </header>
+      </div>
       {game.status === 'scheduled' ? (
         <div className="flex flex-col gap-2.5 py-1">
-          <TeamRow team={game.home} game={game} isWinner />
-          <TeamRow team={game.away} game={game} isWinner />
+          <TeamRow team={game.home} game={game} isWinner form={game.form?.home} />
+          <TeamRow team={game.away} game={game} isWinner form={game.form?.away} />
         </div>
       ) : (
         <div className="flex flex-col gap-1">
@@ -245,17 +285,17 @@ export function GameCard({ game }: { readonly game: Game }) {
           <MatchTimeline game={game} />
         </div>
       )}
+      {game.status === 'scheduled' && game.standings && (
+        <div className="mt-auto">
+          <StandingsSnippet game={game} />
+        </div>
+      )}
       {game.status === 'finished' && game.headline && (
         <div className="mt-auto">
           <GameHeadlineLine game={game} headline={game.headline} />
         </div>
       )}
-      {game.status === 'scheduled' && game.form && (
-        <div className="mt-auto">
-          <FormStrip game={game} />
-        </div>
-      )}
-    </article>
+    </div>
   );
 }
 

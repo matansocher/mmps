@@ -17,6 +17,7 @@ import type {
   DashboardForm,
   DashboardFormEntry,
   DashboardGame,
+  DashboardStandings,
   FormResult,
   GameDetailResponse,
   GameStatRow,
@@ -24,6 +25,7 @@ import type {
   HeadToHead,
   KnockoutStage,
   LineupPlayer,
+  Matchday,
   PlayerDetailResponse,
   SquadPlayer,
   StandingsTable,
@@ -237,6 +239,64 @@ export function toStandingsTables(standings: ScoresStandings | null): { tables: 
   const usedZones = new Set(standings.rows.map((r) => r.destinationNum));
   const zones = (standings.destinations ?? []).filter((d) => d.color && usedZones.has(d.num)).map((d) => ({ name: d.name, color: d.color }));
   return { tables, zones };
+}
+
+// Rows of both teams, only when they sit in the same table (so group-stage tables match and cups are skipped).
+export function toDashboardStandings(standings: ScoresStandings | null, homeId: number, awayId: number): DashboardStandings | undefined {
+  for (const table of toStandingsTables(standings).tables) {
+    const home = table.rows.find((r) => r.team.id === homeId);
+    const away = table.rows.find((r) => r.team.id === awayId);
+    if (home && away) {
+      const pick = (r: typeof home) => ({ position: r.position, played: r.played, points: r.points, goalDiff: r.goalsFor - r.goalsAgainst, ...(r.zoneColor ? { zoneColor: r.zoneColor } : {}) });
+      return { home: pick(home), away: pick(away) };
+    }
+  }
+  return undefined;
+}
+
+type RoundGames = { readonly roundNum: number; readonly games: ScoresGame[] };
+
+// Groups a competition's results + fixtures by round ("matchday") within the stage currently being played,
+// then returns the last fully played round, the in-progress round (if any) and the next round.
+export function toMatchdays(results: readonly ScoresGame[], fixtures: readonly ScoresGame[], lang: DashboardLanguage): Matchday[] {
+  const byId = new Map<number, ScoresGame>();
+  for (const game of [...results, ...fixtures]) if (game.roundNum != null && !byId.has(game.id)) byId.set(game.id, game);
+  const games = [...byId.values()];
+  if (!games.length) return [];
+
+  const started = games.filter((g) => classifyGameStatus(g.statusGroup) !== 'scheduled').sort((a, b) => b.startTime.localeCompare(a.startTime));
+  const reference = started[0] ?? [...games].sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
+  const sameStage = games.filter((g) => g.stageNum === reference.stageNum && g.seasonNum === reference.seasonNum);
+
+  const rounds = new Map<number, ScoresGame[]>();
+  for (const game of sameStage) rounds.set(game.roundNum, [...(rounds.get(game.roundNum) ?? []), game]);
+  const ordered: RoundGames[] = [...rounds.entries()].map(([roundNum, list]) => ({ roundNum, games: list })).sort((a, b) => a.roundNum - b.roundNum);
+
+  const isPlayed = (round: RoundGames) => round.games.every((g) => !['scheduled', 'live'].includes(classifyGameStatus(g.statusGroup)));
+  const hasStarted = (round: RoundGames) => round.games.some((g) => classifyGameStatus(g.statusGroup) !== 'scheduled');
+  const latestStartedIndex = ordered.map(hasStarted).lastIndexOf(true);
+
+  const picked: { round: RoundGames; kind: Matchday['kind'] }[] = [];
+  if (latestStartedIndex === -1) {
+    picked.push({ round: ordered[0], kind: 'next' });
+  } else {
+    const latest = ordered[latestStartedIndex];
+    if (isPlayed(latest)) {
+      picked.push({ round: latest, kind: 'previous' });
+    } else {
+      const previous = ordered[latestStartedIndex - 1];
+      if (previous && isPlayed(previous)) picked.push({ round: previous, kind: 'previous' });
+      picked.push({ round: latest, kind: 'current' });
+    }
+    const next = ordered[latestStartedIndex + 1];
+    if (next) picked.push({ round: next, kind: 'next' });
+  }
+
+  return picked.map(({ round, kind }) => ({
+    roundNum: round.roundNum,
+    kind,
+    games: [...round.games].sort((a, b) => a.startTime.localeCompare(b.startTime) || a.id - b.id).map((g) => toGameSummary(g, lang)),
+  }));
 }
 
 export function toKnockoutStages(brackets: readonly ScoresBracket[]): KnockoutStage[] {

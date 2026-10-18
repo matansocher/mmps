@@ -7,7 +7,7 @@
   --color-border-subtle: #1f2937;
   --color-text-primary: #ffffff;
   --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
+  --color-text-muted: #8290a4;
   --color-accent-live: #00d26a;
   --color-accent-red: #ff3b3b;
   --color-accent-win: #00e676;
@@ -41,12 +41,37 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+
+  /* One keyboard focus ring everywhere; mouse and touch clicks don't show it. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-brand);
+    outline-offset: 2px;
+  }
+
+  /* Inside clipped containers (truncated text, rounded lists) an outside ring gets cut off, so draw it inset. */
+  .truncate :focus-visible,
+  .overflow-hidden :focus-visible {
+    outline-offset: -2px;
+    border-radius: 4px;
+  }
+
+  /* Headings receive focus on navigation so screen readers announce the new page; no ring needed. */
+  h1:focus {
+    outline: none;
+  }
 }
 
 .score-font {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+:root {
+  --chip-fade-dir: right;
+}
+[dir='rtl'] {
+  --chip-fade-dir: left;
 }
 
 .no-scrollbar {
@@ -68,6 +93,32 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the live dot and refresh spinner as static state, and swap slides and lifts for instant changes. */
+  .animate-live-pulse,
+  .animate-spin {
+    animation: none;
+  }
+  .notification-in {
+    animation: notification-fade 0.15s linear;
+  }
+  *,
+  ::before,
+  ::after {
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  [class*='hover:-translate-y'] {
+    transform: none !important;
+  }
+}
+
+@keyframes notification-fade {
+  from {
+    opacity: 0;
   }
 }
 

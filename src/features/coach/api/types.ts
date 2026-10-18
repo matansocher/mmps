@@ -65,7 +65,13 @@ export type DashboardGame = {
   readonly stats?: DashboardStats;
   readonly form?: DashboardForm;
   readonly headline?: GameHeadline;
+  // Both teams' rows in the league table, for upcoming league games.
+  readonly standings?: DashboardStandings;
 };
+
+export type DashboardStandingRow = Pick<StandingsRow, 'position' | 'played' | 'points' | 'zoneColor'> & { readonly goalDiff: number };
+
+export type DashboardStandings = { readonly home: DashboardStandingRow; readonly away: DashboardStandingRow };
 
 export type GameHeadlineType = 'champions' | 'relegated' | 'top' | 'lostTop' | 'zoneIn' | 'zoneOut' | 'dangerIn' | 'dangerOut' | 'moveUp' | 'qualified';
 
@@ -81,7 +87,6 @@ export type DashboardPreferencesDto = {
   readonly competitionIds: number[];
   readonly favoriteTeams: DashboardFavoriteTeam[];
   readonly eventTypes: DashboardEventType[];
-  readonly refreshIntervalSec: number;
   readonly language: DashboardLanguage;
 };
 
@@ -246,6 +251,16 @@ export type CompetitionDetailResponse = {
   readonly tables: StandingsTable[];
   readonly zones: { readonly name: string; readonly color: string }[];
   readonly knockout: KnockoutStage[];
+  readonly matchdays: Matchday[];
+};
+
+// 'previous' = the last fully played round, 'current' = partly played, 'next' = not started yet.
+export type MatchdayKind = 'previous' | 'current' | 'next';
+
+export type Matchday = {
+  readonly roundNum: number;
+  readonly kind: MatchdayKind;
+  readonly games: GameSummary[];
 };
 
 export type ApiError = { readonly error: string };

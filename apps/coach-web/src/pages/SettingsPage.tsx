@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { CompetitionLogo } from '../components/CompetitionLogo';
+import { LanguageFlag } from '../components/LanguageFlag';
 import { PageHeader } from '../components/PageHeader';
 import { TeamLogo } from '../components/TeamLogo';
 import { Loading } from '../components/ui';
@@ -7,14 +8,12 @@ import { useDashboard } from '../hooks/useDashboard';
 import { api } from '../lib/api';
 import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
 import { LANGUAGE_NAMES, useLanguage, useT } from '../lib/i18n';
-import { leagueColor } from '../lib/league-themes';
+import { leagueColor, leagueTextColor } from '../lib/league-themes';
 import { hapticSelect } from '../lib/telegram';
 import type { CompetitionOption, EventType, FavoriteTeam, Language, Preferences, TeamOption } from '../types';
 import { Icon } from '../components/Icon';
 
 const MAX_FAVORITE_TEAMS = 30;
-const REFRESH_INTERVAL_OPTIONS = [15, 20, 30, 45, 60, 120] as const;
-const DEFAULT_REFRESH_INTERVAL_SEC = 30;
 const LANGUAGE_OPTIONS: readonly Language[] = ['he', 'en'];
 
 function toggle<T>(list: readonly T[], value: T): T[] {
@@ -102,7 +101,6 @@ export function SettingsPage() {
   const { refresh } = useDashboard();
   const { language, setLanguage } = useLanguage();
   const t = useT();
-  const formatInterval = (sec: number) => (sec < 60 ? t.settings.seconds(sec) : t.settings.minutes(sec / 60));
   const [prefs, setPrefs] = useState<Preferences | null>(null);
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [error, setError] = useState(false);
@@ -148,11 +146,9 @@ export function SettingsPage() {
     }
   };
 
-  const interval = prefs?.refreshIntervalSec ?? DEFAULT_REFRESH_INTERVAL_SEC;
-
   return (
     <div className="min-h-screen pb-40 md:pb-28">
-      <PageHeader title={t.settings.title} subtitle={t.settings.subtitle} />
+      <PageHeader title={t.settings.title} subtitle={t.settings.subtitle} maxWidth="max-w-2xl" />
 
       {error && <p className="mx-auto mt-4 max-w-2xl px-4 text-sm text-accent-red">{t.settings.error}</p>}
       {!prefs && !error && <Loading />}
@@ -169,8 +165,9 @@ export function SettingsPage() {
                     lang={lang}
                     onClick={() => update({ ...prefs, language: lang })}
                     aria-pressed={on}
-                    className={`rounded-lg border py-2 text-sm font-semibold transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                    className={`flex items-center justify-center gap-2 rounded-lg border py-2 text-sm font-semibold transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
                   >
+                    <LanguageFlag language={lang} />
                     {LANGUAGE_NAMES[lang]}
                   </button>
                 );
@@ -186,8 +183,9 @@ export function SettingsPage() {
                   <button
                     key={c.id}
                     onClick={() => update({ ...prefs, competitionIds: toggle(prefs.competitionIds, c.id) })}
-                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? 'border-transparent text-white' : 'border-border-subtle text-text-secondary'}`}
-                    style={on ? { backgroundColor: leagueColor(c.id) } : undefined}
+                    aria-pressed={on}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? 'border-transparent' : 'border-border-subtle text-text-secondary'}`}
+                    style={on ? { backgroundColor: leagueColor(c.id), color: leagueTextColor(c.id) } : undefined}
                   >
                     <span className={`flex rounded-full ${on ? 'bg-bg-base/70 p-0.5' : ''}`}>
                       <CompetitionLogo competitionId={c.id} size={on ? 14 : 16} />
@@ -200,24 +198,38 @@ export function SettingsPage() {
           </Card>
 
           <Card title={t.settings.myTeams} subtitle={t.settings.myTeamsSubtitle}>
-            {prefs.favoriteTeams.length > 0 && (
-              <ul className="flex flex-wrap gap-2">
+            <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-text-secondary">{t.settings.favoritesTitle}</span>
+              <span className="score-font text-text-muted">
+                {prefs.favoriteTeams.length}/{MAX_FAVORITE_TEAMS}
+              </span>
+            </div>
+            {prefs.favoriteTeams.length === 0 ? (
+              <p className="flex items-center gap-2 rounded-lg border border-dashed border-border-subtle px-3 py-3 text-xs text-text-muted">
+                <Icon name="star" size={14} />
+                {t.settings.noFavorites}
+              </p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-lg border border-border-subtle">
                 {prefs.favoriteTeams.map((team) => (
-                  <li key={team.id} className="flex items-center gap-1.5 rounded-full bg-bg-elevated py-1 ps-1.5 pe-2 text-xs">
-                    <TeamLogo teamId={team.id} name={team.name} size={18} />
-                    {team.name}
+                  <li key={team.id} className="flex items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-sm">
+                      <TeamLogo teamId={team.id} name={team.name} size={22} />
+                      <span className="truncate">{team.name}</span>
+                    </div>
                     <button
                       onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((f) => f.id !== team.id) })}
                       aria-label={t.settings.remove(team.name)}
-                      className="ms-1 text-text-muted hover:text-accent-red"
+                      title={t.settings.remove(team.name)}
+                      className="flex size-10 shrink-0 items-center justify-center text-text-muted transition hover:text-accent-red"
                     >
-                      <Icon name="close" size={12} />
+                      <Icon name="close" size={14} />
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-            <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
           </Card>
 
           <Card title={t.settings.notifications} subtitle={t.settings.notificationsSubtitle}>
@@ -228,6 +240,7 @@ export function SettingsPage() {
                   <button
                     key={type}
                     onClick={() => update({ ...prefs, eventTypes: toggle(prefs.eventTypes, type) })}
+                    aria-pressed={on}
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
                   >
                     <Icon name={EVENT_META[type].icon} size={16} />
@@ -237,23 +250,6 @@ export function SettingsPage() {
                 );
               })}
             </div>
-          </Card>
-
-          <Card title={t.settings.refreshInterval} subtitle={t.settings.refreshIntervalSubtitle}>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-              {REFRESH_INTERVAL_OPTIONS.map((sec) => (
-                <button
-                  key={sec}
-                  onClick={() => update({ ...prefs, refreshIntervalSec: sec })}
-                  className={`rounded-lg border py-2 text-sm font-semibold transition ${interval === sec ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
-                >
-                  {formatInterval(sec)}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs leading-relaxed text-text-muted">
-              ℹ️ {t.settings.refreshNote}
-            </p>
           </Card>
         </main>
       )}

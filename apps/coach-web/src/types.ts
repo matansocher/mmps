@@ -32,6 +32,16 @@ export type GameEvent = {
   readonly ownGoal?: boolean;
 };
 
+export type DashboardStandingRow = {
+  readonly position: number;
+  readonly played: number;
+  readonly points: number;
+  readonly goalDiff: number;
+  readonly zoneColor?: string;
+};
+
+export type DashboardStandings = { readonly home: DashboardStandingRow; readonly away: DashboardStandingRow };
+
 export type Game = {
   readonly id: number;
   readonly competitionId: number;
@@ -50,6 +60,7 @@ export type Game = {
   readonly stats?: GameStats;
   readonly form?: DashboardForm;
   readonly headline?: GameHeadline;
+  readonly standings?: DashboardStandings;
 };
 
 export type FormEntry = { readonly result: FormResult; readonly opponent: string; readonly score: string };
@@ -65,7 +76,6 @@ export type Preferences = {
   readonly competitionIds: number[];
   readonly favoriteTeams: FavoriteTeam[];
   readonly eventTypes: EventType[];
-  readonly refreshIntervalSec: number;
   readonly language: Language;
 };
 
@@ -211,6 +221,13 @@ export type CompetitionDetail = {
   readonly tables: StandingsTable[];
   readonly zones: { readonly name: string; readonly color: string }[];
   readonly knockout: KnockoutStage[];
+  readonly matchdays: Matchday[];
+};
+
+export type Matchday = {
+  readonly roundNum: number;
+  readonly kind: 'previous' | 'current' | 'next';
+  readonly games: GameSummary[];
 };
 
 export type TvChannel = {

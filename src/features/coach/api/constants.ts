@@ -18,11 +18,7 @@ export const DEFAULT_COMPETITION_IDS: number[] = [
 
 export const MAX_FAVORITE_TEAMS = 30;
 
-// The server caches live 365Scores data for LIVE_DATA_TTL_SEC, so refreshing faster than that returns nothing new.
 export const LIVE_DATA_TTL_SEC = 15;
-export const MIN_REFRESH_INTERVAL_SEC = LIVE_DATA_TTL_SEC;
-export const MAX_REFRESH_INTERVAL_SEC = 300;
-export const DEFAULT_REFRESH_INTERVAL_SEC = 30;
 
 export const DASHBOARD_LANGUAGES: readonly DashboardLanguage[] = ['he', 'en'];
 export const DEFAULT_LANGUAGE: DashboardLanguage = 'he';

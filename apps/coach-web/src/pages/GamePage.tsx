@@ -11,11 +11,11 @@ import { LiveTableNote, StandingsTableView, ZonesLegend } from '../components/St
 import { StatsList } from '../components/StatsList';
 import { Card, ErrorState, ForwardArrow, Loading, Section, Tabs } from '../components/ui';
 import { useCompetitions } from '../hooks/useCompetitions';
-import { useDashboard } from '../hooks/useDashboard';
 import { useLiveCompetition } from '../hooks/useLiveCompetition';
 import { useResource } from '../hooks/useResource';
 import { api } from '../lib/api';
 import { formatLongDate, formatKickoff } from '../lib/format';
+import { LIVE_POLL_MS } from '../lib/polling';
 import { navigate } from '../lib/router';
 import type { GameDetail } from '../types';
 import { Icon } from '../components/Icon';
@@ -95,9 +95,8 @@ function GameTable({ detail }: { readonly detail: GameDetail }) {
 }
 
 export function GamePage({ id }: { readonly id: number }) {
-  const { refreshIntervalSec } = useDashboard();
   const [isLive, setIsLive] = useState(false);
-  const resource = useResource(() => api.game(id), `game:${id}`, isLive ? refreshIntervalSec * 1000 : undefined);
+  const resource = useResource(() => api.game(id), `game:${id}`, isLive ? LIVE_POLL_MS : undefined);
   const competitions = useCompetitions();
   const [tab, setTab] = useState<GameTab>('overview');
   const detail = resource.data;

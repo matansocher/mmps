@@ -251,6 +251,8 @@ export type ScoresGame = {
   readonly gameTimeDisplay?: string;
   readonly roundName?: string;
   readonly roundNum?: number;
+  readonly stageNum?: number;
+  readonly seasonNum?: number;
   // 2 = probable, 3 = confirmed.
   readonly lineupsStatus?: number;
   readonly homeCompetitor: ScoresCompetitorRef;
@@ -285,8 +287,6 @@ export type ScoresGameDetails = Omit<ScoresGame, 'homeCompetitor' | 'awayCompeti
   readonly tvNetworks?: readonly ScoresNamedRef[];
   readonly venue?: { readonly name?: string; readonly capacity?: number };
   readonly officials?: readonly { readonly name: string }[];
-  readonly stageNum?: number;
-  readonly seasonNum?: number;
   readonly hasStandings?: boolean;
   readonly hasBrackets?: boolean;
   readonly stages?: readonly { readonly id: number; readonly name: string; readonly homeCompetitorScore?: number; readonly awayCompetitorScore?: number; readonly isEnded?: boolean }[];

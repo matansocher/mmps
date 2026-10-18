@@ -66,6 +66,7 @@ export const api = {
   preferences: () => request<Preferences>('/api/coach/preferences'),
   savePreferences: (preferences: Preferences) => request<Preferences>('/api/coach/preferences', { method: 'PUT', body: JSON.stringify(preferences) }),
   competitions: () => request<CompetitionOption[]>('/api/coach/competitions'),
+  favoriteTeamCounts: () => request<Record<number, number>>('/api/coach/competitions/favorite-counts'),
   searchTeams: (query: string) => request<TeamOption[]>(`/api/coach/teams/search?q=${encodeURIComponent(query)}`),
   game: (id: number) => request<GameDetail>(`/api/coach/games/${id}`),
   team: (id: number) => request<TeamDetail>(`/api/coach/teams/${id}`),

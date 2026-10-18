@@ -1,5 +1,5 @@
 import type { ScoresGame, ScoresGameDetails, ScoresGameStat } from '@services/scores-365';
-import { parsePreferencesBody, parseRefreshInterval } from './dto';
+import { parsePreferencesBody } from './dto';
 import { classifyGameStatus, mapEventType, sortDashboardGames, toDashboardEvents, toDashboardGame, toDashboardStats, toGameSummary } from './transformers';
 import type { DashboardGame } from './types';
 
@@ -182,22 +182,10 @@ describe('parsePreferencesBody()', () => {
       favoriteTeams: [{ id: 110, name: ' Man City ' }, { id: -1, name: 'bad' }, { id: 5 }],
       eventTypes: ['goal', 'nope', 'goal', 'var'],
     });
-    expect(parsed).toEqual({ competitionIds: [7], favoriteTeams: [{ id: 110, name: 'Man City' }], eventTypes: ['goal', 'var'], refreshIntervalSec: 30 });
+    expect(parsed).toEqual({ competitionIds: [7], favoriteTeams: [{ id: 110, name: 'Man City' }], eventTypes: ['goal', 'var'] });
   });
 
   test.each([{ body: null }, { body: {} }, { body: { competitionIds: [], favoriteTeams: [] } }])('should reject invalid body $body', ({ body }) => {
     expect(parsePreferencesBody(body)).toEqual(null);
-  });
-});
-
-describe('parseRefreshInterval()', () => {
-  test.each([
-    { value: 5, expected: 15 },
-    { value: 45, expected: 45 },
-    { value: 9999, expected: 300 },
-    { value: 'x', expected: 30 },
-    { value: undefined, expected: 30 },
-  ])('should parse $value as $expected', ({ value, expected }) => {
-    expect(parseRefreshInterval(value)).toEqual(expected);
   });
 });

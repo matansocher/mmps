@@ -1,13 +1,15 @@
-import { type ReactNode, useMemo, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { GameCard, GameCardSkeleton } from '../components/GameCard';
 import { GameRow } from '../components/GameRow';
 import { Icon, type IconName } from '../components/Icon';
 import { LiveDot } from '../components/LiveDot';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
+import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatClock, formatDateTitle } from '../lib/format';
+import { leagueColor, leagueTextColor } from '../lib/league-themes';
 import { type Messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
@@ -16,6 +18,7 @@ import type { Game } from '../types';
 type ViewMode = 'cards' | 'list';
 
 const VIEW_MODE_KEY = 'coach:dashboard-view';
+const FAVORITES_FILTER = 'favorites';
 
 function readViewMode(): ViewMode {
   try {
@@ -24,7 +27,8 @@ function readViewMode(): ViewMode {
   } catch {
     // ignore unavailable storage
   }
-  return window.matchMedia('(min-width: 1024px)').matches ? 'cards' : 'list';
+  // Until the user picks one: the compact list on phones, the detailed cards on wider screens.
+  return window.matchMedia('(min-width: 768px)').matches ? 'cards' : 'list';
 }
 
 type LeagueGroup = { readonly competitionId: number; readonly name: string; readonly games: Game[] };
@@ -85,13 +89,46 @@ function IconButton({ onClick, label, icon, spinning }: { readonly onClick: () =
   );
 }
 
-function FilterChip({ active, onClick, children }: { readonly active: boolean; readonly onClick: () => void; readonly children: ReactNode }) {
+function ViewToggle({ value, onChange }: { readonly value: ViewMode; readonly onChange: (mode: ViewMode) => void }) {
+  const t = useT();
+  const options: { id: ViewMode; icon: IconName; label: string }[] = [
+    { id: 'cards', icon: 'grid', label: t.dashboard.cardView },
+    { id: 'list', icon: 'list', label: t.dashboard.listView },
+  ];
+  return (
+    <div role="group" aria-label={t.dashboard.viewMode} className="flex h-9 shrink-0 items-center rounded-full border border-white/[0.06] bg-white/[0.03] p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          onClick={() => value !== o.id && onChange(o.id)}
+          aria-pressed={value === o.id}
+          aria-label={o.label}
+          title={o.label}
+          className={`flex h-full w-9 items-center justify-center rounded-full transition duration-150 ease-out ${
+            value === o.id ? 'bg-white/[0.1] text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.4)]' : 'text-text-muted hover:text-text-primary'
+          }`}
+        >
+          <Icon name={o.icon} size={16} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+type ChipTone = { readonly background: string; readonly color: string };
+
+const ALL_TONE: ChipTone = { background: 'var(--color-text-primary)', color: 'var(--color-bg-base)' };
+const FAVORITES_TONE: ChipTone = { background: 'var(--color-accent-draw)', color: '#0a0e14' };
+
+function FilterChip({ active, tone, onClick, children }: { readonly active: boolean; readonly tone: ChipTone; readonly onClick: () => void; readonly children: ReactNode }) {
   return (
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand ${
-        active ? 'border-transparent bg-text-primary text-bg-base' : 'border-white/[0.06] bg-white/[0.03] text-text-secondary hover:bg-white/[0.07] hover:text-text-primary'
+      data-active={active || undefined}
+      style={active ? ({ backgroundColor: tone.background, color: tone.color } as CSSProperties) : undefined}
+      className={`group/chip flex h-9 shrink-0 items-center gap-2 rounded-full border ps-2.5 pe-1.5 text-[13px] font-medium transition duration-150 ease-out active:scale-[0.97] ${
+        active ? 'border-transparent font-semibold shadow-[0_2px_10px_-2px_rgba(0,0,0,0.5)]' : 'border-white/[0.07] bg-white/[0.03] text-text-secondary hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-text-primary'
       }`}
     >
       {children}
@@ -99,18 +136,67 @@ function FilterChip({ active, onClick, children }: { readonly active: boolean; r
   );
 }
 
-function Count({ value, active }: { readonly value: number; readonly active: boolean }) {
-  return <span className={`score-font text-[11px] ${active ? 'text-bg-base/60' : 'text-text-muted'}`}>{value}</span>;
+function Count({ value, live, active }: { readonly value: number; readonly live?: boolean; readonly active: boolean }) {
+  return (
+    <span
+      className={`score-font flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-1.5 text-[11px] ${
+        active ? 'bg-black/15' : live ? 'bg-accent-live/12 text-accent-live' : 'bg-white/[0.06] text-text-muted'
+      }`}
+    >
+      {live && <LiveDot />}
+      {value}
+    </span>
+  );
+}
+
+// Horizontal chip strip: fades the edges that have more chips to scroll to and keeps the active chip in view.
+function ChipStrip({ label, activeKey, children }: { readonly label: string; readonly activeKey: string; readonly children: ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  const [edges, setEdges] = useState({ start: false, end: false });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const offset = Math.abs(el.scrollLeft);
+      const max = el.scrollWidth - el.clientWidth;
+      setEdges({ start: offset > 2, end: max - offset > 2 });
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener('scroll', update);
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    ref.current?.querySelector<HTMLElement>('[data-active]')?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+  }, [activeKey]);
+
+  const fade = (on: boolean) => (on ? 'transparent, #000 40px' : '#000, #000');
+  return (
+    <nav
+      ref={ref}
+      aria-label={label}
+      className="no-scrollbar mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 pt-1 pb-3"
+      style={{ maskImage: `linear-gradient(to var(--chip-fade-dir), ${fade(edges.start)}, #000 calc(100% - 40px), ${edges.end ? 'transparent' : '#000'})` } as CSSProperties}
+    >
+      {children}
+    </nav>
+  );
 }
 
 export function DashboardPage() {
-  const { data, loading, refreshing, errorStatus, refresh, refreshIntervalSec } = useDashboard();
+  const { data, loading, refreshing, errorStatus, refresh } = useDashboard();
   const t = useT();
-  const [competitionFilter, setCompetitionFilter] = useState<number | null>(null);
+  const [competitionFilter, setCompetitionFilter] = useState<number | typeof FAVORITES_FILTER | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
 
-  const toggleViewMode = () => {
-    const next = viewMode === 'cards' ? 'list' : 'cards';
+  const changeViewMode = (next: ViewMode) => {
     hapticSelect();
     setViewMode(next);
     try {
@@ -132,8 +218,10 @@ export function DashboardPage() {
     return [...map.values()];
   }, [games]);
 
-  const activeFilter = competitionFilter !== null && competitions.some((c) => c.id === competitionFilter) ? competitionFilter : null;
-  const visibleGames = activeFilter === null ? games : games.filter((g) => g.competitionId === activeFilter);
+  const favoriteGames = games.filter((g) => g.isFavorite);
+  const filterAvailable = competitionFilter === FAVORITES_FILTER ? favoriteGames.length > 0 : competitions.some((c) => c.id === competitionFilter);
+  const activeFilter = competitionFilter !== null && filterAvailable ? competitionFilter : null;
+  const visibleGames = activeFilter === null ? games : activeFilter === FAVORITES_FILTER ? favoriteGames : games.filter((g) => g.competitionId === activeFilter);
   const sections = buildSections(visibleGames, t.dashboard.sections);
   const liveCount = games.filter((g) => g.status === 'live').length;
 
@@ -151,28 +239,59 @@ export function DashboardPage() {
             )}
           </>
         }
-        subtitle={data ? t.dashboard.subtitle(formatDateTitle(data.date), formatClock(data.updatedAt), refreshIntervalSec) : t.common.loading}
+        subtitle={
+          data ? (
+            <>
+              {formatDateTitle(data.date)} ·{' '}
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                {errorStatus === null && (
+                  <span className="relative inline-flex size-2" role="img" aria-label={t.dashboard.liveData} title={t.dashboard.liveData}>
+                    <span className="absolute inset-0 animate-ping rounded-full bg-accent-live/60 motion-reduce:hidden" />
+                    <span className="relative size-2 rounded-full bg-accent-live" />
+                  </span>
+                )}
+                {t.dashboard.updated(formatClock(data.updatedAt))} · <TimeAgo iso={data.updatedAt} />
+              </span>
+            </>
+          ) : (
+            t.common.loading
+          )
+        }
         actions={
           <>
-            <IconButton onClick={toggleViewMode} label={viewMode === 'cards' ? t.dashboard.listView : t.dashboard.cardView} icon={viewMode === 'cards' ? 'list' : 'grid'} />
+            <ViewToggle value={viewMode} onChange={changeViewMode} />
             <IconButton onClick={refresh} label={t.dashboard.refresh} icon="refresh" spinning={refreshing} />
           </>
         }
       >
-        {competitions.length > 1 && (
-          <nav aria-label={t.dashboard.filterByLeague} className="no-scrollbar mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 pb-3">
-            <FilterChip active={activeFilter === null} onClick={() => setCompetitionFilter(null)}>
-              {t.dashboard.all} <Count value={games.length} active={activeFilter === null} />
+        {(competitions.length > 1 || favoriteGames.length > 0) && (
+          <ChipStrip label={t.dashboard.filterByLeague} activeKey={String(activeFilter)}>
+            <FilterChip active={activeFilter === null} tone={ALL_TONE} onClick={() => setCompetitionFilter(null)}>
+              <span className="ps-1">{t.dashboard.all}</span>
+              <Count value={games.length} active={activeFilter === null} />
             </FilterChip>
+            {favoriteGames.length > 0 && (
+              <FilterChip active={activeFilter === FAVORITES_FILTER} tone={FAVORITES_TONE} onClick={() => setCompetitionFilter(activeFilter === FAVORITES_FILTER ? null : FAVORITES_FILTER)}>
+                <Icon name="star" size={15} className={activeFilter === FAVORITES_FILTER ? '' : 'text-accent-draw'} />
+                {t.dashboard.myTeams}
+                <Count value={favoriteGames.length} live={favoriteGames.some((g) => g.status === 'live')} active={activeFilter === FAVORITES_FILTER} />
+              </FilterChip>
+            )}
             {competitions.map((c) => (
-              <FilterChip key={c.id} active={activeFilter === c.id} onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}>
-                <CompetitionLogo competitionId={c.id} size={16} />
+              <FilterChip
+                key={c.id}
+                active={activeFilter === c.id}
+                tone={{ background: leagueColor(c.id), color: leagueTextColor(c.id) }}
+                onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}
+              >
+                <span className={`flex size-5 items-center justify-center rounded-full ${activeFilter === c.id ? 'bg-white' : ''}`}>
+                  <CompetitionLogo competitionId={c.id} size={16} />
+                </span>
                 {c.name}
-                <Count value={c.count} active={activeFilter === c.id} />
-                {c.live > 0 && <LiveDot />}
+                <Count value={c.count} live={c.live > 0} active={activeFilter === c.id} />
               </FilterChip>
             ))}
-          </nav>
+          </ChipStrip>
         )}
       </PageHeader>
 

@@ -13,7 +13,7 @@ function ordinal(n: number): string {
 }
 
 const en = {
-  nav: { live: 'Live', leagues: 'Leagues', settings: 'Settings' },
+  nav: { brand: 'Coach Live', label: 'Main', live: 'Live', leagues: 'Leagues', settings: 'Settings' },
   common: {
     back: 'Back',
     close: 'Close',
@@ -50,12 +50,15 @@ const en = {
   ownGoalShort: 'OG',
   dashboard: {
     title: 'Live',
-    subtitle: (date: string, time: string, sec: number) => `${date} · updated ${time} · every ${sec}s`,
+    updated: (time: string) => `updated ${time}`,
+    liveData: 'Live data',
     listView: 'List view',
     cardView: 'Card view',
+    viewMode: 'View',
     refresh: 'Refresh',
     filterByLeague: 'Filter by league',
     all: 'All',
+    myTeams: 'My teams',
     refreshFailed: 'Couldn’t refresh. Showing the last results; retrying automatically.',
     emptyTitle: 'No games today in your leagues',
     emptyText: 'Add more leagues or teams to follow and their games will show up here.',
@@ -161,6 +164,7 @@ const en = {
     more: 'More leagues',
     all: 'All leagues',
     today: (n: number) => `${n} today`,
+    yourTeams: (n: number) => (n === 1 ? '1 of your teams' : `${n} of your teams`),
   },
   league: {
     title: 'League',
@@ -168,6 +172,11 @@ const en = {
     table: 'Table',
     groups: 'Groups',
     knockout: 'Knockout',
+    matchdays: 'Matchdays',
+    matchday: (n: number) => `Matchday ${n}`,
+    matchdayKind: { previous: 'Last', current: 'In play', next: 'Next' } as Record<'previous' | 'current' | 'next', string>,
+    playedOf: (played: number, total: number) => `${played} of ${total} games played`,
+    gamesCount: (n: number) => `${n} games`,
     empty: 'No table or bracket available yet',
   },
   standings: {
@@ -185,6 +194,7 @@ const en = {
     goalDiff: 'GD',
     points: 'Pts',
     form: 'Form',
+    title: 'League table',
   },
   bracket: {
     leg: (n: number) => `Leg ${n}`,
@@ -203,6 +213,8 @@ const en = {
     leagues: 'Leagues',
     leaguesSubtitle: "Today's games from these leagues appear on the dashboard",
     myTeams: 'My teams',
+    favoritesTitle: 'Your favorite teams',
+    noFavorites: 'No favorite teams yet. Search above to add one.',
     myTeamsSubtitle: "Listed first in each section, and shown even when their league isn't selected",
     remove: (name: string) => `Remove ${name}`,
     searchPlaceholder: 'Search a team (e.g. Maccabi Haifa, Arsenal)',
@@ -211,11 +223,6 @@ const en = {
     add: '+ Add',
     notifications: 'Notifications',
     notificationsSubtitle: 'Which events pop up as notifications. Game cards always show goals, red cards, missed penalties and VAR.',
-    refreshInterval: 'Refresh interval',
-    refreshIntervalSubtitle: 'How often the dashboard checks for new events',
-    seconds: (n: number) => `${n}s`,
-    minutes: (n: number) => `${n} min`,
-    refreshNote: "Minimum is 15 seconds. 365Scores doesn't publish a rate limit, but live data is cached on the server for about 15 seconds, so refreshing faster wouldn't show anything newer.",
     save: 'Save',
     saving: 'Saving…',
     saved: 'Saved',
@@ -225,7 +232,7 @@ const en = {
 export type Messages = typeof en;
 
 const he: Messages = {
-  nav: { live: 'לייב', leagues: 'ליגות', settings: 'הגדרות' },
+  nav: { brand: 'Coach Live', label: 'ראשי', live: 'לייב', leagues: 'ליגות', settings: 'הגדרות' },
   common: {
     back: 'חזרה',
     close: 'סגירה',
@@ -262,12 +269,15 @@ const he: Messages = {
   ownGoalShort: 'עצמי',
   dashboard: {
     title: 'לייב',
-    subtitle: (date, time, sec) => `${date} · עודכן ב-${time} · כל ${sec} שניות`,
+    updated: (time) => `עודכן ב-${time}`,
+    liveData: 'נתונים חיים',
     listView: 'תצוגת רשימה',
     cardView: 'תצוגת כרטיסים',
+    viewMode: 'תצוגה',
     refresh: 'רענון',
     filterByLeague: 'סינון לפי ליגה',
     all: 'הכל',
+    myTeams: 'הקבוצות שלי',
     refreshFailed: 'הרענון נכשל. מוצגות התוצאות האחרונות, ננסה שוב אוטומטית.',
     emptyTitle: 'אין היום משחקים בליגות שלך',
     emptyText: 'הוסיפו ליגות או קבוצות למעקב והמשחקים שלהן יופיעו כאן.',
@@ -373,6 +383,7 @@ const he: Messages = {
     more: 'ליגות נוספות',
     all: 'כל הליגות',
     today: (n) => `${n} היום`,
+    yourTeams: (n) => (n === 1 ? 'קבוצה אחת שלך' : `${n} מהקבוצות שלך`),
   },
   league: {
     title: 'ליגה',
@@ -380,6 +391,11 @@ const he: Messages = {
     table: 'טבלה',
     groups: 'בתים',
     knockout: 'נוקאאוט',
+    matchdays: 'מחזורים',
+    matchday: (n) => `מחזור ${n}`,
+    matchdayKind: { previous: 'אחרון', current: 'מתקיים', next: 'הבא' },
+    playedOf: (played, total) => `${played} מתוך ${total} משחקים שוחקו`,
+    gamesCount: (n) => `${n} משחקים`,
     empty: 'עדיין אין טבלה או עץ גביע',
   },
   standings: {
@@ -397,6 +413,7 @@ const he: Messages = {
     goalDiff: 'הפרש',
     points: 'נק׳',
     form: 'כושר',
+    title: 'טבלת הליגה',
   },
   bracket: {
     leg: (n) => `משחק ${n}`,
@@ -415,6 +432,8 @@ const he: Messages = {
     leagues: 'ליגות',
     leaguesSubtitle: 'משחקי היום מהליגות האלה יופיעו בלוח',
     myTeams: 'הקבוצות שלי',
+    favoritesTitle: 'הקבוצות האהובות שלך',
+    noFavorites: 'עדיין אין קבוצות אהובות. אפשר לחפש ולהוסיף למעלה.',
     myTeamsSubtitle: 'מופיעות ראשונות בכל קבוצת משחקים, גם אם הליגה שלהן לא נבחרה',
     remove: (name) => `הסרת ${name}`,
     searchPlaceholder: 'חיפוש קבוצה (למשל מכבי חיפה, ארסנל)',
@@ -423,11 +442,6 @@ const he: Messages = {
     add: '+ הוספה',
     notifications: 'התראות',
     notificationsSubtitle: 'אילו אירועים יקפצו כהתראה. כרטיסי המשחק תמיד מציגים שערים, אדומים, פנדלים מוחמצים ו-VAR.',
-    refreshInterval: 'תדירות רענון',
-    refreshIntervalSubtitle: 'כל כמה זמן הלוח בודק אם יש אירועים חדשים',
-    seconds: (n) => `${n} שנ׳`,
-    minutes: (n) => `${n} דק׳`,
-    refreshNote: 'המינימום הוא 15 שניות. ל-365Scores אין מגבלת קצב מפורסמת, אבל נתוני הלייב נשמרים בשרת כ-15 שניות, כך שרענון מהיר יותר לא יציג שום דבר חדש.',
     save: 'שמירה',
     saving: 'שומר…',
     saved: 'נשמר',

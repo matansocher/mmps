@@ -15,12 +15,15 @@ const gameCache = new TtlCache<ScoresGameDetails | null>();
 const statsCache = new TtlCache<ScoresGameStat[]>();
 const headToHeadCache = new TtlCache<HeadToHead | null>();
 const standingsCache = new TtlCache<ScoresStandings | null>();
+const competitionTeamsCache = new TtlCache<readonly number[]>();
 
 const logger = new Logger('coach:scores-cache');
 // Recent form and past meetings only change after a game ends.
 const HEAD_TO_HEAD_TTL_MS = 30 * 60_000;
 // Tables update a little after the final whistle, so finished-game headlines retry often.
 const STANDINGS_TTL_MS = 2 * 60_000;
+// Who plays in a competition barely changes during a season.
+const COMPETITION_TEAMS_TTL_MS = 6 * 60 * 60_000;
 
 // Lineups are usually confirmed about an hour before kick-off, so games starting soon refresh like live ones.
 const KICKOFF_SOON_MS = 90 * 60_000;
@@ -64,5 +67,18 @@ export async function getCachedStandings(competitionId: number, lang: DashboardL
     .catch((err) => {
       logger.warn(`Failed to load standings ${competitionId}: ${getErrorMessage(err)}`);
       return null;
+    });
+}
+
+// Team ids in the competition's current table; empty for competitions without one (e.g. cups).
+export async function getCachedCompetitionTeamIds(competitionId: number): Promise<readonly number[]> {
+  return competitionTeamsCache
+    .get(`${competitionId}`, COMPETITION_TEAMS_TTL_MS, async () => {
+      const standings = await getStandings(competitionId, LANGUAGE_IDS.en);
+      return standings?.rows.map((row) => row.competitor.id) ?? [];
+    })
+    .catch((err) => {
+      logger.warn(`Failed to load teams of competition ${competitionId}: ${getErrorMessage(err)}`);
+      return [];
     });
 }

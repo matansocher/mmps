@@ -1,5 +1,5 @@
 import { messages } from '../lib/i18n';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { formatKickoff, formatShortDate, shortCode } from '../lib/format';
 import { navigate } from '../lib/router';
 import type { KnockoutLeg, KnockoutMatchup, KnockoutStage } from '../types';
@@ -89,23 +89,53 @@ function LegRow({ leg, matchup, index, total }: { readonly leg: KnockoutLeg; rea
 }
 
 function MatchupSheet({ matchup, stageName, nextStageName, onClose }: { readonly matchup: KnockoutMatchup; readonly stageName: string; readonly nextStageName?: string; readonly onClose: () => void }) {
+  const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // Modal behaviour: focus moves in, Tab stays inside, Escape closes, focus returns to the matchup that opened it.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const opener = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    panel?.querySelector<HTMLElement>('button')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') return onCloseRef.current();
+      if (e.key !== 'Tab' || !panel) return;
+      const focusable = [...panel.querySelectorAll<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')];
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
+      opener?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   const qualified = matchup.teams.find((t) => t.isQualified);
   const [a, b] = matchup.teams;
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
-      <div className="w-full max-w-md overflow-hidden rounded-t-2xl border border-border-subtle bg-bg-card shadow-2xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full max-w-md overflow-hidden rounded-t-2xl border border-border-subtle bg-bg-card shadow-2xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-          <h2 className="truncate text-sm font-semibold">
+          <h2 id={titleId} className="truncate text-sm font-semibold">
             {stageName}
             {a && b && <span className="font-normal text-text-muted"> · {shortCode(a.name)} v {shortCode(b.name)}</span>}
           </h2>

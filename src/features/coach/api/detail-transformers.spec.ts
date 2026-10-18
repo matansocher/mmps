@@ -1,5 +1,5 @@
 import type { ScoresAthleteDetails, ScoresBracket, ScoresGame, ScoresGameDetails, ScoresHeadToHead, ScoresStandings } from '@services/scores-365';
-import { toDashboardForm, toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toPlayerDetail, toStandingsTables } from './detail-transformers';
+import { toDashboardForm, toDashboardStandings, toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables } from './detail-transformers';
 import { toDashboardGame } from './transformers';
 
 const details: ScoresGameDetails = {
@@ -251,5 +251,86 @@ describe('toHeadToHead()', () => {
   it('should return undefined without data', () => {
     expect(toHeadToHead(null, 'en')).toBeUndefined();
     expect(toHeadToHead({ id: 1, homeCompetitor: { id: 1, name: 'A' }, awayCompetitor: { id: 2, name: 'B' } }, 'en')).toBeUndefined();
+  });
+});
+
+describe('toMatchdays()', () => {
+  const game = (id: number, roundNum: number, statusGroup: number, day: number, stageNum = 1): ScoresGame => ({
+    id,
+    competitionId: 7,
+    startTime: `2026-10-${String(day).padStart(2, '0')}T15:00:00Z`,
+    statusGroup,
+    roundNum,
+    stageNum,
+    seasonNum: 132,
+    homeCompetitor: { id: id * 10, name: `H${id}`, score: statusGroup === 2 ? -1 : 1 },
+    awayCompetitor: { id: id * 10 + 1, name: `A${id}`, score: statusGroup === 2 ? -1 : 0 },
+  });
+  const summarize = (matchdays: ReturnType<typeof toMatchdays>) => matchdays.map((m) => ({ roundNum: m.roundNum, kind: m.kind, ids: m.games.map((g) => g.id) }));
+
+  it('should return the previous, in-progress and next rounds merged from results and fixtures', () => {
+    const results = [game(4, 7, 4, 10), game(3, 7, 4, 9), game(2, 6, 4, 3), game(1, 6, 4, 2)];
+    const fixtures = [game(5, 7, 2, 11), game(6, 8, 2, 17), game(7, 9, 2, 24)];
+    expect(summarize(toMatchdays(results, fixtures, 'en'))).toEqual([
+      { roundNum: 6, kind: 'previous', ids: [1, 2] },
+      { roundNum: 7, kind: 'current', ids: [3, 4, 5] },
+      { roundNum: 8, kind: 'next', ids: [6] },
+    ]);
+  });
+
+  it('should return the last played round and the next one when no round is in progress', () => {
+    const results = [game(2, 6, 4, 3), game(1, 5, 4, 1)];
+    const fixtures = [game(3, 7, 2, 10), game(4, 8, 2, 17)];
+    expect(summarize(toMatchdays(results, fixtures, 'en'))).toEqual([
+      { roundNum: 6, kind: 'previous', ids: [2] },
+      { roundNum: 7, kind: 'next', ids: [3] },
+    ]);
+  });
+
+  it('should treat a round with a live game as current', () => {
+    expect(summarize(toMatchdays([game(1, 3, 4, 1)], [game(2, 3, 3, 2), game(3, 4, 2, 9)], 'en'))).toEqual([
+      { roundNum: 3, kind: 'current', ids: [1, 2] },
+      { roundNum: 4, kind: 'next', ids: [3] },
+    ]);
+  });
+
+  it('should only use the stage currently being played and skip games without a round', () => {
+    const results = [game(1, 6, 4, 1, 1), game(2, 1, 4, 5, 2), { ...game(3, 1, 4, 6, 2), roundNum: undefined }];
+    expect(summarize(toMatchdays(results, [game(4, 2, 2, 9, 2)], 'en'))).toEqual([
+      { roundNum: 1, kind: 'previous', ids: [2] },
+      { roundNum: 2, kind: 'next', ids: [4] },
+    ]);
+  });
+
+  it('should return only the first round before the season starts and nothing without rounds', () => {
+    expect(summarize(toMatchdays([], [game(2, 2, 2, 9), game(1, 1, 2, 2)], 'en'))).toEqual([{ roundNum: 1, kind: 'next', ids: [1] }]);
+    expect(toMatchdays([], [], 'en')).toEqual([]);
+  });
+});
+
+describe('toDashboardStandings()', () => {
+  const row = (id: number, position: number, groupNum = 0) => ({
+    competitor: { id, name: `T${id}` },
+    position,
+    groupNum,
+    gamePlayed: 7,
+    for: 10,
+    against: 4,
+    points: 15,
+    destinationNum: position === 1 ? 1 : undefined,
+  });
+  const standings: ScoresStandings = { competitionId: 7, rows: [row(1, 1), row(2, 2), row(3, 1, 1)], destinations: [{ num: 1, name: 'UCL', color: '#00f' }] };
+
+  it('should return both rows from the shared table', () => {
+    expect(toDashboardStandings(standings, 2, 1)).toEqual({
+      home: { position: 2, played: 7, points: 15, goalDiff: 6 },
+      away: { position: 1, played: 7, points: 15, goalDiff: 6, zoneColor: '#00f' },
+    });
+  });
+
+  it('should return undefined when the teams are in different tables or missing', () => {
+    expect(toDashboardStandings(standings, 1, 3)).toBeUndefined();
+    expect(toDashboardStandings(standings, 1, 99)).toBeUndefined();
+    expect(toDashboardStandings(null, 1, 2)).toBeUndefined();
   });
 });
