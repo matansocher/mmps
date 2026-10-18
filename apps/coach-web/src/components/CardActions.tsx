@@ -24,7 +24,7 @@ const BUTTON = 'flex size-7 shrink-0 items-center justify-center rounded-full tr
 export function PreMatchButton({ game }: { readonly game: Game }) {
   const actions = useContext(CardActionsContext);
   const t = useT().dashboard.preMatch;
-  if (!actions || game.status !== 'scheduled') return null;
+  if (!actions || (game.status !== 'scheduled' && game.status !== 'live')) return null;
   const label = t.open(teams(game));
   return (
     <button

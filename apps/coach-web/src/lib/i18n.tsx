@@ -78,7 +78,7 @@ const en = {
       restored: 'Connection restored, updated',
     },
     preMatch: {
-      open: (teams: string) => `Pre-match info: ${teams}`,
+      open: (teams: string) => `Game info: ${teams}`,
       close: 'Close',
       form: 'Recent form',
       h2h: 'Head to head',
@@ -331,7 +331,7 @@ const he: Messages = {
       restored: 'החיבור לשרת חזר, הנתונים עודכנו',
     },
     preMatch: {
-      open: (teams) => `מידע לפני המשחק: ${teams}`,
+      open: (teams) => `מידע על המשחק: ${teams}`,
       close: 'סגירה',
       form: 'כושר אחרון',
       h2h: 'ראש בראש',
