@@ -30,5 +30,8 @@ export function formatEvent(event: CalendarEvent) {
     description: event.description,
     status: event.status,
     attendees: event.attendees?.map(({ email, responseStatus }) => ({ email, responseStatus })),
+    allDay: !event.start?.dateTime && !!event.start?.date,
+    recurrence: event.recurrence,
+    recurringEventId: event.recurringEventId,
   };
 }

@@ -195,6 +195,19 @@ describe('formatEvent', () => {
     expect(result.attendees).toBeUndefined();
   });
 
+  it('should expose all-day and recurrence info', () => {
+    const event = createMockEvent({ start: { date: '2027-04-23' }, end: { date: '2027-04-24' }, recurrence: ['RRULE:FREQ=YEARLY'], recurringEventId: 'series-1' });
+    const result = formatEvent(event);
+
+    expect(result.allDay).toEqual(true);
+    expect(result.recurrence).toEqual(['RRULE:FREQ=YEARLY']);
+    expect(result.recurringEventId).toEqual('series-1');
+  });
+
+  it('should mark timed events as not all-day', () => {
+    expect(formatEvent(createMockEvent()).allDay).toEqual(false);
+  });
+
   it('should preserve event id for reference', () => {
     const event = createMockEvent({ id: 'unique-event-id-abc123' });
     const result = formatEvent(event);
