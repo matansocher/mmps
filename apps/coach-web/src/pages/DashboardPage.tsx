@@ -105,7 +105,7 @@ function Count({ value, active }: { readonly value: number; readonly active: boo
 }
 
 export function DashboardPage() {
-  const { data, loading, refreshing, errorStatus, refresh, refreshIntervalSec } = useDashboard();
+  const { data, loading, refreshing, errorStatus, refresh } = useDashboard();
   const t = useT();
   const [competitionFilter, setCompetitionFilter] = useState<number | typeof FAVORITES_FILTER | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
@@ -154,7 +154,7 @@ export function DashboardPage() {
             )}
           </>
         }
-        subtitle={data ? t.dashboard.subtitle(formatDateTitle(data.date), formatClock(data.updatedAt), refreshIntervalSec) : t.common.loading}
+        subtitle={data ? t.dashboard.subtitle(formatDateTitle(data.date), formatClock(data.updatedAt)) : t.common.loading}
         actions={
           <>
             <IconButton onClick={toggleViewMode} label={viewMode === 'cards' ? t.dashboard.listView : t.dashboard.cardView} icon={viewMode === 'cards' ? 'list' : 'grid'} />

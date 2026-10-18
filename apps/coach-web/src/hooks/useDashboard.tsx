@@ -2,16 +2,14 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useR
 import { api, ApiError } from '../lib/api';
 import { getLanguage, useLanguage } from '../lib/i18n';
 import { diffGames, type GameNotification } from '../lib/notifications';
+import { nextPollDelayMs } from '../lib/polling';
 import type { DashboardResponse } from '../types';
-
-const DEFAULT_REFRESH_INTERVAL_SEC = 30;
 
 export type DashboardState = {
   readonly data: DashboardResponse | null;
   readonly loading: boolean;
   readonly refreshing: boolean;
   readonly errorStatus: number | null;
-  readonly refreshIntervalSec: number;
   readonly lastFetchedAt: number | null;
   readonly notifications: GameNotification[];
   readonly dismissNotification: (key: string) => void;
@@ -59,40 +57,32 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
     }
   }, [setLanguage]);
 
-  const refreshIntervalSec = data?.preferences.refreshIntervalSec ?? DEFAULT_REFRESH_INTERVAL_SEC;
-
   useEffect(() => {
     void load();
   }, [load]);
 
+  // Every fetch (success or failure) bumps lastFetchedAt, which re-plans the next poll from the latest games.
   useEffect(() => {
-    let timer: number | undefined;
-    const schedule = () => {
-      window.clearInterval(timer);
-      timer = window.setInterval(() => {
-        if (document.visibilityState === 'visible') void load();
-      }, refreshIntervalSec * 1000);
-    };
+    if (lastFetchedAt === null) return;
+    const timer = window.setTimeout(() => {
+      if (document.visibilityState === 'visible') void load();
+    }, nextPollDelayMs(dataRef.current?.games ?? []));
+    return () => window.clearTimeout(timer);
+  }, [load, lastFetchedAt]);
+
+  useEffect(() => {
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        void load();
-        schedule();
-      }
+      if (document.visibilityState === 'visible') void load();
     };
-    schedule();
     document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, [load, refreshIntervalSec]);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [load]);
 
   const value: DashboardState = {
     data,
     loading,
     refreshing,
     errorStatus,
-    refreshIntervalSec,
     lastFetchedAt,
     notifications,
     dismissNotification: (key) => setNotifications((list) => list.filter((n) => n.key !== key)),

@@ -13,8 +13,6 @@ import type { CompetitionOption, EventType, FavoriteTeam, Language, Preferences,
 import { Icon } from '../components/Icon';
 
 const MAX_FAVORITE_TEAMS = 30;
-const REFRESH_INTERVAL_OPTIONS = [15, 20, 30, 45, 60, 120] as const;
-const DEFAULT_REFRESH_INTERVAL_SEC = 30;
 const LANGUAGE_OPTIONS: readonly Language[] = ['he', 'en'];
 
 function toggle<T>(list: readonly T[], value: T): T[] {
@@ -102,7 +100,6 @@ export function SettingsPage() {
   const { refresh } = useDashboard();
   const { language, setLanguage } = useLanguage();
   const t = useT();
-  const formatInterval = (sec: number) => (sec < 60 ? t.settings.seconds(sec) : t.settings.minutes(sec / 60));
   const [prefs, setPrefs] = useState<Preferences | null>(null);
   const [competitions, setCompetitions] = useState<CompetitionOption[]>([]);
   const [error, setError] = useState(false);
@@ -147,8 +144,6 @@ export function SettingsPage() {
       setSaving(false);
     }
   };
-
-  const interval = prefs?.refreshIntervalSec ?? DEFAULT_REFRESH_INTERVAL_SEC;
 
   return (
     <div className="min-h-screen pb-40 md:pb-28">
@@ -251,23 +246,6 @@ export function SettingsPage() {
                 );
               })}
             </div>
-          </Card>
-
-          <Card title={t.settings.refreshInterval} subtitle={t.settings.refreshIntervalSubtitle}>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-              {REFRESH_INTERVAL_OPTIONS.map((sec) => (
-                <button
-                  key={sec}
-                  onClick={() => update({ ...prefs, refreshIntervalSec: sec })}
-                  className={`rounded-lg border py-2 text-sm font-semibold transition ${interval === sec ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
-                >
-                  {formatInterval(sec)}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs leading-relaxed text-text-muted">
-              ℹ️ {t.settings.refreshNote}
-            </p>
           </Card>
         </main>
       )}

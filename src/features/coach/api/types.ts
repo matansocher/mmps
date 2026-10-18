@@ -81,7 +81,6 @@ export type DashboardPreferencesDto = {
   readonly competitionIds: number[];
   readonly favoriteTeams: DashboardFavoriteTeam[];
   readonly eventTypes: DashboardEventType[];
-  readonly refreshIntervalSec: number;
   readonly language: DashboardLanguage;
 };
 

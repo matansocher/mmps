@@ -5,9 +5,8 @@ import { COMPETITIONS, getGamesByDate, searchCompetitors } from '@services/score
 import type { ScoresGame, ScoresGameDetails, ScoresGameStat } from '@services/scores-365';
 import { getDashboardPreferences, getSubscription, saveDashboardPreferences } from '@shared/coach';
 import type { DashboardLanguage, DashboardPreferences, DashboardPreferencesUpdate } from '@shared/coach';
-import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_LANGUAGE, DEFAULT_REFRESH_INTERVAL_SEC, LANGUAGE_IDS, LIVE_DATA_TTL_SEC, SEASON_GAMES } from './constants';
+import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_LANGUAGE, LANGUAGE_IDS, LIVE_DATA_TTL_SEC, SEASON_GAMES } from './constants';
 import { toDashboardForm } from './detail-transformers';
-import { parseRefreshInterval } from './dto';
 import { getGameHeadline } from './game-headline';
 import { getCachedCompetitionTeamIds, getCachedGameDetails, getCachedGameStats, getCachedHeadToHead, getCachedStandings } from './scores-cache';
 import { classifyGameStatus, sortDashboardGames, toDashboardGame } from './transformers';
@@ -24,7 +23,7 @@ export async function getDefaultDashboardPreferences(telegramUserId: number): Pr
   // Seed from the leagues the user already follows in the bot, when set.
   const subscription = await getSubscription(telegramUserId).catch(() => null);
   const competitionIds = subscription?.customLeagues?.length ? subscription.customLeagues : DEFAULT_COMPETITION_IDS;
-  return { competitionIds, favoriteTeams: [], eventTypes: DEFAULT_EVENT_TYPES, refreshIntervalSec: DEFAULT_REFRESH_INTERVAL_SEC, language: DEFAULT_LANGUAGE };
+  return { competitionIds, favoriteTeams: [], eventTypes: DEFAULT_EVENT_TYPES, language: DEFAULT_LANGUAGE };
 }
 
 function toPreferencesDto(saved: DashboardPreferences): DashboardPreferencesDto {
@@ -32,7 +31,6 @@ function toPreferencesDto(saved: DashboardPreferences): DashboardPreferencesDto 
     competitionIds: saved.competitionIds,
     favoriteTeams: saved.favoriteTeams ?? [],
     eventTypes: saved.eventTypes ?? DEFAULT_EVENT_TYPES,
-    refreshIntervalSec: parseRefreshInterval(saved.refreshIntervalSec),
     language: saved.language ?? DEFAULT_LANGUAGE,
   };
 }

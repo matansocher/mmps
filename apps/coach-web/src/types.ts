@@ -65,7 +65,6 @@ export type Preferences = {
   readonly competitionIds: number[];
   readonly favoriteTeams: FavoriteTeam[];
   readonly eventTypes: EventType[];
-  readonly refreshIntervalSec: number;
   readonly language: Language;
 };
 

@@ -23,11 +23,10 @@ export type DashboardPreferences = {
   readonly competitionIds: number[];
   readonly favoriteTeams: DashboardFavoriteTeam[];
   readonly eventTypes: DashboardEventType[];
-  readonly refreshIntervalSec?: number;
   readonly language?: DashboardLanguage;
   readonly accessToken?: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };
 
-export type DashboardPreferencesUpdate = Pick<DashboardPreferences, 'competitionIds' | 'favoriteTeams' | 'eventTypes' | 'refreshIntervalSec' | 'language'>;
+export type DashboardPreferencesUpdate = Pick<DashboardPreferences, 'competitionIds' | 'favoriteTeams' | 'eventTypes' | 'language'>;
