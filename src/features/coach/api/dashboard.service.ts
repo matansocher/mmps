@@ -9,7 +9,7 @@ import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAUL
 import { toDashboardForm } from './detail-transformers';
 import { parseRefreshInterval } from './dto';
 import { getGameHeadline } from './game-headline';
-import { getCachedGameDetails, getCachedGameStats, getCachedHeadToHead, getCachedStandings } from './scores-cache';
+import { getCachedCompetitionTeamIds, getCachedGameDetails, getCachedGameStats, getCachedHeadToHead, getCachedStandings } from './scores-cache';
 import { classifyGameStatus, sortDashboardGames, toDashboardGame } from './transformers';
 import { TtlCache } from './ttl-cache';
 import type { CompetitionOption, DashboardForm, DashboardPreferencesDto, DashboardResponse, GameHeadline, TeamOption } from './types';
@@ -53,6 +53,22 @@ export class CoachDashboardService {
 
   getCompetitionOptions(lang: DashboardLanguage): CompetitionOption[] {
     return COMPETITIONS.map((c) => ({ id: c.id, name: COMPETITION_NAMES[lang][c.id] ?? `${c.id}`, icon: c.icon }));
+  }
+
+  // Competition id -> number of the user's favorite teams in its current table; competitions with none are left out.
+  async getFavoriteTeamCounts(telegramUserId: number): Promise<Record<number, number>> {
+    const { favoriteTeams } = await this.getPreferences(telegramUserId);
+    if (favoriteTeams.length === 0) return {};
+    const favoriteIds = new Set(favoriteTeams.map((t) => t.id));
+    const counts: Record<number, number> = {};
+    for (const batch of chunk(COMPETITIONS, FETCH_CONCURRENCY)) {
+      const teamIds = await Promise.all(batch.map((c) => getCachedCompetitionTeamIds(c.id)));
+      batch.forEach((c, i) => {
+        const count = teamIds[i].filter((id) => favoriteIds.has(id)).length;
+        if (count > 0) counts[c.id] = count;
+      });
+    }
+    return counts;
   }
 
   async searchTeams(query: string, lang: DashboardLanguage): Promise<TeamOption[]> {

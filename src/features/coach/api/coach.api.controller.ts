@@ -90,6 +90,16 @@ export function registerCoachApiRoutes(app: Express, dashboardService: CoachDash
     }
   });
 
+  app.get('/api/coach/competitions/favorite-counts', async (req: Request, res: Response<Record<number, number> | ApiError>) => {
+    const user = getCoachUser(req);
+    try {
+      res.json(await dashboardService.getFavoriteTeamCounts(user.telegramUserId));
+    } catch (err) {
+      logger.error(`Failed to count favorite teams for ${user.telegramUserId}: ${getErrorMessage(err)}`);
+      res.status(500).json({ error: 'favorite_counts_failed' });
+    }
+  });
+
   app.get('/api/coach/teams/search', async (req: Request, res: Response<TeamOption[] | ApiError>) => {
     const query = typeof req.query.q === 'string' ? req.query.q.slice(0, 50) : '';
     try {

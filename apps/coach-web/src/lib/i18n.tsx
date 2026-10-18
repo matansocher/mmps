@@ -162,6 +162,7 @@ const en = {
     more: 'More leagues',
     all: 'All leagues',
     today: (n: number) => `${n} today`,
+    yourTeams: (n: number) => (n === 1 ? '1 of your teams' : `${n} of your teams`),
   },
   league: {
     title: 'League',
@@ -377,6 +378,7 @@ const he: Messages = {
     more: 'ליגות נוספות',
     all: 'כל הליגות',
     today: (n) => `${n} היום`,
+    yourTeams: (n) => (n === 1 ? 'קבוצה אחת שלך' : `${n} מהקבוצות שלך`),
   },
   league: {
     title: 'ליגה',
