@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { messages } from '../lib/i18n';
 import { hapticSelect } from '../lib/telegram';
 
@@ -21,15 +21,30 @@ export function Card({ children, className = '' }: { readonly children: ReactNod
 }
 
 export function Tabs<T extends string>({ tabs, active, onChange }: { readonly tabs: readonly { readonly id: T; readonly label: string }[]; readonly active: T; readonly onChange: (id: T) => void }) {
+  const select = (id: T) => {
+    hapticSelect();
+    onChange(id);
+  };
+  // Arrow keys move between tabs (mirrored in RTL), Home/End jump to the ends.
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const index = tabs.findIndex((tab) => tab.id === active);
+    const rtl = getComputedStyle(e.currentTarget).direction === 'rtl';
+    const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[e.key];
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : step !== undefined ? (index + step + tabs.length) % tabs.length : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    select(tabs[next].id);
+    (e.currentTarget.children[next] as HTMLElement | undefined)?.focus();
+  };
   return (
-    <div className="flex gap-1 rounded-xl bg-bg-card p-1">
+    <div role="tablist" className="flex gap-1 rounded-xl bg-bg-card p-1" onKeyDown={onKeyDown}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => {
-            hapticSelect();
-            onChange(tab.id);
-          }}
+          role="tab"
+          aria-selected={active === tab.id}
+          tabIndex={active === tab.id ? 0 : -1}
+          onClick={() => select(tab.id)}
           className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${active === tab.id ? 'bg-bg-elevated text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
         >
           {tab.label}
@@ -41,8 +56,9 @@ export function Tabs<T extends string>({ tabs, active, onChange }: { readonly ta
 
 export function Loading() {
   return (
-    <div className="flex justify-center py-16">
-      <span className="size-6 animate-spin rounded-full border-2 border-bg-elevated border-t-accent-live" />
+    <div role="status" className="flex justify-center py-16">
+      <span className="sr-only">{messages().common.loading}</span>
+      <span aria-hidden className="size-6 animate-spin rounded-full border-2 border-bg-elevated border-t-accent-live" />
     </div>
   );
 }

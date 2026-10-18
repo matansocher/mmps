@@ -59,6 +59,19 @@ function useScrollRestore(path: string) {
   }, [path]);
 }
 
+// After in-app navigation, move focus to the new page's heading so keyboard and screen reader users start there.
+function useFocusOnNavigate(path: string) {
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => document.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [path]);
+}
+
 export function App() {
   const route = useRoute();
   const path = routePath(route);
@@ -66,6 +79,7 @@ export function App() {
   useScrollRestore(path);
 
   useEffect(() => (isTopLevel ? undefined : showBackButton(goBack)), [isTopLevel]);
+  useFocusOnNavigate(path);
 
   return (
     <LanguageProvider>

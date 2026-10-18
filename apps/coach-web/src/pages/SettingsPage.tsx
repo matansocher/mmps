@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { CompetitionLogo } from '../components/CompetitionLogo';
+import { LanguageFlag } from '../components/LanguageFlag';
 import { PageHeader } from '../components/PageHeader';
 import { TeamLogo } from '../components/TeamLogo';
 import { Loading } from '../components/ui';
@@ -7,7 +8,7 @@ import { useDashboard } from '../hooks/useDashboard';
 import { api } from '../lib/api';
 import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
 import { LANGUAGE_NAMES, useLanguage, useT } from '../lib/i18n';
-import { leagueColor } from '../lib/league-themes';
+import { leagueColor, leagueTextColor } from '../lib/league-themes';
 import { hapticSelect } from '../lib/telegram';
 import type { CompetitionOption, EventType, FavoriteTeam, Language, Preferences, TeamOption } from '../types';
 import { Icon } from '../components/Icon';
@@ -164,8 +165,9 @@ export function SettingsPage() {
                     lang={lang}
                     onClick={() => update({ ...prefs, language: lang })}
                     aria-pressed={on}
-                    className={`rounded-lg border py-2 text-sm font-semibold transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                    className={`flex items-center justify-center gap-2 rounded-lg border py-2 text-sm font-semibold transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
                   >
+                    <LanguageFlag language={lang} />
                     {LANGUAGE_NAMES[lang]}
                   </button>
                 );
@@ -181,8 +183,9 @@ export function SettingsPage() {
                   <button
                     key={c.id}
                     onClick={() => update({ ...prefs, competitionIds: toggle(prefs.competitionIds, c.id) })}
-                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? 'border-transparent text-white' : 'border-border-subtle text-text-secondary'}`}
-                    style={on ? { backgroundColor: leagueColor(c.id) } : undefined}
+                    aria-pressed={on}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? 'border-transparent' : 'border-border-subtle text-text-secondary'}`}
+                    style={on ? { backgroundColor: leagueColor(c.id), color: leagueTextColor(c.id) } : undefined}
                   >
                     <span className={`flex rounded-full ${on ? 'bg-bg-base/70 p-0.5' : ''}`}>
                       <CompetitionLogo competitionId={c.id} size={on ? 14 : 16} />
@@ -237,6 +240,7 @@ export function SettingsPage() {
                   <button
                     key={type}
                     onClick={() => update({ ...prefs, eventTypes: toggle(prefs.eventTypes, type) })}
+                    aria-pressed={on}
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
                   >
                     <Icon name={EVENT_META[type].icon} size={16} />

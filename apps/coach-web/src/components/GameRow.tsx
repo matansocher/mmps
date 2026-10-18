@@ -51,7 +51,7 @@ export function GameRow({ game }: { readonly game: Game }) {
   const lastEvent = game.status === 'live' ? game.events.filter((e) => CARD_EVENT_TYPES.has(e.type)).at(-1) : undefined;
   const t = useT();
   return (
-    <article
+    <div
       role="link"
       tabIndex={0}
       onClick={() => openGame(game.id)}
@@ -74,6 +74,6 @@ export function GameRow({ game }: { readonly game: Game }) {
         </p>
       )}
       {finished && game.headline && <GameHeadlineLine game={game} headline={game.headline} compact />}
-    </article>
+    </div>
   );
 }

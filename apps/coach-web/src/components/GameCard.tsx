@@ -207,14 +207,14 @@ export function GameCard({ game }: { readonly game: Game }) {
   const awayScore = game.away.score ?? 0;
   const t = useT();
   return (
-    <article
+    <div
       role="link"
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
       className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
     >
-      <header className="flex h-6 items-center justify-between gap-3">
+      <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
           <span className="truncate">{game.competitionName}</span>
@@ -225,7 +225,7 @@ export function GameCard({ game }: { readonly game: Game }) {
           {game.status === 'scheduled' && <Countdown startTime={game.startTime} />}
           <StatusBadge game={game} />
         </span>
-      </header>
+      </div>
       {game.status === 'scheduled' ? (
         <div className="flex flex-col gap-2.5 py-1">
           <TeamRow team={game.home} game={game} isWinner />
@@ -255,7 +255,7 @@ export function GameCard({ game }: { readonly game: Game }) {
           <FormStrip game={game} />
         </div>
       )}
-    </article>
+    </div>
   );
 }
 

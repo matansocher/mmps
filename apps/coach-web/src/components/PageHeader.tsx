@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { useT } from '../lib/i18n';
 import { goBack } from '../lib/router';
 import { Icon } from './Icon';
@@ -14,6 +14,12 @@ type Props = {
 
 export function PageHeader({ title, subtitle, back, actions, children, maxWidth = 'max-w-[1500px]' }: Props) {
   const t = useT();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    const text = headingRef.current?.textContent?.trim();
+    document.title = text ? `${text} · ${t.nav.brand}` : t.nav.brand;
+  });
   return (
     <header className="sticky top-0 z-20 md:top-14 border-b border-border-subtle bg-bg-base/90 backdrop-blur-md">
       <div className={`mx-auto flex ${maxWidth} items-center gap-3 px-4 py-3`}>
@@ -23,7 +29,7 @@ export function PageHeader({ title, subtitle, back, actions, children, maxWidth 
           </button>
         )}
         <div className="flex min-w-0 flex-1 flex-col">
-          <h1 className="flex min-w-0 items-center gap-2 truncate text-lg font-bold">{title}</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="flex min-w-0 items-center gap-2 truncate text-lg font-bold">{title}</h1>
           {subtitle && <span className="truncate text-xs text-text-muted">{subtitle}</span>}
         </div>
         {actions}

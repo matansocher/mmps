@@ -26,7 +26,7 @@ export function TopBar() {
   const active = activeTab(useRoute());
   const t = useT();
   return (
-    <header className="sticky top-0 z-30 hidden h-14 border-b border-border-subtle bg-bg-base/95 backdrop-blur-md md:block">
+    <div className="sticky top-0 z-30 hidden h-14 border-b border-border-subtle bg-bg-base/95 backdrop-blur-md md:block">
       <div className="mx-auto flex h-full max-w-[1500px] items-center gap-8 px-4">
         <button onClick={() => go('live')} className="flex shrink-0 items-center gap-2 text-sm font-bold tracking-[-0.01em] text-text-primary">
           <span className="flex size-7 items-center justify-center rounded-lg bg-accent-live/12 text-accent-live">
@@ -52,7 +52,7 @@ export function TopBar() {
           })}
         </nav>
       </div>
-    </header>
+    </div>
   );
 }
 
