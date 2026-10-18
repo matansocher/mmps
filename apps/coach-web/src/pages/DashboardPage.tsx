@@ -1,16 +1,22 @@
-import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type CardActions, CardActionsContext } from '../components/CardActions';
 import { GameCard, GameCardSkeleton } from '../components/GameCard';
 import { GameRow } from '../components/GameRow';
 import { Icon, type IconName } from '../components/Icon';
 import { LiveDot } from '../components/LiveDot';
+import { MatchdayHeatmap, slotRange } from '../components/MatchdayHeatmap';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
+import { PreMatchModal } from '../components/PreMatchModal';
+import { RefreshBanner } from '../components/RefreshBanner';
 import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatClock, formatDateTitle } from '../lib/format';
+import { isInSlot } from '../lib/heatmap';
 import { leagueColor, leagueTextColor } from '../lib/league-themes';
 import { type Messages, useT } from '../lib/i18n';
+import { MAX_PINS, readPins, togglePin, writePins } from '../lib/pins';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { Game } from '../types';
@@ -32,7 +38,8 @@ function readViewMode(): ViewMode {
 }
 
 type LeagueGroup = { readonly competitionId: number; readonly name: string; readonly games: Game[] };
-type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean; readonly leagues?: LeagueGroup[] };
+type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean; readonly pinned?: boolean; readonly leagues?: LeagueGroup[] };
+type PreMatchTarget = { readonly game: Game; readonly trigger: HTMLElement };
 
 // Leagues with a favourite team's game come first; otherwise leagues keep the server order. Games run by kick-off.
 function groupByLeague(games: readonly Game[]): LeagueGroup[] {
@@ -191,10 +198,26 @@ function ChipStrip({ label, activeKey, children }: { readonly label: string; rea
 }
 
 export function DashboardPage() {
-  const { data, loading, refreshing, errorStatus, refresh } = useDashboard();
+  const { data, loading, refreshing, errorStatus, refresh, lastSuccessAt, nextRetryAt, online, recovered } = useDashboard();
   const t = useT();
   const [competitionFilter, setCompetitionFilter] = useState<number | typeof FAVORITES_FILTER | null>(null);
+  const [slotFilter, setSlotFilter] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
+  const [pins, setPins] = useState<{ date: string | null; ids: readonly number[] }>({ date: null, ids: [] });
+  const [pinLimitShown, setPinLimitShown] = useState(false);
+  const [preMatch, setPreMatch] = useState<PreMatchTarget | null>(null);
+  const date = data?.date ?? null;
+  const pinnedIds = useMemo(() => (pins.date === date ? pins.ids : []), [pins, date]);
+
+  useEffect(() => {
+    if (date) setPins({ date, ids: readPins(date) });
+  }, [date]);
+
+  useEffect(() => {
+    if (!pinLimitShown) return;
+    const timer = window.setTimeout(() => setPinLimitShown(false), 3500);
+    return () => window.clearTimeout(timer);
+  }, [pinLimitShown]);
 
   const changeViewMode = (next: ViewMode) => {
     hapticSelect();
@@ -218,11 +241,49 @@ export function DashboardPage() {
     return [...map.values()];
   }, [games]);
 
+  const gameIds = useMemo(() => new Set(games.map((g) => g.id)), [games]);
+  const togglePinned = useCallback(
+    (game: Game) => {
+      if (!date) return;
+      const result = togglePin(pinnedIds, game.id, gameIds);
+      setPinLimitShown(result.limitReached);
+      if (result.limitReached) return;
+      hapticSelect();
+      writePins(date, result.ids);
+      setPins({ date, ids: result.ids });
+    },
+    [date, pinnedIds, gameIds],
+  );
+  const cardActions = useMemo<CardActions>(
+    () => ({
+      isPinned: (id) => pinnedIds.includes(id),
+      togglePin: togglePinned,
+      openPreMatch: (game, trigger) => setPreMatch({ game, trigger }),
+    }),
+    [pinnedIds, togglePinned],
+  );
+
   const favoriteGames = games.filter((g) => g.isFavorite);
   const filterAvailable = competitionFilter === FAVORITES_FILTER ? favoriteGames.length > 0 : competitions.some((c) => c.id === competitionFilter);
   const activeFilter = competitionFilter !== null && filterAvailable ? competitionFilter : null;
   const visibleGames = activeFilter === null ? games : activeFilter === FAVORITES_FILTER ? favoriteGames : games.filter((g) => g.competitionId === activeFilter);
-  const sections = buildSections(visibleGames, t.dashboard.sections);
+  const activeSlot = slotFilter !== null && visibleGames.some((g) => isInSlot(g, slotFilter)) ? slotFilter : null;
+  const slotGames = activeSlot === null ? visibleGames : visibleGames.filter((g) => isInSlot(g, activeSlot));
+  // Pinned games always lead the page, whatever filter is on, and leave their usual section.
+  const pinnedGames = pinnedIds.map((id) => games.find((g) => g.id === id)).filter((g): g is Game => !!g);
+  const sections = [
+    ...(pinnedGames.length ? [{ key: 'pinned', title: t.dashboard.sections.pinned, games: pinnedGames, pinned: true }] : []),
+    ...buildSections(
+      slotGames.filter((g) => !pinnedIds.includes(g.id)),
+      t.dashboard.sections,
+    ),
+  ];
+  const stale = errorStatus !== null && !!data;
+
+  const selectSlot = (slot: number | null) => {
+    hapticSelect();
+    setSlotFilter(slot);
+  };
   const liveCount = games.filter((g) => g.status === 'live').length;
 
   return (
@@ -298,8 +359,27 @@ export function DashboardPage() {
       {errorStatus !== null && !data ? (
         <ErrorState status={errorStatus} onRetry={refresh} />
       ) : (
-        <main className="mx-auto flex max-w-[1500px] flex-col gap-8 px-4 pt-5">
-          {errorStatus !== null && <p className="rounded-xl border border-accent-red/20 bg-accent-red/10 px-3 py-2 text-xs text-accent-red">{t.dashboard.refreshFailed}</p>}
+        <CardActionsContext.Provider value={cardActions}>
+        <RefreshBanner failed={stale} online={online} refreshing={refreshing} lastSuccessAt={lastSuccessAt} nextRetryAt={nextRetryAt} recovered={recovered} onRetry={refresh} />
+        <main data-stale={stale || undefined} className="mx-auto flex max-w-[1500px] flex-col gap-8 px-4 pt-5">
+          {!loading && visibleGames.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <MatchdayHeatmap games={visibleGames} activeSlot={activeSlot} onSelect={selectSlot} />
+              {activeSlot !== null && (
+                <div className="flex items-center gap-2 text-xs text-text-secondary">
+                  <span>{t.dashboard.showingSlot(slotRange(activeSlot))}</span>
+                  <button
+                    type="button"
+                    onClick={() => selectSlot(null)}
+                    className="flex items-center gap-1 rounded-full bg-white/[0.06] px-2.5 py-1 font-semibold text-text-primary transition hover:bg-white/[0.1]"
+                  >
+                    <Icon name="close" size={12} />
+                    {t.dashboard.clearSlot}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           {loading && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 6 }, (_, i) => (
@@ -307,7 +387,7 @@ export function DashboardPage() {
               ))}
             </div>
           )}
-          {!loading && sections.length === 0 && (
+          {!loading && games.length === 0 && (
             <div className="mt-16 flex flex-col items-center gap-3 text-center">
               <span className="flex size-14 items-center justify-center rounded-full bg-white/[0.04] text-text-muted">
                 <Icon name="moon" size={26} />
@@ -323,6 +403,7 @@ export function DashboardPage() {
             <section key={section.key} aria-labelledby={`section-${section.key}`} className="flex flex-col gap-3">
               <h2 id={`section-${section.key}`} className="flex items-center gap-2 text-[15px] font-bold tracking-[-0.01em] text-text-primary">
                 {section.live && <LiveDot />}
+                {section.pinned && <Icon name="pin" size={14} className="text-accent-brand" />}
                 {section.title}
                 <span className="score-font rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-text-secondary">{section.games.length}</span>
               </h2>
@@ -345,6 +426,16 @@ export function DashboardPage() {
             </section>
           ))}
         </main>
+        {preMatch && <PreMatchModal game={games.find((g) => g.id === preMatch.game.id) ?? preMatch.game} trigger={preMatch.trigger} onClose={() => setPreMatch(null)} />}
+        <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 md:bottom-8">
+          {pinLimitShown && (
+            <p className="banner-in pointer-events-auto flex items-center gap-2 rounded-full border border-border-subtle bg-bg-elevated px-4 py-2 text-sm text-text-primary shadow-xl">
+              <Icon name="pin" size={14} className="text-accent-brand" />
+              {t.dashboard.pinLimit(MAX_PINS)}
+            </p>
+          )}
+        </div>
+        </CardActionsContext.Provider>
       )}
     </div>
   );

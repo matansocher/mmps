@@ -6,6 +6,7 @@ import { TeamLogo } from '../components/TeamLogo';
 import { Loading } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { api } from '../lib/api';
+import { isGoalSoundEnabled, setGoalSoundEnabled } from '../lib/goal-sound';
 import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
 import { LANGUAGE_NAMES, useLanguage, useT } from '../lib/i18n';
 import { leagueColor, leagueTextColor } from '../lib/league-themes';
@@ -107,6 +108,7 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [goalSound, setGoalSound] = useState(isGoalSoundEnabled);
 
   useEffect(() => {
     (async () => {
@@ -249,6 +251,25 @@ export function SettingsPage() {
                   </button>
                 );
               })}
+            </div>
+          </Card>
+
+          <Card title={t.settings.goalSound} subtitle={t.settings.goalSoundSubtitle}>
+            <div className="grid grid-cols-2 gap-2">
+              {[true, false].map((value) => (
+                <button
+                  key={String(value)}
+                  onClick={() => {
+                    hapticSelect();
+                    setGoalSound(value);
+                    setGoalSoundEnabled(value);
+                  }}
+                  aria-pressed={goalSound === value}
+                  className={`rounded-lg border px-3 py-2 text-sm transition ${goalSound === value ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                >
+                  {value ? t.settings.on : t.settings.off}
+                </button>
+              ))}
             </div>
           </Card>
         </main>

@@ -4,6 +4,7 @@ import { messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { DashboardStandingRow, FormEntry, Game, GameEvent, Team, TvChannel } from '../types';
+import { HotBadge, PinButton, PreMatchButton } from './CardActions';
 import { ChannelLogo } from './ChannelLogo';
 import { CompetitionLogo } from './CompetitionLogo';
 import { GameHeadlineLine } from './GameHeadline';
@@ -95,7 +96,7 @@ function StatusBadge({ game }: { readonly game: Game }) {
     return (
       <span className="flex h-6 items-center gap-1.5 rounded-full bg-accent-live/12 px-2.5 text-xs font-bold text-accent-live">
         <LiveDot />
-        <span className="score-font ltr-num">{game.minuteDisplay || game.statusText || t.common.live}</span>
+        <span className="live-minute score-font ltr-num">{game.minuteDisplay || game.statusText || t.common.live}</span>
       </span>
     );
   }
@@ -140,7 +141,7 @@ function MatchTimeline({ game }: { readonly game: Game }) {
       <TimelineLane events={events.filter((e) => e.side === 'home')} scale={scale} side="top" />
       <span />
       <div className="relative my-1 h-[3px] rounded-full bg-white/[0.08]">
-        <div className="h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
+        <div className="live-progress h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
         <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ insetInlineStart: `${(45 / scale) * 100}%` }} aria-hidden />
       </div>
       <TeamLogo teamId={game.away.id} name={game.away.name} size={14} />
@@ -252,7 +253,7 @@ export function GameCard({ game }: { readonly game: Game }) {
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
+      className="game-card group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
     >
       <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
@@ -263,7 +264,12 @@ export function GameCard({ game }: { readonly game: Game }) {
         <span className="flex shrink-0 items-center gap-2">
           {game.channels.length > 0 && <HeaderChannel channels={game.channels} />}
           {game.status === 'scheduled' && <Countdown startTime={game.startTime} />}
+          <HotBadge game={game} />
           <StatusBadge game={game} />
+          <span className="-me-1.5 flex items-center empty:hidden">
+            <PreMatchButton game={game} />
+            <PinButton game={game} />
+          </span>
         </span>
       </div>
       {game.status === 'scheduled' ? (

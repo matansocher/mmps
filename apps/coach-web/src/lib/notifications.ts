@@ -8,6 +8,7 @@ export type GameNotification = {
   readonly gameId: number;
   readonly competitionId: number;
   readonly icon: IconName;
+  readonly eventType?: EventType;
   readonly title: string;
   readonly text?: string;
   readonly minuteDisplay?: string;
@@ -161,6 +162,7 @@ export function diffGames(previous: readonly Game[], next: readonly Game[], even
         ...base,
         key: event.key,
         icon: meta.icon,
+        eventType: event.type,
         title: context?.title ?? messages().events[event.type].title,
         text: context?.text ?? eventText(event),
         minuteDisplay: event.minuteDisplay,

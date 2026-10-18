@@ -1,6 +1,7 @@
 import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/format';
 import { useT } from '../lib/i18n';
 import type { Game, Side, Team } from '../types';
+import { HotBadge, PinButton, PreMatchButton } from './CardActions';
 import { openGame } from './GameCard';
 import { Icon } from './Icon';
 import { LiveDot } from './LiveDot';
@@ -35,10 +36,14 @@ function Center({ game }: { readonly game: Game }) {
       {game.status === 'live' ? (
         <span className="score-font flex h-3.5 items-center gap-1 text-[11px] font-bold leading-none text-accent-live">
           <LiveDot />
-          <span className="ltr-num">{game.minuteDisplay || game.statusText}</span>
+          <span className="live-minute ltr-num">{game.minuteDisplay || game.statusText}</span>
+          <HotBadge game={game} compact />
         </span>
       ) : (
-        <span className="h-3.5 max-w-16 truncate text-[10px] leading-3.5 text-text-muted">{game.statusText}</span>
+        <span className="flex h-3.5 max-w-16 items-center gap-1">
+          <span className="truncate text-[10px] leading-3.5 text-text-muted">{game.statusText}</span>
+          <HotBadge game={game} compact />
+        </span>
       )}
     </>
   );
@@ -56,15 +61,19 @@ export function GameRow({ game }: { readonly game: Game }) {
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="relative flex cursor-pointer flex-col gap-1 rounded-xl border border-white/[0.06] bg-bg-card px-3 py-2 transition duration-150 ease-out hover:border-white/[0.1] hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand"
+      className="game-card relative flex cursor-pointer flex-col gap-1 rounded-xl border border-white/[0.06] bg-bg-card px-3 py-2 transition duration-150 ease-out hover:border-white/[0.1] hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand"
     >
-      {game.isFavorite && <Icon name="star" size={10} className="absolute end-1.5 top-1.5 text-accent-draw" title={t.common.favouriteTeam} />}
+      {game.isFavorite && <Icon name="star" size={10} className="absolute start-1.5 top-1.5 text-accent-draw" title={t.common.favouriteTeam} />}
       <div className="flex items-center gap-2">
         <TeamCell team={game.home} reds={redCards(game, 'home')} align="start" dim={finished && homeScore < awayScore} />
         <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5">
           <Center game={game} />
         </div>
         <TeamCell team={game.away} reds={redCards(game, 'away')} align="end" dim={finished && awayScore < homeScore} />
+        <span className="-me-1.5 flex shrink-0 items-center empty:hidden">
+          <PreMatchButton game={game} />
+          <PinButton game={game} />
+        </span>
       </div>
       {lastEvent && (
         <p className="flex min-w-0 items-center justify-center gap-1.5 text-[11px] text-text-muted">
