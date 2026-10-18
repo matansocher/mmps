@@ -11,7 +11,8 @@ import { RefreshBanner } from '../components/RefreshBanner';
 import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
-import { formatDateTitle } from '../lib/format';
+import { daysBetween, shiftDate } from '../lib/dates';
+import { formatDateTitle, formatDayLabel } from '../lib/format';
 import { leagueColor, leagueTextColor } from '../lib/league-themes';
 import { type Messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
@@ -22,6 +23,8 @@ type ViewMode = 'cards' | 'list';
 
 const VIEW_MODE_KEY = 'coach:dashboard-view';
 const FAVORITES_FILTER = 'favorites';
+// Matches the server's MAX_DASHBOARD_DAY_OFFSET.
+const MAX_DAY_OFFSET = 7;
 
 function readViewMode(): ViewMode {
   try {
@@ -59,14 +62,14 @@ function groupWithFavorites(games: readonly Game[], title: string): LeagueGroup[
   return favorites.length ? [{ key: 'favorites', name: title, games: favorites }, ...leagues] : leagues;
 }
 
-function buildSections(games: Game[], t: Messages['dashboard']['sections'], myTeams: string): GameSection[] {
+function buildSections(games: Game[], t: Messages['dashboard']['sections'], myTeams: string, isToday: boolean): GameSection[] {
   // The sort is stable, so games of equal priority keep the server order.
   const rest = [...games].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
   const scheduled = rest.filter((g) => g.status === 'scheduled');
   const finished = games.filter((g) => g.status === 'finished');
   return [
     { key: 'live', title: t.live, games: rest.filter((g) => g.status === 'live'), live: true },
-    { key: 'scheduled', title: t.scheduled, games: scheduled, leagues: groupWithFavorites(scheduled, myTeams) },
+    { key: 'scheduled', title: isToday ? t.scheduled : t.upcoming, games: scheduled, leagues: groupWithFavorites(scheduled, myTeams) },
     { key: 'other', title: t.other, games: rest.filter((g) => g.status === 'other') },
     { key: 'finished', title: t.finished, games: finished, leagues: groupByLeague(finished) },
   ].filter((s) => s.games.length > 0);
@@ -123,6 +126,47 @@ function ViewToggle({ value, onChange }: { readonly value: ViewMode; readonly on
           <Icon name={o.icon} size={16} />
         </button>
       ))}
+    </div>
+  );
+}
+
+function DayButton({ onClick, label, disabled, flip }: { readonly onClick: () => void; readonly label: string; readonly disabled: boolean; readonly flip?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className="flex size-9 shrink-0 items-center justify-center rounded-full text-text-secondary transition duration-150 ease-out hover:bg-white/[0.06] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+    >
+      <Icon name="back" size={18} className={flip ? '-scale-x-100 rtl:scale-x-100' : 'rtl:-scale-x-100'} />
+    </button>
+  );
+}
+
+function DayNavigator({ date, today, onChange }: { readonly date: string; readonly today: string; readonly onChange: (date: string) => void }) {
+  const t = useT();
+  const offset = daysBetween(today, date);
+  const go = (next: string) => {
+    hapticSelect();
+    onChange(next);
+  };
+  return (
+    <div role="group" aria-label={t.dashboard.day.label} className="mx-auto flex max-w-[1500px] items-center gap-1 px-3 pb-2">
+      <DayButton onClick={() => go(shiftDate(date, -1))} label={t.dashboard.day.previous} disabled={offset <= -MAX_DAY_OFFSET} />
+      <span aria-live="polite" className={`min-w-24 text-center text-sm font-semibold ${offset === 0 ? 'text-text-primary' : 'text-accent-brand'}`}>
+        {formatDayLabel(date, today)}
+      </span>
+      <DayButton onClick={() => go(shiftDate(date, 1))} label={t.dashboard.day.next} disabled={offset >= MAX_DAY_OFFSET} flip />
+      {offset !== 0 && (
+        <button
+          onClick={() => go(today)}
+          className="ms-auto flex h-8 items-center gap-1.5 rounded-full bg-white/[0.06] px-3 text-[13px] font-semibold text-text-primary transition duration-150 ease-out hover:bg-white/[0.1] active:scale-[0.97]"
+        >
+          {t.dashboard.day.today}
+          <Icon name="back" size={14} className={offset < 0 ? '-scale-x-100 rtl:scale-x-100' : 'rtl:-scale-x-100'} />
+        </button>
+      )}
     </div>
   );
 }
@@ -203,7 +247,7 @@ function ChipStrip({ label, activeKey, children }: { readonly label: string; rea
 }
 
 export function DashboardPage() {
-  const { data, loading, refreshing, errorStatus, refresh, lastSuccessAt, nextRetryAt, online, recovered } = useDashboard();
+  const { data, loading, refreshing, errorStatus, refresh, lastSuccessAt, nextRetryAt, online, recovered, selectedDate, setDate } = useDashboard();
   const t = useT();
   const [competitionFilter, setCompetitionFilter] = useState<number | typeof FAVORITES_FILTER | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
@@ -219,7 +263,11 @@ export function DashboardPage() {
     }
   };
 
-  const games = useMemo(() => data?.games ?? [], [data]);
+  // While another day loads, the previous day's games give way to skeletons.
+  const switchingDay = !!data && selectedDate !== null && data.date !== selectedDate;
+  const shownDate = switchingDay ? selectedDate : data?.date;
+  const isToday = !data || shownDate === data.today;
+  const games = useMemo(() => (switchingDay ? [] : (data?.games ?? [])), [data, switchingDay]);
   const competitions = useMemo(() => {
     const map = new Map<number, { id: number; name: string; count: number; live: number }>();
     for (const g of games) {
@@ -242,7 +290,7 @@ export function DashboardPage() {
   const filterAvailable = competitionFilter === FAVORITES_FILTER ? favoriteGames.length > 0 : competitions.some((c) => c.id === competitionFilter);
   const activeFilter = competitionFilter !== null && filterAvailable ? competitionFilter : null;
   const visibleGames = activeFilter === null ? games : activeFilter === FAVORITES_FILTER ? favoriteGames : games.filter((g) => g.competitionId === activeFilter);
-  const sections = buildSections(visibleGames, t.dashboard.sections, t.dashboard.myTeams);
+  const sections = buildSections(visibleGames, t.dashboard.sections, t.dashboard.myTeams, isToday);
   const stale = errorStatus !== null && !!data;
 
   const liveCount = games.filter((g) => g.status === 'live').length;
@@ -263,7 +311,7 @@ export function DashboardPage() {
         subtitle={
           data ? (
             <>
-              {formatDateTitle(data.date)} ·{' '}
+              {formatDateTitle(shownDate)} ·{' '}
               <TimeAgo iso={data.updatedAt} />
             </>
           ) : (
@@ -277,6 +325,7 @@ export function DashboardPage() {
           </>
         }
       >
+        {data && <DayNavigator date={shownDate} today={data.today} onChange={setDate} />}
         {(competitions.length > 1 || favoriteGames.length > 0) && (
           <ChipStrip label={t.dashboard.filterByLeague} activeKey={String(activeFilter)}>
             <FilterChip active={activeFilter === null} tone={ALL_TONE} onClick={() => setCompetitionFilter(null)}>
@@ -308,25 +357,31 @@ export function DashboardPage() {
         )}
       </PageHeader>
 
-      {errorStatus !== null && !data ? (
+      {errorStatus !== null && (!data || switchingDay) ? (
         <ErrorState status={errorStatus} onRetry={refresh} />
       ) : (
         <CardActionsContext.Provider value={cardActions}>
         <RefreshBanner failed={stale} online={online} refreshing={refreshing} lastSuccessAt={lastSuccessAt} nextRetryAt={nextRetryAt} recovered={recovered} onRetry={refresh} />
         <main data-stale={stale || undefined} className="mx-auto flex max-w-[1500px] flex-col gap-8 px-4 pt-5">
-          {loading && (
+          {data && !switchingDay && selectedDate === null && data.date !== data.today && (
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5 text-sm text-text-secondary">
+              <Icon name="moon" size={16} className="shrink-0 text-text-muted" />
+              {t.dashboard.day.lastNight}
+            </div>
+          )}
+          {(loading || switchingDay) && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 6 }, (_, i) => (
                 <GameCardSkeleton key={i} />
               ))}
             </div>
           )}
-          {!loading && games.length === 0 && (
+          {!loading && !switchingDay && games.length === 0 && (
             <div className="mt-16 flex flex-col items-center gap-3 text-center">
               <span className="flex size-14 items-center justify-center rounded-full bg-white/[0.04] text-text-muted">
                 <Icon name="moon" size={26} />
               </span>
-              <p className="text-base font-semibold">{t.dashboard.emptyTitle}</p>
+              <p className="text-base font-semibold">{isToday ? t.dashboard.emptyTitle : t.dashboard.emptyTitleDay}</p>
               <p className="max-w-xs text-sm text-text-muted">{t.dashboard.emptyText}</p>
               <button onClick={() => navigate({ name: 'settings' })} className="mt-1 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-white/[0.1]">
                 {t.dashboard.emptyAction}

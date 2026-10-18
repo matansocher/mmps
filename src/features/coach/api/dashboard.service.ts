@@ -1,11 +1,13 @@
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { chunk, getErrorMessage, Logger } from '@core/utils';
 import { COMPETITIONS, getGamesByDate, searchCompetitors } from '@services/scores-365';
 import type { ScoresGame, ScoresGameDetails, ScoresGameStat } from '@services/scores-365';
 import { getDashboardPreferences, getSubscription, saveDashboardPreferences } from '@shared/coach';
 import type { DashboardLanguage, DashboardPreferences, DashboardPreferencesUpdate } from '@shared/coach';
-import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_LANGUAGE, LANGUAGE_IDS, LIVE_DATA_TTL_SEC, SEASON_GAMES } from './constants';
+import { COMPETITION_NAMES, DEFAULT_COMPETITION_IDS, DEFAULT_EVENT_TYPES, DEFAULT_LANGUAGE, LANGUAGE_IDS, LIVE_DATA_TTL_SEC, SEASON_GAMES, SPORTS_DAY_ROLLOVER_HOUR } from './constants';
+import { shiftDate } from './dates';
 import { toDashboardForm, toDashboardStandings } from './detail-transformers';
 import { getGameHeadline } from './game-headline';
 import { getCachedCompetitionTeamIds, getCachedGameDetails, getCachedGameStats, getCachedHeadToHead, getCachedLiveOdds, getCachedStandings } from './scores-cache';
@@ -85,13 +87,30 @@ export class CoachDashboardService {
     });
   }
 
-  async getDashboard(telegramUserId: number, requestedLang?: DashboardLanguage, now = new Date()): Promise<DashboardResponse> {
+  async getDashboard(telegramUserId: number, requestedLang?: DashboardLanguage, requestedDate?: string, now = new Date()): Promise<DashboardResponse> {
     const preferences = await this.getPreferences(telegramUserId);
     const lang = requestedLang ?? preferences.language;
-    const date = formatInTimeZone(now, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
     const favoriteTeamIds = new Set(preferences.favoriteTeams.map((t) => t.id));
+    const load = (day: string) => this.getGamesForDate(day, lang, preferences.competitionIds, [...favoriteTeamIds]);
 
-    const games = await this.getTodayGames(now, date, lang, preferences.competitionIds, [...favoriteTeamIds]);
+    const today = formatInTimeZone(now, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
+    const yesterday = shiftDate(today, -1);
+    const earlyHours = Number(formatInTimeZone(now, DEFAULT_TIMEZONE, 'H')) < SPORTS_DAY_ROLLOVER_HOUR;
+
+    let date = requestedDate ?? today;
+    let games: ScoresGame[];
+    if (earlyHours && (date === today || date === yesterday)) {
+      const yesterdayGames = await load(yesterday);
+      const todayGames = await load(today);
+      // Opening the app after midnight lands on last night's games, unless there were none.
+      if (!requestedDate && yesterdayGames.length > 0) date = yesterday;
+      const [shown, other] = date === yesterday ? [yesterdayGames, todayGames] : [todayGames, yesterdayGames];
+      // Games still running across midnight stay in view whichever of the two days is shown.
+      const shownIds = new Set(shown.map((g) => g.id));
+      games = [...shown, ...other.filter((g) => !shownIds.has(g.id) && classifyGameStatus(g.statusGroup) === 'live')];
+    } else {
+      games = await load(date);
+    }
 
     const enriched: EnrichedGame[] = [];
     for (const batch of chunk(games, FETCH_CONCURRENCY)) {
@@ -108,15 +127,16 @@ export class CoachDashboardService {
       }),
     );
 
-    return { date, updatedAt: new Date().toISOString(), preferences, games: dashboardGames };
+    return { date, today, updatedAt: new Date().toISOString(), preferences, games: dashboardGames };
   }
 
-  private async getTodayGames(now: Date, date: string, lang: DashboardLanguage, competitionIds: readonly number[], competitorIds: readonly number[]): Promise<ScoresGame[]> {
-    const zonedNow = toZonedTime(now, DEFAULT_TIMEZONE);
+  private async getGamesForDate(date: string, lang: DashboardLanguage, competitionIds: readonly number[], competitorIds: readonly number[]): Promise<ScoresGame[]> {
+    // getGamesByDate formats the day in server-local time, so pass the requested date at local midnight.
+    const day = parseISO(date);
     // Cached per league and per team (not per user selection) so users with overlapping selections share upstream calls.
     const loaders = [
-      ...[...new Set(competitionIds)].map((id) => () => this.fetchGames(`${lang}:c:${date}:${id}`, () => getGamesByDate({ date: zonedNow, competitionIds: [id], langId: LANGUAGE_IDS[lang] }))),
-      ...[...new Set(competitorIds)].map((id) => () => this.fetchGames(`${lang}:t:${date}:${id}`, () => getGamesByDate({ date: zonedNow, competitorIds: [id], langId: LANGUAGE_IDS[lang] }))),
+      ...[...new Set(competitionIds)].map((id) => () => this.fetchGames(`${lang}:c:${date}:${id}`, () => getGamesByDate({ date: day, competitionIds: [id], langId: LANGUAGE_IDS[lang] }))),
+      ...[...new Set(competitorIds)].map((id) => () => this.fetchGames(`${lang}:t:${date}:${id}`, () => getGamesByDate({ date: day, competitorIds: [id], langId: LANGUAGE_IDS[lang] }))),
     ];
     const lists: ScoresGame[][] = [];
     for (const batch of chunk(loaders, FETCH_CONCURRENCY)) {

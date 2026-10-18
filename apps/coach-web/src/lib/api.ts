@@ -62,7 +62,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  dashboard: () => request<DashboardResponse>('/api/coach/dashboard'),
+  dashboard: (date?: string) => request<DashboardResponse>(`/api/coach/dashboard${date ? `?date=${date}` : ''}`),
   preferences: () => request<Preferences>('/api/coach/preferences'),
   savePreferences: (preferences: Preferences) => request<Preferences>('/api/coach/preferences', { method: 'PUT', body: JSON.stringify(preferences) }),
   competitions: () => request<CompetitionOption[]>('/api/coach/competitions'),

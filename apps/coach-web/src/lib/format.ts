@@ -1,5 +1,6 @@
 import type { IconName } from '../components/Icon';
 import type { EventType, GameEvent } from '../types';
+import { daysBetween } from './dates';
 import { getLocale, messages } from './i18n';
 
 export const EVENT_META: Record<EventType, { readonly icon: IconName }> = {
@@ -38,6 +39,16 @@ export function formatKickoff(iso: string): string {
 
 export function formatDateTitle(date: string): string {
   return new Date(`${date}T12:00:00`).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+// "Today" / "Yesterday" / "Tomorrow", otherwise a short weekday and date.
+export function formatDayLabel(date: string, today: string): string {
+  const offset = daysBetween(today, date);
+  if (Math.abs(offset) <= 1) {
+    const label = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' }).format(offset, 'day');
+    return label.charAt(0).toLocaleUpperCase(getLocale()) + label.slice(1);
+  }
+  return new Date(`${date}T12:00:00`).toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 export function formatShortDate(iso: string): string {

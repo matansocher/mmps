@@ -92,7 +92,9 @@ export type DashboardPreferencesDto = {
 };
 
 export type DashboardResponse = {
+  // Format: "YYYY-MM-DD" (Asia/Jerusalem) for both
   readonly date: string;
+  readonly today: string;
   readonly updatedAt: string;
   readonly preferences: DashboardPreferencesDto;
   readonly games: DashboardGame[];
