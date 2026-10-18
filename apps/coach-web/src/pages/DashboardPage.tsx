@@ -16,6 +16,7 @@ import type { Game } from '../types';
 type ViewMode = 'cards' | 'list';
 
 const VIEW_MODE_KEY = 'coach:dashboard-view';
+const FAVORITES_FILTER = 'favorites';
 
 function readViewMode(): ViewMode {
   try {
@@ -106,7 +107,7 @@ function Count({ value, active }: { readonly value: number; readonly active: boo
 export function DashboardPage() {
   const { data, loading, refreshing, errorStatus, refresh, refreshIntervalSec } = useDashboard();
   const t = useT();
-  const [competitionFilter, setCompetitionFilter] = useState<number | null>(null);
+  const [competitionFilter, setCompetitionFilter] = useState<number | typeof FAVORITES_FILTER | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
 
   const toggleViewMode = () => {
@@ -132,8 +133,10 @@ export function DashboardPage() {
     return [...map.values()];
   }, [games]);
 
-  const activeFilter = competitionFilter !== null && competitions.some((c) => c.id === competitionFilter) ? competitionFilter : null;
-  const visibleGames = activeFilter === null ? games : games.filter((g) => g.competitionId === activeFilter);
+  const favoriteGames = games.filter((g) => g.isFavorite);
+  const filterAvailable = competitionFilter === FAVORITES_FILTER ? favoriteGames.length > 0 : competitions.some((c) => c.id === competitionFilter);
+  const activeFilter = competitionFilter !== null && filterAvailable ? competitionFilter : null;
+  const visibleGames = activeFilter === null ? games : activeFilter === FAVORITES_FILTER ? favoriteGames : games.filter((g) => g.competitionId === activeFilter);
   const sections = buildSections(visibleGames, t.dashboard.sections);
   const liveCount = games.filter((g) => g.status === 'live').length;
 
@@ -159,11 +162,19 @@ export function DashboardPage() {
           </>
         }
       >
-        {competitions.length > 1 && (
+        {(competitions.length > 1 || favoriteGames.length > 0) && (
           <nav aria-label={t.dashboard.filterByLeague} className="no-scrollbar mx-auto flex max-w-[1500px] gap-2 overflow-x-auto px-4 pb-3">
             <FilterChip active={activeFilter === null} onClick={() => setCompetitionFilter(null)}>
               {t.dashboard.all} <Count value={games.length} active={activeFilter === null} />
             </FilterChip>
+            {favoriteGames.length > 0 && (
+              <FilterChip active={activeFilter === FAVORITES_FILTER} onClick={() => setCompetitionFilter(activeFilter === FAVORITES_FILTER ? null : FAVORITES_FILTER)}>
+                <Icon name="star" size={14} className={activeFilter === FAVORITES_FILTER ? '' : 'text-accent-draw'} />
+                {t.dashboard.myTeams}
+                <Count value={favoriteGames.length} active={activeFilter === FAVORITES_FILTER} />
+                {favoriteGames.some((g) => g.status === 'live') && <LiveDot />}
+              </FilterChip>
+            )}
             {competitions.map((c) => (
               <FilterChip key={c.id} active={activeFilter === c.id} onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}>
                 <CompetitionLogo competitionId={c.id} size={16} />

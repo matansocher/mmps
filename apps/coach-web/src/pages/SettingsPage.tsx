@@ -200,24 +200,38 @@ export function SettingsPage() {
           </Card>
 
           <Card title={t.settings.myTeams} subtitle={t.settings.myTeamsSubtitle}>
-            {prefs.favoriteTeams.length > 0 && (
-              <ul className="flex flex-wrap gap-2">
+            <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-text-secondary">{t.settings.favoritesTitle}</span>
+              <span className="score-font text-text-muted">
+                {prefs.favoriteTeams.length}/{MAX_FAVORITE_TEAMS}
+              </span>
+            </div>
+            {prefs.favoriteTeams.length === 0 ? (
+              <p className="flex items-center gap-2 rounded-lg border border-dashed border-border-subtle px-3 py-3 text-xs text-text-muted">
+                <Icon name="star" size={14} />
+                {t.settings.noFavorites}
+              </p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-lg border border-border-subtle">
                 {prefs.favoriteTeams.map((team) => (
-                  <li key={team.id} className="flex items-center gap-1.5 rounded-full bg-bg-elevated py-1 ps-1.5 pe-2 text-xs">
-                    <TeamLogo teamId={team.id} name={team.name} size={18} />
-                    {team.name}
+                  <li key={team.id} className="flex items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-sm">
+                      <TeamLogo teamId={team.id} name={team.name} size={22} />
+                      <span className="truncate">{team.name}</span>
+                    </div>
                     <button
                       onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((f) => f.id !== team.id) })}
                       aria-label={t.settings.remove(team.name)}
-                      className="ms-1 text-text-muted hover:text-accent-red"
+                      title={t.settings.remove(team.name)}
+                      className="flex size-10 shrink-0 items-center justify-center text-text-muted transition hover:text-accent-red"
                     >
-                      <Icon name="close" size={12} />
+                      <Icon name="close" size={14} />
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-            <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
           </Card>
 
           <Card title={t.settings.notifications} subtitle={t.settings.notificationsSubtitle}>
