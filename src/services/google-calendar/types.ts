@@ -3,14 +3,15 @@ export type CalendarEvent = {
   summary: string;
   description?: string;
   location?: string;
+  // null clears the field on patch (e.g. when switching between timed and all-day)
   start: {
-    dateTime?: string;
-    date?: string;
+    dateTime?: string | null;
+    date?: string | null;
     timeZone?: string;
   };
   end: {
-    dateTime?: string;
-    date?: string;
+    dateTime?: string | null;
+    date?: string | null;
     timeZone?: string;
   };
   attendees?: Array<{
@@ -26,6 +27,7 @@ export type CalendarEvent = {
     }>;
   };
   recurrence?: string[];
+  recurringEventId?: string;
   status?: 'confirmed' | 'tentative' | 'cancelled';
   extendedProperties?: {
     private?: Record<string, string>;
