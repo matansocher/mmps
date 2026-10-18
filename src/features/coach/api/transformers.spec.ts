@@ -1,5 +1,5 @@
 import type { ScoresGame, ScoresGameDetails, ScoresGameStat } from '@services/scores-365';
-import { parsePreferencesBody } from './dto';
+import { parseDashboardDate, parsePreferencesBody } from './dto';
 import { classifyGameStatus, mapEventType, sortDashboardGames, toDashboardEvents, toDashboardGame, toDashboardStats, toGameSummary } from './transformers';
 import type { DashboardGame } from './types';
 
@@ -125,7 +125,14 @@ describe('toDashboardStats()', () => {
 
 describe('toDashboardGame()', () => {
   const bestOdds = [
-    { lineTypeId: 1, options: [{ num: 1, rate: { decimal: 2 } }, { num: 2, rate: { decimal: 3 } }, { num: 3, rate: { decimal: 4 } }] },
+    {
+      lineTypeId: 1,
+      options: [
+        { num: 1, rate: { decimal: 2 } },
+        { num: 2, rate: { decimal: 3 } },
+        { num: 3, rate: { decimal: 4 } },
+      ],
+    },
   ];
 
   test.each([2, 3])('should normalize home and away win probabilities for status %s including the draw', (statusGroup) => {
@@ -226,5 +233,23 @@ describe('parsePreferencesBody()', () => {
 
   test.each([{ body: null }, { body: {} }, { body: { competitionIds: [], favoriteTeams: [] } }])('should reject invalid body $body', ({ body }) => {
     expect(parsePreferencesBody(body)).toEqual(null);
+  });
+});
+
+describe('parseDashboardDate()', () => {
+  const now = new Date('2026-10-18T00:20:00+03:00');
+
+  test.each([
+    { value: undefined, expected: undefined },
+    { value: '2026-10-18', expected: '2026-10-18' },
+    { value: '2026-10-11', expected: '2026-10-11' },
+    { value: '2026-10-25', expected: '2026-10-25' },
+    { value: '2026-10-10', expected: null },
+    { value: '2026-10-26', expected: null },
+    { value: '2026-02-30', expected: null },
+    { value: '18/10/2026', expected: null },
+    { value: ['2026-10-18'], expected: null },
+  ])('should return $expected when value is $value', ({ value, expected }) => {
+    expect(parseDashboardDate(value, now)).toEqual(expected);
   });
 });

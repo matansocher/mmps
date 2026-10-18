@@ -81,7 +81,9 @@ export type Preferences = {
 };
 
 export type DashboardResponse = {
+  // Format: "YYYY-MM-DD" for both
   readonly date: string;
+  readonly today: string;
   readonly updatedAt: string;
   readonly preferences: Preferences;
   readonly games: Game[];

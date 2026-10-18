@@ -19,6 +19,11 @@ export const DEFAULT_COMPETITION_IDS: number[] = [
 export const MAX_FAVORITE_TEAMS = 30;
 
 export const LIVE_DATA_TTL_SEC = 15;
+
+// Until this local hour the dashboard opens on the previous day, so late games and their results stay in view.
+export const SPORTS_DAY_ROLLOVER_HOUR = 6;
+// How many days back or ahead of today the dashboard can be browsed.
+export const MAX_DASHBOARD_DAY_OFFSET = 7;
 // 365Scores country whose feed carries in-play odds (England, Bet365).
 export const LIVE_ODDS_COUNTRY_ID = 1;
 

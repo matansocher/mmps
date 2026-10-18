@@ -1,6 +1,10 @@
+import { isValid, parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
+import { DEFAULT_TIMEZONE } from '@core/config';
 import { COMPETITIONS } from '@services/scores-365';
 import type { DashboardEventType, DashboardFavoriteTeam, DashboardLanguage, DashboardPreferencesUpdate } from '@shared/coach';
-import { DASHBOARD_EVENT_TYPES, DASHBOARD_LANGUAGES, MAX_FAVORITE_TEAMS } from './constants';
+import { DASHBOARD_EVENT_TYPES, DASHBOARD_LANGUAGES, MAX_DASHBOARD_DAY_OFFSET, MAX_FAVORITE_TEAMS } from './constants';
+import { daysBetween } from './dates';
 
 const KNOWN_COMPETITION_IDS = new Set(COMPETITIONS.map((c) => c.id));
 
@@ -35,4 +39,12 @@ export function parsePreferencesBody(body: unknown): DashboardPreferencesUpdate 
 
 export function parseLanguage(value: unknown): DashboardLanguage | undefined {
   return DASHBOARD_LANGUAGES.includes(value as DashboardLanguage) ? (value as DashboardLanguage) : undefined;
+}
+
+// undefined when absent (the server picks the day), null when malformed or out of the browsable range.
+export function parseDashboardDate(value: unknown, now = new Date()): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) || !isValid(parseISO(value))) return null;
+  const today = formatInTimeZone(now, DEFAULT_TIMEZONE, 'yyyy-MM-dd');
+  return Math.abs(daysBetween(today, value)) <= MAX_DASHBOARD_DAY_OFFSET ? value : null;
 }

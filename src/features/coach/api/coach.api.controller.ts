@@ -5,7 +5,7 @@ import { coachAuthMiddleware, getCoachUser } from './auth.middleware';
 import { DEFAULT_LANGUAGE } from './constants';
 import type { CoachDashboardService } from './dashboard.service';
 import type { CoachDetailsService } from './details.service';
-import { parseLanguage, parsePreferencesBody } from './dto';
+import { parseDashboardDate, parseLanguage, parsePreferencesBody } from './dto';
 import type { ApiError, CompetitionOption, DashboardPreferencesDto, DashboardResponse, TeamOption } from './types';
 
 const logger = new Logger('coach:api');
@@ -48,8 +48,13 @@ export function registerCoachApiRoutes(app: Express, dashboardService: CoachDash
 
   app.get('/api/coach/dashboard', async (req: Request, res: Response<DashboardResponse | ApiError>) => {
     const user = getCoachUser(req);
+    const date = parseDashboardDate(req.query.date);
+    if (date === null) {
+      res.status(400).json({ error: 'invalid_date' });
+      return;
+    }
     try {
-      res.json(await dashboardService.getDashboard(user.telegramUserId, requestLanguage(req)));
+      res.json(await dashboardService.getDashboard(user.telegramUserId, requestLanguage(req), date));
     } catch (err) {
       logger.error(`Failed to build dashboard for ${user.telegramUserId}: ${getErrorMessage(err)}`);
       res.status(500).json({ error: 'dashboard_failed' });

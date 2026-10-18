@@ -21,6 +21,9 @@ export type DashboardState = {
   readonly dismissNotification: (key: string) => void;
   readonly clearNotifications: () => void;
   readonly refresh: () => void;
+  // null follows the server's default day (yesterday until early morning, then today).
+  readonly selectedDate: string | null;
+  readonly setDate: (date: string | null) => void;
 };
 
 export type RecoveredFrom = 'offline' | 'server';
@@ -40,17 +43,24 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
   const [nextRetryAt, setNextRetryAt] = useState<number | null>(null);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [recovered, setRecovered] = useState<RecoveredFrom | null>(null);
-  const inFlight = useRef(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const inFlight = useRef<string | null | undefined>(undefined);
+  const requestSeq = useRef(0);
+  const selectedDateRef = useRef<string | null>(null);
   const failure = useRef<RecoveredFrom | null>(null);
   const dataRef = useRef<DashboardResponse | null>(null);
   const { setLanguage } = useLanguage();
 
   const load = useCallback(async () => {
-    if (inFlight.current) return;
-    inFlight.current = true;
+    const date = selectedDateRef.current;
+    // Polls for the same day collapse into the request in flight; a day change supersedes it.
+    if (inFlight.current === date) return;
+    inFlight.current = date;
+    const seq = ++requestSeq.current;
     setRefreshing(true);
     try {
-      const next = await api.dashboard();
+      const next = await api.dashboard(date ?? undefined);
+      if (seq !== requestSeq.current) return;
       // A new device starts in the default language; switch to the saved one (this remounts and refetches).
       if (next.preferences.language && next.preferences.language !== getLanguage()) {
         setLanguage(next.preferences.language);
@@ -71,14 +81,17 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
       if (failure.current) setRecovered(failure.current);
       failure.current = null;
     } catch (err) {
+      if (seq !== requestSeq.current) return;
       setErrorStatus(err instanceof ApiError ? err.status : 0);
       failure.current = navigator.onLine ? 'server' : 'offline';
       setRecovered(null);
     } finally {
-      inFlight.current = false;
-      setRefreshing(false);
-      setLoading(false);
-      setLastFetchedAt(Date.now());
+      if (seq === requestSeq.current) {
+        inFlight.current = undefined;
+        setRefreshing(false);
+        setLoading(false);
+        setLastFetchedAt(Date.now());
+      }
     }
   }, [setLanguage]);
 
@@ -122,6 +135,17 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
 
   useEffect(() => installAudioUnlock(), []);
 
+  const setDate = useCallback(
+    (date: string | null) => {
+      if (date === selectedDateRef.current) return;
+      selectedDateRef.current = date;
+      setSelectedDate(date);
+      setNotifications([]);
+      void load();
+    },
+    [load],
+  );
+
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === 'visible') void load();
@@ -144,6 +168,8 @@ export function DashboardProvider({ children }: { readonly children: ReactNode }
     dismissNotification: (key) => setNotifications((list) => list.filter((n) => n.key !== key)),
     clearNotifications: () => setNotifications([]),
     refresh: () => void load(),
+    selectedDate,
+    setDate,
   };
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 }
