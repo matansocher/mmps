@@ -67,6 +67,13 @@
   letter-spacing: 0.02em;
 }
 
+:root {
+  --chip-fade-dir: right;
+}
+[dir='rtl'] {
+  --chip-fade-dir: left;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }
