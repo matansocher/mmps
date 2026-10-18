@@ -62,7 +62,7 @@ const en = {
     filterByLeague: 'Filter by league',
     all: 'All',
     myTeams: 'My teams',
-    pin: (teams: string) => `Pin ${teams} to the top`,
+    pin: (teams: string) => `Pin ${teams}`,
     unpin: (teams: string) => `Unpin ${teams}`,
     pinLimit: (max: number) => `You can pin up to ${max} games. Unpin one to make room.`,
     hot: {
@@ -99,7 +99,7 @@ const en = {
     emptyTitle: 'No games today in your leagues',
     emptyText: 'Add more leagues or teams to follow and their games will show up here.',
     emptyAction: 'Choose leagues and teams',
-    sections: { pinned: 'Pinned', live: 'Live now', scheduled: 'Later today', other: 'Other', finished: 'Finished' },
+    sections: { live: 'Live now', scheduled: 'Later today', other: 'Other', finished: 'Finished' },
   },
   card: {
     timeline: (status: string) => `Match timeline, ${status}`,
@@ -320,7 +320,7 @@ const he: Messages = {
     filterByLeague: 'סינון לפי ליגה',
     all: 'הכל',
     myTeams: 'הקבוצות שלי',
-    pin: (teams) => `הצמדת ${teams} לראש הלוח`,
+    pin: (teams) => `הצמדת ${teams}`,
     unpin: (teams) => `ביטול הצמדה של ${teams}`,
     pinLimit: (max) => `אפשר להצמיד עד ${max} משחקים. בטלו הצמדה כדי לפנות מקום.`,
     hot: {
@@ -357,7 +357,7 @@ const he: Messages = {
     emptyTitle: 'אין היום משחקים בליגות שלך',
     emptyText: 'הוסיפו ליגות או קבוצות למעקב והמשחקים שלהן יופיעו כאן.',
     emptyAction: 'בחירת ליגות וקבוצות',
-    sections: { pinned: 'מוצמדים', live: 'משחקים עכשיו', scheduled: 'בהמשך היום', other: 'אחר', finished: 'הסתיימו' },
+    sections: { live: 'משחקים עכשיו', scheduled: 'בהמשך היום', other: 'אחר', finished: 'הסתיימו' },
   },
   card: {
     timeline: (status) => `ציר המשחק, ${status}`,

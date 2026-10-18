@@ -36,32 +36,36 @@ function readViewMode(): ViewMode {
 }
 
 type LeagueGroup = { readonly competitionId: number; readonly name: string; readonly games: Game[] };
-type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean; readonly pinned?: boolean; readonly leagues?: LeagueGroup[] };
+type GameSection = { readonly key: string; readonly title: string; readonly games: Game[]; readonly live?: boolean; readonly leagues?: LeagueGroup[] };
 type PreMatchTarget = { readonly game: Game; readonly trigger: HTMLElement };
 
-// Leagues with a favourite team's game come first; otherwise leagues keep the server order. Games run by kick-off.
-function groupByLeague(games: readonly Game[]): LeagueGroup[] {
+// Pinned games lead, then favourite teams' games, then the rest.
+function priority(game: Game, pinnedIds: readonly number[]): number {
+  return pinnedIds.includes(game.id) ? 2 : game.isFavorite ? 1 : 0;
+}
+
+// Leagues holding a pinned or favourite game come first; otherwise leagues keep the server order. Games run by priority, then kick-off.
+function groupByLeague(games: readonly Game[], pinnedIds: readonly number[]): LeagueGroup[] {
   const groups = new Map<number, LeagueGroup>();
   for (const game of games) {
     const group = groups.get(game.competitionId) ?? { competitionId: game.competitionId, name: game.competitionName, games: [] };
     group.games.push(game);
     groups.set(game.competitionId, group);
   }
-  const byKickoff = (a: Game, b: Game) => a.startTime.localeCompare(b.startTime) || a.id - b.id;
-  return [...groups.values()]
-    .map((g) => ({ ...g, games: [...g.games].sort(byKickoff) }))
-    .sort((a, b) => Number(b.games.some((g) => g.isFavorite)) - Number(a.games.some((g) => g.isFavorite)));
+  const byPriority = (a: Game, b: Game) => priority(b, pinnedIds) - priority(a, pinnedIds) || a.startTime.localeCompare(b.startTime) || a.id - b.id;
+  const top = (group: LeagueGroup) => Math.max(...group.games.map((g) => priority(g, pinnedIds)));
+  return [...groups.values()].map((g) => ({ ...g, games: [...g.games].sort(byPriority) })).sort((a, b) => top(b) - top(a));
 }
 
-function buildSections(games: Game[], t: Messages['dashboard']['sections']): GameSection[] {
-  // Favourite teams' games lead their status section; the sort is stable, so the rest keep the server order.
-  const rest = [...games].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
+function buildSections(games: Game[], pinnedIds: readonly number[], t: Messages['dashboard']['sections']): GameSection[] {
+  // The sort is stable, so games of equal priority keep the server order.
+  const rest = [...games].sort((a, b) => priority(b, pinnedIds) - priority(a, pinnedIds));
   const finished = games.filter((g) => g.status === 'finished');
   return [
     { key: 'live', title: t.live, games: rest.filter((g) => g.status === 'live'), live: true },
     { key: 'scheduled', title: t.scheduled, games: rest.filter((g) => g.status === 'scheduled') },
     { key: 'other', title: t.other, games: rest.filter((g) => g.status === 'other') },
-    { key: 'finished', title: t.finished, games: finished, leagues: groupByLeague(finished) },
+    { key: 'finished', title: t.finished, games: finished, leagues: groupByLeague(finished, pinnedIds) },
   ].filter((s) => s.games.length > 0);
 }
 
@@ -264,15 +268,7 @@ export function DashboardPage() {
   const filterAvailable = competitionFilter === FAVORITES_FILTER ? favoriteGames.length > 0 : competitions.some((c) => c.id === competitionFilter);
   const activeFilter = competitionFilter !== null && filterAvailable ? competitionFilter : null;
   const visibleGames = activeFilter === null ? games : activeFilter === FAVORITES_FILTER ? favoriteGames : games.filter((g) => g.competitionId === activeFilter);
-  // Pinned games always lead the page, whatever filter is on, and leave their usual section.
-  const pinnedGames = pinnedIds.map((id) => games.find((g) => g.id === id)).filter((g): g is Game => !!g);
-  const sections = [
-    ...(pinnedGames.length ? [{ key: 'pinned', title: t.dashboard.sections.pinned, games: pinnedGames, pinned: true }] : []),
-    ...buildSections(
-      visibleGames.filter((g) => !pinnedIds.includes(g.id)),
-      t.dashboard.sections,
-    ),
-  ];
+  const sections = buildSections(visibleGames, pinnedIds, t.dashboard.sections);
   const stale = errorStatus !== null && !!data;
 
   const liveCount = games.filter((g) => g.status === 'live').length;
@@ -376,7 +372,6 @@ export function DashboardPage() {
             <section key={section.key} aria-labelledby={`section-${section.key}`} className="flex flex-col gap-3">
               <h2 id={`section-${section.key}`} className="flex items-center gap-2 text-[15px] font-bold tracking-[-0.01em] text-text-primary">
                 {section.live && <LiveDot />}
-                {section.pinned && <Icon name="pin" size={14} className="text-accent-brand" />}
                 {section.title}
                 <span className="score-font rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-text-secondary">{section.games.length}</span>
               </h2>
