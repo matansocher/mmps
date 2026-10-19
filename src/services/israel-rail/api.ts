@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { trainSearchCache } from './cache';
 import { DEFAULT_TRAINS_LIMIT, RAIL_API_HEADERS, RAIL_API_SEARCH_URL } from './constants';
 import { getStationById } from './station-search';
 import type { RailApiSearchResponse, RailApiTrain, RailApiTravel, RailStation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainTransfer, TrainTravel } from './types';
@@ -58,7 +59,34 @@ function toTravel(travel: RailApiTravel): TrainTravel {
   };
 }
 
-export async function searchTrains({ fromStationId, toStationId, date, hour, limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): Promise<SearchTrainsResult> {
+const inFlightSearches = new Map<string, Promise<SearchTrainsResult>>();
+
+export function buildSearchCacheKey({ fromStationId, toStationId, date, hour, limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): string {
+  return [fromStationId, toStationId, date, hour.padStart(5, '0'), limit].join(':');
+}
+
+// Serves identical searches from Redis for a few minutes and collapses concurrent identical
+// requests into one upstream call.
+export async function searchTrains(params: SearchTrainsParams): Promise<SearchTrainsResult> {
+  const key = buildSearchCacheKey(params);
+  const cached = await trainSearchCache.get(key);
+  if (cached) return cached;
+
+  const pending = inFlightSearches.get(key);
+  if (pending) return pending;
+
+  const request = fetchTrains(params);
+  inFlightSearches.set(key, request);
+  try {
+    const result = await request;
+    await trainSearchCache.save(key, result);
+    return result;
+  } finally {
+    inFlightSearches.delete(key);
+  }
+}
+
+async function fetchTrains({ fromStationId, toStationId, date, hour, limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): Promise<SearchTrainsResult> {
   const body = {
     fromStation: String(fromStationId),
     toStation: String(toStationId),
