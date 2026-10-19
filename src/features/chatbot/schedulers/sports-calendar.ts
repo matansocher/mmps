@@ -6,7 +6,8 @@ import { getDateString, getErrorMessage, Logger } from '@core/utils';
 import type { CalendarEvent } from '@services/google-calendar';
 import { createEvent, deleteEvent, listEvents, updateEvent } from '@services/google-calendar';
 import { COMPETITION_IDS_MAP, getCompetitionTable, getUpcomingMatches } from '@services/scores-365';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
+import { generateMatchCardsImage, upcomingMatchesToCardGroups } from '@shared/sports';
 import { SPORTS_CALENDAR_EVENT_DURATION_HOURS, SPORTS_CALENDAR_SOURCE } from './sports-calendar.config';
 import { selectSportsCalendarMatches } from './utils';
 import type { SelectedSportsMatch } from './utils';
@@ -177,7 +178,12 @@ export async function sportsCalendar(bot: Bot): Promise<void> {
     const [matches, table, existingEvents] = await Promise.all([getUpcomingMatches(startDate, endDate), getIsraeliPremierLeagueTable(), getManagedEvents(startDate, endDate)]);
     const selectedMatches = selectSportsCalendarMatches(matches, table);
     const result = await syncSportsCalendar(selectedMatches, existingEvents);
-    await sendShortenedMessage(bot, MY_USER_ID, formatSummary(selectedMatches, result));
+    await sendImageThenText(bot, MY_USER_ID, {
+      image: () => (selectedMatches.length ? generateMatchCardsImage(upcomingMatchesToCardGroups(selectedMatches), 'en') : null),
+      fileName: 'sports-calendar.png',
+      text: formatSummary(selectedMatches, result),
+      sendText: sendShortenedMessage,
+    });
   } catch (err) {
     logger.error(`Failed to sync sports calendar: ${getErrorMessage(err)}`);
   }

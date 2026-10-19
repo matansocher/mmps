@@ -1,6 +1,7 @@
 import { getErrorMessage, Logger } from '@core/utils';
 import type { ToolResult } from '../types';
 import { CALENDAR_AGENDA_IMAGE_BUILDER } from './calendar-agenda';
+import { COMPETITION_MATCHES_IMAGE_BUILDER, MATCH_SUMMARY_IMAGE_BUILDER } from './football-matches';
 import { LEAGUE_TABLE_IMAGE_BUILDER } from './league-table';
 import { POLYMARKET_ODDS_IMAGE_BUILDER } from './polymarket-odds';
 import { RAIL_ROUTE_IMAGE_BUILDER } from './rail-route';
@@ -16,6 +17,8 @@ export const TOOL_IMAGE_BUILDERS: readonly ToolImageBuilder[] = [
   WEATHER_CHART_IMAGE_BUILDER,
   CALENDAR_AGENDA_IMAGE_BUILDER,
   POLYMARKET_ODDS_IMAGE_BUILDER,
+  COMPETITION_MATCHES_IMAGE_BUILDER,
+  MATCH_SUMMARY_IMAGE_BUILDER,
 ];
 
 export async function buildToolImages(toolResults: readonly ToolResult[], replyText: string, builders: readonly ToolImageBuilder[] = TOOL_IMAGE_BUILDERS): Promise<ToolImage[]> {
