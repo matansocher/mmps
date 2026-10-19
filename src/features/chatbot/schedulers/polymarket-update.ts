@@ -1,10 +1,10 @@
 import type { Bot } from 'grammy';
 import { getErrorMessage, Logger } from '@core/utils';
-import { getEventOutcomes, getMarketById } from '@services/polymarket';
-import { sendShortenedMessage } from '@services/telegram';
+import { generateOddsImage, getEventOutcomes, getMarketById } from '@services/polymarket';
+import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
 import { getSubscriptionsGroupedByChatId, removeSubscription, updateSubscription } from '@shared/polymarket-follower';
 import type { Subscription } from '@shared/polymarket-follower';
-import { formatDailyUpdateMessage, formatExpiredMarketsSection, formatMultiOutcomeUpdateMessage, toOutcomeSnapshots } from './utils';
+import { buildPolymarketUpdateCards, formatDailyUpdateMessage, formatExpiredMarketsSection, formatMultiOutcomeUpdateMessage, toOutcomeSnapshots } from './utils';
 import type { ExpiredMarketInfo, MarketUpdate, MultiOutcomeUpdate } from './utils';
 
 const logger = new Logger('chatbot:scheduler:polymarket-update');
@@ -49,6 +49,16 @@ async function processSubscriptionsForChat(bot: Bot, chatId: number, subscriptio
   const expiredSection = formatExpiredMarketsSection(expiredMarkets);
   const message = sections.length > 0 ? `${sections.join('\n\n')}${expiredSection}` : `*Polymarket Update*${expiredSection}`;
 
+  const cards = buildPolymarketUpdateCards(updates, multiUpdates);
+  await sendImageThenText(bot, chatId, {
+    image: () => (cards.length ? generateOddsImage(cards, { subtitle: 'Daily update', language: 'en' }) : null),
+    fileName: 'polymarket-odds.png',
+    text: message,
+    sendText: sendPolymarketText,
+  });
+}
+
+async function sendPolymarketText(bot: Bot, chatId: number, message: string): Promise<void> {
   await sendShortenedMessage(bot, chatId, message, { parse_mode: 'Markdown' }).catch(() => {
     sendShortenedMessage(bot, chatId, message.replace(/[*_`[\]]/g, ''));
   });

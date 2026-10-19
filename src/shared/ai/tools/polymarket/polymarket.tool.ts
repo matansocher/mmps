@@ -57,7 +57,8 @@ When users mention following/tracking prediction markets, betting odds, election
 
 Replying:
 - Subscribe accepts full URLs or slugs. After subscribing, confirm the market question and current Yes price.
-- Format subscription lists with questions, slugs, and dates; trending/search results with rank, question/title, current Yes price, and 24h volume.
+- Format subscription lists with questions, slugs, and dates; search results with rank, title, and 24h volume.
+- An odds bars image is sent automatically for event, trending, and subscribe results, so keep their text compact: highlight the top few outcomes/markets with their odds instead of repeating the full list.
 - Use emojis (📊, 📈, 📉, 🟢, 🔒, 🔍).
 
 Examples:
