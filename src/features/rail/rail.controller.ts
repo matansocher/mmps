@@ -7,7 +7,7 @@ import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
-import { BOT_CONFIG, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
+import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import { buildRouteKeyboard, formatRouteMessage, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
 
@@ -28,6 +28,18 @@ export class RailController {
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on(['message:voice', 'message:audio'], (ctx) => this.audioHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
+    this.syncBotProfile().catch((err) => this.logger.error(`Failed to set bot profile: ${getErrorMessage(err)}`));
+  }
+
+  // English is the default for every Telegram language except Hebrew, matching getUserLanguage.
+  private async syncBotProfile(): Promise<void> {
+    const { en, he } = BOT_PROFILE;
+    await Promise.all([
+      this.bot.api.setMyDescription(en.description),
+      this.bot.api.setMyShortDescription(en.shortDescription),
+      this.bot.api.setMyDescription(he.description, { language_code: 'he' }),
+      this.bot.api.setMyShortDescription(he.shortDescription, { language_code: 'he' }),
+    ]);
   }
 
   private async startHandler(ctx: Context): Promise<void> {

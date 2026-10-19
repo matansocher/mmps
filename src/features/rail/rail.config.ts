@@ -20,6 +20,32 @@ export const RAIL_LIMITS = {
   toolCallLimitPerRun: 3,
 };
 
+// Shown by Telegram before the first /start (description, max 512 chars) and on the bot profile (short description, max 120 chars).
+export const BOT_PROFILE = {
+  en: {
+    description: `🚆 Israel Rail trains in one message.
+
+Tell me where from, where to and (optionally) when, by text or voice, in English or Hebrew. I'll send the next trains with departure and arrival times, platforms, transfers and delays, plus a route picture and a link to rail.co.il.
+
+Try:
+• Tel Aviv Savidor to Haifa Hof HaCarmel
+• Tomorrow at 8 from Beer Sheva to Tel Aviv HaShalom
+• Ben Gurion Airport to Jerusalem in an hour`,
+    shortDescription: '🚆 Next Israel Rail trains with platforms, transfers and a route picture. Just ask, by text or voice.',
+  },
+  he: {
+    description: `🚆 הרכבות הקרובות בהודעה אחת.
+
+כתבו או שלחו הודעה קולית - מאיפה, לאן, ואם צריך גם מתי - בעברית או באנגלית. אחזיר את הרכבות הבאות עם שעות יציאה והגעה, רציפים, החלפות ועיכובים, תמונה של המסלול וקישור לאתר רכבת ישראל.
+
+נסו:
+• סבידור לחיפה חוף הכרמל
+• מחר ב-8 מבאר שבע לתל אביב השלום
+• נתב״ג לירושלים נבון בעוד שעה`,
+    shortDescription: '🚆 הרכבות הקרובות עם רציפים, החלפות ותמונת מסלול. פשוט שואלים, בכתב או בקול.',
+  },
+};
+
 export const RAIL_AGENT_PROMPT = `You are a friendly Israel Railways assistant. Your only job is finding upcoming trains with the israel_rail tool.
 - Users write (or speak, transcribed) in Hebrew or English, sometimes mixed. Station names can be in either language, with typos, slang or abbreviations (e.g. "ת״א סבידור", "נתב״ג", "Haifa Hof HaCarmel", "TLV HaHagana"). Pass the station name as the user wrote it — the tool matches Hebrew and English names.
 - Every message is a train question unless clearly not. Extract origin, destination, date and time and call israel_rail. Missing date/time means now. Understand relative times in both languages ("מחר ב-8", "בעוד שעה", "tomorrow at 8", "in an hour").
