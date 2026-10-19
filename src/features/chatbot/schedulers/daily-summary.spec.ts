@@ -1,15 +1,26 @@
 import type { Bot } from 'grammy';
 import { ObjectId } from 'mongodb';
-import { sendRichMessage } from '@services/telegram';
+import { sendImageThenText, sendRichMessage } from '@services/telegram';
 import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather, TomorrowForecast } from '@services/weather';
+import { generateAgendaImage } from '@shared/agenda-image';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
 import { dailySummary } from './daily-summary';
 
-vi.mock('@services/telegram', () => ({ sendRichMessage: vi.fn() }));
+vi.mock('@services/telegram', () => {
+  const sendRichMessage = vi.fn();
+  return {
+    sendRichMessage,
+    sendImageThenText: vi.fn(async (bot, chatId, { image, text }) => {
+      if (typeof image === 'function') await image();
+      await sendRichMessage(bot, chatId, text);
+    }),
+  };
+});
+vi.mock('@shared/agenda-image', () => ({ generateAgendaImage: vi.fn(() => Buffer.from('png')) }));
 vi.mock('@services/weather', () => ({ getTomorrowHourlyForecast: vi.fn() }));
 vi.mock('@shared/calendar-events', () => ({ getTomorrowEvents: vi.fn() }));
 vi.mock('@shared/reminders', () => ({ getPendingRemindersDueOnOrBefore: vi.fn() }));
@@ -276,5 +287,34 @@ describe('dailySummary()', () => {
     const message = lastSentMessage();
     expect(message).toContain('Standup');
     expect(message).not.toContain('Unfinished reminders');
+  });
+
+  it("should send tomorrow's agenda image before the text when there are events", async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-08-15T20:00:00Z'));
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Dentist', 'Weizmann 12'), createEvent('Dana birthday')]);
+
+    await dailySummary(bot);
+    vi.useRealTimers();
+
+    expect(sendImageThenText).toHaveBeenCalledWith(bot, expect.any(Number), expect.objectContaining({ fileName: 'daily-agenda.png', text: lastSentMessage() }));
+    expect(generateAgendaImage).toHaveBeenCalledWith(
+      [
+        { title: 'Dentist', start: '2026-08-16T09:00:00+03:00', end: '2026-08-16T10:00:00+03:00', allDay: false, location: 'Weizmann 12' },
+        { title: 'Dana birthday', start: '2026-08-16T09:00:00+03:00', end: '2026-08-16T10:00:00+03:00', allDay: false, location: undefined },
+      ],
+      { language: 'en', days: ['2026-08-16'] },
+    );
+  });
+
+  it('should not build an agenda image when nothing is scheduled', async () => {
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
+
+    await dailySummary(bot);
+
+    expect(generateAgendaImage).not.toHaveBeenCalled();
+    expect(lastSentMessage()).toContain('Nothing scheduled');
   });
 });

@@ -214,4 +214,9 @@ describe('formatEvent', () => {
 
     expect(result.id).toBe('unique-event-id-abc123');
   });
+
+  it('should expose the raw start and end values', () => {
+    expect(formatEvent(createMockEvent())).toMatchObject({ start: '2025-01-15T10:00:00-05:00', end: '2025-01-15T11:00:00-05:00' });
+    expect(formatEvent(createMockEvent({ start: { date: '2025-01-15' }, end: { date: '2025-01-16' } }))).toMatchObject({ start: '2025-01-15', end: '2025-01-16' });
+  });
 });

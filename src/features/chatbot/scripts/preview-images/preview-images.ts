@@ -3,6 +3,7 @@ import path from 'node:path';
 import { argv } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
 import { LEAGUE_TABLE_PREVIEWS } from './league-table.preview';
+import { CALENDAR_PREVIEWS } from './calendar.preview';
 import { RAIL_PREVIEWS } from './rail.preview';
 import type { ImagePreview } from './types';
 import { WEATHER_PREVIEWS } from './weather.preview';
@@ -11,7 +12,7 @@ import { WEATHER_PREVIEWS } from './weather.preview';
 const logger = new Logger('chatbot:script:preview-images');
 
 const OUTPUT_DIR = '/tmp/mmps-images';
-const PREVIEWS: readonly ImagePreview[] = [...RAIL_PREVIEWS, ...LEAGUE_TABLE_PREVIEWS, ...WEATHER_PREVIEWS];
+const PREVIEWS: readonly ImagePreview[] = [...RAIL_PREVIEWS, ...LEAGUE_TABLE_PREVIEWS, ...WEATHER_PREVIEWS, ...CALENDAR_PREVIEWS];
 
 async function main(): Promise<void> {
   const filter = argv[2];
