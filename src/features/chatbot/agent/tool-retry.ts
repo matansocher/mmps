@@ -12,6 +12,7 @@ const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>>
   web_search: true,
   browse_url: true,
   earthquake_monitor: true,
+  israel_rail: true,
   recipes: true,
   competitions_list: true,
   competition_matches: true,
