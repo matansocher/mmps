@@ -1,11 +1,12 @@
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
 import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { sendRichMessage } from '@services/telegram';
+import { sendImageThenText } from '@services/telegram';
 import { getTomorrowHourlyForecast } from '@services/weather';
 import type { HourlyWeather } from '@services/weather';
+import { generateAgendaImage } from '@shared/agenda-image';
 import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
@@ -53,6 +54,22 @@ function buildBirthdaysSection(events: CalendarEvent[]): string | null {
   return ['**🎉 Birthdays**', '', ...birthdays.map((event) => `- 🎂 ${cell(event.summary)}`)].join('\n');
 }
 
+// Birthdays are kept in the image as all-day items; the text below still has the full tables.
+function buildAgendaImage(events: CalendarEvent[]): Buffer | null {
+  if (!events.length) {
+    return null;
+  }
+  const tomorrow = format(addDays(toZonedTime(new Date(), DEFAULT_TIMEZONE), 1), 'yyyy-MM-dd');
+  const agendaEvents = events.map((event) => ({
+    title: event.summary,
+    start: event.start.dateTime || event.start.date,
+    end: event.end?.dateTime || event.end?.date,
+    allDay: !event.start.dateTime,
+    location: event.location,
+  }));
+  return generateAgendaImage(agendaEvents, { language: 'en', days: [tomorrow] });
+}
+
 function formatReminderDueDate(dueDate: Date): string {
   return format(toZonedTime(dueDate, DEFAULT_TIMEZONE), 'yyyy-MM-dd HH:mm');
 }
@@ -80,15 +97,10 @@ export async function dailySummary(bot: Bot): Promise<void> {
     ]);
 
     // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
-    const sections = [
-      buildWeatherTable(forecast?.hourly ?? []),
-      buildCalendarTable(events.filter((event) => !isBirthday(event))),
-      buildBirthdaysSection(events),
-      buildRemindersSection(reminders),
-    ];
+    const sections = [buildWeatherTable(forecast?.hourly ?? []), buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events), buildRemindersSection(reminders)];
     const message = sections.filter(Boolean).join('\n\n');
     if (message) {
-      await sendRichMessage(bot, MY_USER_ID, message);
+      await sendImageThenText(bot, MY_USER_ID, { image: () => buildAgendaImage(events), fileName: 'daily-agenda.png', text: message });
     }
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});
