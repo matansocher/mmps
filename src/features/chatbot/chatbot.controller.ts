@@ -1,3 +1,4 @@
+import { InputFile } from 'grammy';
 import type { Bot, Context } from 'grammy';
 import type { ReactionTypeEmoji } from 'grammy/types';
 import { LOCAL_FILES_PATH, MY_USER_ID, WIFE_USER_ID } from '@core/config';
@@ -11,14 +12,8 @@ import { addExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { FileSummaryService, getFileSummaryRejection } from './file-summary';
-import {
-  describeSnoozeOption,
-  parseBirthdayCallbackData,
-  parseExerciseCallbackData,
-  parseReminderCallbackData,
-  resolveSnoozeUntil,
-  sendExerciseReminder,
-} from './schedulers';
+import { buildRailRouteImage } from './rail-route-image';
+import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
 import {
   ACTION_CALLBACK_PREFIX,
   buildActionsKeyboard,
@@ -32,6 +27,7 @@ import {
   TRANSCRIPTION_HEADER,
   updateActionStatus,
 } from './secretary';
+import type { ChatbotResponse } from './types';
 import { fileToDataUrl } from './utils';
 
 const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
@@ -292,14 +288,26 @@ export class ChatbotController {
 
     const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji });
     await messageLoaderService.handleMessageWithLoader(async () => {
-      const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId);
-      await this.handleBotResponse(chatId, replyText);
+      const response = await this.chatbotService.processMessage(prompt, chatId);
+      await this.handleBotResponse(chatId, response);
     });
   }
 
-  private async handleBotResponse(chatId: number, replyText: string): Promise<void> {
+  private async handleBotResponse(chatId: number, { message: replyText, toolResults }: ChatbotResponse): Promise<void> {
     this.logger.log(`bot response for chatId ${chatId}: ${replyText}`);
+    await this.sendRailRouteImage(chatId, toolResults, replyText);
     await sendRichMessage(this.bot, chatId, replyText);
+  }
+
+  private async sendRailRouteImage(chatId: number, toolResults: ChatbotResponse['toolResults'], replyText: string): Promise<void> {
+    try {
+      const image = buildRailRouteImage(toolResults, replyText);
+      if (image) {
+        await this.bot.api.sendPhoto(chatId, new InputFile(image, 'rail-route.png'));
+      }
+    } catch (err) {
+      this.logger.error(`Failed to send rail route image: ${getErrorMessage(err)}`);
+    }
   }
 
   private async photoHandler(ctx: Context): Promise<void> {
@@ -329,9 +337,9 @@ export class ChatbotController {
       const audioFileLocalPath = await downloadFile(this.bot, audio.file_id, LOCAL_FILES_PATH);
 
       const transcribedText = await getTranscriptFromAudio(audioFileLocalPath);
-      const { message: replyText } = await this.chatbotService.processMessage(transcribedText, chatId);
+      const response = await this.chatbotService.processMessage(transcribedText, chatId);
 
-      await this.handleBotResponse(chatId, replyText);
+      await this.handleBotResponse(chatId, response);
 
       deleteFile(audioFileLocalPath);
     });

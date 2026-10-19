@@ -58,7 +58,10 @@ export const israelRailTool = tool(runner, {
 Rules:
 - Pass station names exactly as the user wrote them (Hebrew or English); the tool resolves them. Convert relative times ("tomorrow at 8", "in an hour", "מחר בבוקר") to date + time in Israel time.
 - If the result has "candidates" (ambiguous name), ask the user which station they meant, or re-call with the obvious candidate if context makes it clear. If it has "allStations", pick the closest real station and re-call, or ask the user.
-- Reply format: one line per train: departure → arrival, duration, platform, train number; mention delays (delayMinutes > 0), transfers (station and connection time), and crowding only if high (>70%). Add any alerts briefly at the end.
+- Reply format: one line per train: departure → arrival, duration, platform, train number; mention delays (delayMinutes > 0) and crowding only if high (>70%).
+- For every train with transfers, ALWAYS include each transfer from transferDetails, without being asked: the transfer station, arrival platform → departure platform, the connecting train number and its departure time, and the wait time.
+- A visual route card (timeline with platforms and transfers) of the trains whose departure times you mention is sent automatically right before your reply, so keep the text compact.
+- Add any alerts briefly at the end.
 - Use station names in the user's language (nameHe for Hebrew, nameEn for English).`,
   schema,
 });

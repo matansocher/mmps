@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { DEFAULT_TRAINS_LIMIT, RAIL_API_HEADERS, RAIL_API_SEARCH_URL } from './constants';
 import { getStationById } from './station-search';
-import type { RailApiSearchResponse, RailApiTrain, RailApiTravel, RailStation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainTravel } from './types';
+import type { RailApiSearchResponse, RailApiTrain, RailApiTravel, RailStation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainTransfer, TrainTravel } from './types';
 
 // API times are Israel local time without offset. Format: "YYYY-MM-DDTHH:mm:ss"
 function toTime(apiDateTime: string): string {
@@ -31,6 +31,21 @@ function toLeg(train: RailApiTrain): TrainLeg {
   };
 }
 
+function toTransfers(trains: readonly RailApiTrain[]): TrainTransfer[] {
+  return trains.slice(1).map((nextTrain, index) => {
+    const previousTrain = trains[index];
+    return {
+      station: toStation(nextTrain.orignStation),
+      arrivalTime: toTime(previousTrain.arrivalTime),
+      arrivalPlatform: previousTrain.destPlatform,
+      departureTime: toTime(nextTrain.departureTime),
+      departurePlatform: nextTrain.originPlatform,
+      waitMinutes: minutesBetween(previousTrain.arrivalTime, nextTrain.departureTime),
+      nextTrainNumber: nextTrain.trainNumber,
+    };
+  });
+}
+
 function toTravel(travel: RailApiTravel): TrainTravel {
   return {
     date: travel.departureTime.slice(0, 10),
@@ -38,6 +53,7 @@ function toTravel(travel: RailApiTravel): TrainTravel {
     arrivalTime: toTime(travel.arrivalTime),
     durationMinutes: minutesBetween(travel.departureTime, travel.arrivalTime),
     transfers: Math.max(travel.trains.length - 1, 0),
+    transferDetails: toTransfers(travel.trains),
     legs: travel.trains.map(toLeg),
   };
 }
