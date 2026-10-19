@@ -4,7 +4,8 @@ import { createEvent, deleteEvent, listEvents, updateEvent } from '@services/goo
 import type { CalendarEvent } from '@services/google-calendar';
 import { getCompetitionTable, getUpcomingMatches } from '@services/scores-365';
 import type { UpcomingMatch } from '@services/scores-365';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
+import type { SendImageThenTextOptions } from '@services/telegram';
 import { sportsCalendar } from './sports-calendar';
 
 vi.mock('@services/google-calendar', () => ({
@@ -20,6 +21,7 @@ vi.mock('@services/scores-365', async (importOriginal) => ({
 }));
 vi.mock('@services/telegram', () => ({
   sendShortenedMessage: vi.fn(),
+  sendImageThenText: vi.fn(),
 }));
 
 const bot = {} as Bot;
@@ -73,7 +75,14 @@ describe('sportsCalendar()', () => {
     vi.mocked(updateEvent).mockImplementation(async (_eventId, event) => event as CalendarEvent);
     vi.mocked(deleteEvent).mockResolvedValue();
     vi.mocked(sendShortenedMessage).mockResolvedValue({} as Message.TextMessage);
+    vi.mocked(sendImageThenText).mockImplementation(async (b, chatId, { text, sendText }) => {
+      await sendText(b, chatId, text);
+    });
   });
+
+  function getImageOptions(): SendImageThenTextOptions {
+    return vi.mocked(sendImageThenText).mock.calls.at(-1)?.[2];
+  }
 
   afterEach(() => {
     vi.useRealTimers();
@@ -127,6 +136,27 @@ describe('sportsCalendar()', () => {
     expect(updateEvent).not.toHaveBeenCalled();
     expect(deleteEvent).not.toHaveBeenCalled();
     expect(sendShortenedMessage).not.toHaveBeenCalled();
+  });
+
+  it('should send a match cards image before the summary when matches are selected', async () => {
+    vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
+
+    await sportsCalendar(bot);
+
+    const { image, fileName, sendText } = getImageOptions();
+    expect(fileName).toEqual('sports-calendar.png');
+    expect(sendText).toBe(sendShortenedMessage);
+    expect(typeof image === 'function' ? await image() : image).toBeInstanceOf(Buffer);
+    expect(sendShortenedMessage).toHaveBeenCalledWith(bot, expect.any(Number), expect.stringContaining('Real Madrid vs Opponent'));
+  });
+
+  it('should skip the image when no matches are selected', async () => {
+    vi.mocked(getUpcomingMatches).mockResolvedValue([]);
+
+    await sportsCalendar(bot);
+
+    const { image } = getImageOptions();
+    expect(typeof image === 'function' ? await image() : image).toBeNull();
   });
 
   it('should still sync favorite-team matches when standings retrieval fails', async () => {
