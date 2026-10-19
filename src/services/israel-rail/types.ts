@@ -71,12 +71,23 @@ export type TrainLeg = {
   readonly intermediateStops: number;
 };
 
+export type TrainTransfer = {
+  readonly station: RailStation;
+  readonly arrivalTime: string; // Format: "HH:mm"
+  readonly arrivalPlatform: number;
+  readonly departureTime: string; // Format: "HH:mm"
+  readonly departurePlatform: number;
+  readonly waitMinutes: number;
+  readonly nextTrainNumber: number;
+};
+
 export type TrainTravel = {
   readonly date: string; // Format: "YYYY-MM-DD"
   readonly departureTime: string; // Format: "HH:mm"
   readonly arrivalTime: string; // Format: "HH:mm"
   readonly durationMinutes: number;
   readonly transfers: number;
+  readonly transferDetails: readonly TrainTransfer[];
   readonly legs: readonly TrainLeg[];
 };
 
