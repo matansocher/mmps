@@ -311,7 +311,7 @@ export function DashboardPage() {
         subtitle={
           data ? (
             <>
-              {formatDateTitle(shownDate)} ·{' '}
+              {formatDateTitle(shownDate ?? data.date)} ·{' '}
               <TimeAgo iso={data.updatedAt} />
             </>
           ) : (
@@ -325,7 +325,7 @@ export function DashboardPage() {
           </>
         }
       >
-        {data && <DayNavigator date={shownDate} today={data.today} onChange={setDate} />}
+        {data && <DayNavigator date={shownDate ?? data.date} today={data.today} onChange={setDate} />}
         {(competitions.length > 1 || favoriteGames.length > 0) && (
           <ChipStrip label={t.dashboard.filterByLeague} activeKey={String(activeFilter)}>
             <FilterChip active={activeFilter === null} tone={ALL_TONE} onClick={() => setCompetitionFilter(null)}>
