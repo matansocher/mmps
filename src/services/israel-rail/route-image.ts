@@ -111,6 +111,8 @@ function drawCard(ctx: CanvasRenderingContext2D, travel: TrainTravel, top: numbe
   const labels = LABELS[language];
   const rows = buildRows(travel);
   const height = cardHeight(rows);
+  // Without an RTL base direction, mixed Hebrew/number strings like "44 דק׳ · …" get their numbers reordered
+  ctx.direction = rtl ? 'rtl' : 'ltr';
   const left = MARGIN;
   const right = WIDTH - MARGIN;
 
