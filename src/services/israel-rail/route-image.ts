@@ -1,9 +1,9 @@
-import { createCanvas, registerFont } from 'canvas';
 import type { CanvasRenderingContext2D } from 'canvas';
-import path from 'node:path';
+import { COLORS as BASE_COLORS, createScaledCanvas, drawArrow, drawBadge, drawDot, drawText, roundRect } from '@shared/image-card';
+import type { ImageLanguage } from '@shared/image-card';
 import type { RailStation, TrainLeg, TrainTravel } from './types';
 
-export type RouteImageLanguage = 'he' | 'en';
+export type RouteImageLanguage = ImageLanguage;
 
 type Row =
   | { readonly kind: 'stop'; readonly station: RailStation; readonly time: string; readonly platform: number; readonly isEnd: boolean }
@@ -29,9 +29,6 @@ type Labels = {
   readonly delay: (n: number) => string;
 };
 
-const FONT_FAMILY = 'Rail Hebrew';
-const FONT_PATH = path.resolve(process.cwd(), 'assets/fonts/NotoSansHebrew-Bold.ttf');
-const SCALE = 2;
 const WIDTH = 640;
 const MARGIN = 16;
 const PADDING = 24;
@@ -39,21 +36,21 @@ const HEADER_HEIGHT = 78;
 const ROW_HEIGHT = { stop: 46, ride: 38, transfer: 66 } as const;
 
 const COLORS = {
-  background: '#ffffff',
-  card: '#f6f8fb',
-  cardBorder: '#e3e8ef',
-  text: '#1b2430',
-  muted: '#6b7785',
-  line: '#2f80ed',
-  transfer: '#f2994a',
-  platformBg: '#e3eefc',
-  platformText: '#1d5fbf',
-  waitBg: '#fdebd9',
-  waitText: '#b45f12',
-  onTimeBg: '#e2f5e8',
-  onTimeText: '#1e7b3c',
-  delayBg: '#fde2e1',
-  delayText: '#b3261e',
+  background: BASE_COLORS.background,
+  card: BASE_COLORS.card,
+  cardBorder: BASE_COLORS.cardBorder,
+  text: BASE_COLORS.text,
+  muted: BASE_COLORS.muted,
+  line: BASE_COLORS.primary,
+  transfer: BASE_COLORS.accent,
+  platformBg: BASE_COLORS.infoBg,
+  platformText: BASE_COLORS.infoText,
+  waitBg: BASE_COLORS.warningBg,
+  waitText: BASE_COLORS.warningText,
+  onTimeBg: BASE_COLORS.successBg,
+  onTimeText: BASE_COLORS.successText,
+  delayBg: BASE_COLORS.dangerBg,
+  delayText: BASE_COLORS.dangerText,
 } as const;
 
 const LABELS: Record<RouteImageLanguage, Labels> = {
@@ -78,18 +75,6 @@ const LABELS: Record<RouteImageLanguage, Labels> = {
     delay: (n) => `${n} min late`,
   },
 };
-
-let fontRegistered = false;
-
-function ensureFont(): void {
-  if (fontRegistered) return;
-  registerFont(FONT_PATH, { family: FONT_FAMILY, weight: 'bold' });
-  fontRegistered = true;
-}
-
-function font(size: number): string {
-  return `bold ${size}px "${FONT_FAMILY}", sans-serif`;
-}
 
 function buildRows(travel: TrainTravel): Row[] {
   const { legs, transferDetails } = travel;
@@ -119,66 +104,6 @@ function buildRows(travel: TrainTravel): Row[] {
 
 function cardHeight(rows: readonly Row[]): number {
   return PADDING * 2 + HEADER_HEIGHT + rows.reduce((sum, row) => sum + ROW_HEIGHT[row.kind], 0);
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + width, y, x + width, y + height, radius);
-  ctx.arcTo(x + width, y + height, x, y + height, radius);
-  ctx.arcTo(x, y + height, x, y, radius);
-  ctx.arcTo(x, y, x + width, y, radius);
-  ctx.closePath();
-}
-
-// Draws a pill badge starting at `edgeX` and growing in the reading direction; returns the far edge.
-function drawBadge(ctx: CanvasRenderingContext2D, text: string, edgeX: number, centerY: number, bg: string, color: string, rtl: boolean): number {
-  ctx.font = font(13);
-  const width = ctx.measureText(text).width + 16;
-  const height = 22;
-  const x = rtl ? edgeX - width : edgeX;
-  ctx.fillStyle = bg;
-  roundRect(ctx, x, centerY - height / 2, width, height, height / 2);
-  ctx.fill();
-  ctx.fillStyle = color;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, x + width / 2, centerY + 1);
-  return rtl ? x : x + width;
-}
-
-function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color: string, align: 'left' | 'right'): number {
-  ctx.font = font(size);
-  ctx.fillStyle = color;
-  ctx.textAlign = align;
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, x, y);
-  const width = ctx.measureText(text).width;
-  return align === 'right' ? x - width : x + width;
-}
-
-function drawDot(ctx: CanvasRenderingContext2D, x: number, y: number, fill: string, stroke: string): void {
-  ctx.beginPath();
-  ctx.arc(x, y, 8, 0, Math.PI * 2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = stroke;
-  ctx.stroke();
-}
-
-function drawArrow(ctx: CanvasRenderingContext2D, fromX: number, toX: number, y: number): void {
-  const head = fromX < toX ? -7 : 7;
-  ctx.strokeStyle = COLORS.muted;
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(fromX, y);
-  ctx.lineTo(toX, y);
-  ctx.moveTo(toX + head, y - 6);
-  ctx.lineTo(toX, y);
-  ctx.lineTo(toX + head, y + 6);
-  ctx.stroke();
 }
 
 function drawCard(ctx: CanvasRenderingContext2D, travel: TrainTravel, top: number, language: RouteImageLanguage): number {
@@ -278,16 +203,10 @@ export function generateRouteImage(travels: readonly TrainTravel[], language: Ro
   if (!travels.length) {
     throw new Error('Cannot render a route image without travels');
   }
-  ensureFont();
-
   const heights = travels.map((travel) => cardHeight(buildRows(travel)));
   const totalHeight = MARGIN + heights.reduce((sum, h) => sum + h + MARGIN, 0);
 
-  const canvas = createCanvas(WIDTH * SCALE, totalHeight * SCALE);
-  const ctx = canvas.getContext('2d');
-  ctx.scale(SCALE, SCALE);
-  ctx.fillStyle = COLORS.background;
-  ctx.fillRect(0, 0, WIDTH, totalHeight);
+  const { canvas, ctx } = createScaledCanvas(WIDTH, totalHeight, COLORS.background);
 
   let top = MARGIN;
   travels.forEach((travel) => {

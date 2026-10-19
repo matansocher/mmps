@@ -15,6 +15,8 @@ export type { CallbackQueryData } from './utils/get-callback-query-data';
 export { removeItemFromInlineKeyboardMarkup } from './utils/remove-item-from-inline-keyboard-markup';
 export { buildRichButtonRows, sendRichMessageWithButtons } from './utils/rich-message';
 export type { RichButtonData } from './utils/rich-message';
+export { sendImageThenText } from './utils/send-image-then-text';
+export type { ImageSource, SendImageThenTextOptions } from './utils/send-image-then-text';
 export { sendRichMessage, sendShortenedMessage, sendStyledMessage } from './utils/send-message';
 export * from './constants';
 export * from './types';
