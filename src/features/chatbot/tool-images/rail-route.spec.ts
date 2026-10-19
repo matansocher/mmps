@@ -1,5 +1,5 @@
 import type { TrainTravel } from '@services/israel-rail';
-import { selectRailTravels } from './rail-route-image';
+import { selectRailTravels } from './rail-route';
 
 const travel = (departureTime: string) => ({ departureTime }) as TrainTravel;
 const trains = [travel('15:10'), travel('15:25'), travel('15:40'), travel('15:55'), travel('16:10')];

@@ -1,6 +1,8 @@
 import { generateRouteImage } from '@services/israel-rail';
-import type { RouteImageLanguage, TrainTravel } from '@services/israel-rail';
-import type { ToolResult } from './types';
+import type { TrainTravel } from '@services/israel-rail';
+import { detectLanguage } from '@shared/image-card';
+import type { ToolResult } from '../types';
+import type { ToolImageBuilder } from './types';
 
 const RAIL_TOOL_NAME = 'israel_rail';
 const MAX_ROUTES_IN_IMAGE = 3;
@@ -22,6 +24,11 @@ export function buildRailRouteImage(toolResults: readonly ToolResult[], replyTex
   if (!travels.length) {
     return null;
   }
-  const language: RouteImageLanguage = /[\u0590-\u05FF]/.test(replyText) ? 'he' : 'en';
-  return generateRouteImage(travels, language);
+  return generateRouteImage(travels, detectLanguage(replyText));
 }
+
+export const RAIL_ROUTE_IMAGE_BUILDER: ToolImageBuilder = {
+  toolName: RAIL_TOOL_NAME,
+  fileName: 'rail-route.png',
+  build: buildRailRouteImage,
+};

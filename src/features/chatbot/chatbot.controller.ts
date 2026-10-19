@@ -12,7 +12,6 @@ import { addExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { FileSummaryService, getFileSummaryRejection } from './file-summary';
-import { buildRailRouteImage } from './rail-route-image';
 import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
 import {
   ACTION_CALLBACK_PREFIX,
@@ -27,6 +26,7 @@ import {
   TRANSCRIPTION_HEADER,
   updateActionStatus,
 } from './secretary';
+import { buildToolImages } from './tool-images';
 import type { ChatbotResponse } from './types';
 import { fileToDataUrl } from './utils';
 
@@ -295,18 +295,18 @@ export class ChatbotController {
 
   private async handleBotResponse(chatId: number, { message: replyText, toolResults }: ChatbotResponse): Promise<void> {
     this.logger.log(`bot response for chatId ${chatId}: ${replyText}`);
-    await this.sendRailRouteImage(chatId, toolResults, replyText);
+    await this.sendToolImages(chatId, toolResults, replyText);
     await sendRichMessage(this.bot, chatId, replyText);
   }
 
-  private async sendRailRouteImage(chatId: number, toolResults: ChatbotResponse['toolResults'], replyText: string): Promise<void> {
-    try {
-      const image = buildRailRouteImage(toolResults, replyText);
-      if (image) {
-        await this.bot.api.sendPhoto(chatId, new InputFile(image, 'rail-route.png'));
+  private async sendToolImages(chatId: number, toolResults: ChatbotResponse['toolResults'], replyText: string): Promise<void> {
+    const images = await buildToolImages(toolResults, replyText);
+    for (const { fileName, image } of images) {
+      try {
+        await this.bot.api.sendPhoto(chatId, new InputFile(image, fileName));
+      } catch (err) {
+        this.logger.error(`Failed to send tool image ${fileName}: ${getErrorMessage(err)}`);
       }
-    } catch (err) {
-      this.logger.error(`Failed to send rail route image: ${getErrorMessage(err)}`);
     }
   }
 
