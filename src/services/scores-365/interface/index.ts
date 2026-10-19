@@ -83,10 +83,22 @@ export type CompetitionTableDetails = {
   readonly competitionTable: CompetitionTableRow[];
 };
 
+export type CompetitionTableZone = {
+  readonly name: string;
+  readonly color: string;
+};
+
 export type CompetitionTableRow = {
   readonly competitor: Competitor;
   readonly points: number;
   readonly gamesPlayed: number;
+  readonly position?: number;
+  readonly gamesWon?: number;
+  readonly gamesDrawn?: number;
+  readonly gamesLost?: number;
+  readonly goalsFor?: number;
+  readonly goalsAgainst?: number;
+  readonly zone?: CompetitionTableZone; // Qualification / relegation zone the row currently sits in
 };
 
 export type AthleteGame = {
