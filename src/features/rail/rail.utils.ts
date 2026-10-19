@@ -90,3 +90,8 @@ export function formatRouteMessage(context: RailRouteContext, railWebsiteUrl: st
   const link = language === 'he' ? `[לבדיקה באתר רכבת ישראל](${railWebsiteUrl})` : `[Check on the Israel Railways website](${railWebsiteUrl})`;
   return [header, '', ...lines, '', link].join('\n');
 }
+
+// Used before we have any text to detect from (e.g. a voice message). Hebrew unless Telegram says otherwise.
+export function getUserLanguage(languageCode?: string): ImageLanguage {
+  return languageCode && !languageCode.toLowerCase().startsWith('he') ? 'en' : 'he';
+}

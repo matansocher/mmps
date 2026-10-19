@@ -20,11 +20,15 @@ function defaultKey(req: Request): string {
   return req.ip ?? req.socket.remoteAddress ?? 'unknown';
 }
 
+type RateLimitCounterOptions = {
+  readonly windowMs: number;
+  readonly prefix: string;
+};
+
 // Fixed-window counter. Uses Redis (INCR + EXPIRE) for persistence across
 // restarts / multiple instances, and falls back to an in-memory map when Redis
-// is unavailable (e.g. local dev without REDIS_URL).
-export function createRateLimiter(options: RateLimitOptions): RequestHandler {
-  const { windowMs, max, prefix, keyGenerator = defaultKey } = options;
+// is unavailable (e.g. local dev without REDIS_URL). Returns the hit count in the current window.
+export function createRateLimitCounter({ windowMs, prefix }: RateLimitCounterOptions): (key: string) => Promise<number> {
   const windowSeconds = Math.ceil(windowMs / 1000);
   const memoryStore = new Map<string, MemoryEntry>();
 
@@ -54,9 +58,17 @@ export function createRateLimiter(options: RateLimitOptions): RequestHandler {
     return entry.count;
   }
 
+  return async (key: string): Promise<number> => (await hitRedis(key)) ?? hitMemory(key);
+}
+
+export function createRateLimiter(options: RateLimitOptions): RequestHandler {
+  const { windowMs, max, prefix, keyGenerator = defaultKey } = options;
+  const windowSeconds = Math.ceil(windowMs / 1000);
+  const hit = createRateLimitCounter({ windowMs, prefix });
+
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const key = keyGenerator(req);
-    const count = (await hitRedis(key)) ?? hitMemory(key);
+    const count = await hit(key);
 
     if (count > max) {
       res.setHeader('Retry-After', String(windowSeconds));

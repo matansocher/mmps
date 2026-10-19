@@ -1,5 +1,5 @@
 import type { TrainTravel } from '@services/israel-rail';
-import { buildCallbackData, buildRouteKeyboard, formatRouteMessage, formatTrainLine, getNextSearchTime, getRouteContext, parseCallbackData } from './rail.utils';
+import { buildCallbackData, buildRouteKeyboard, formatRouteMessage, formatTrainLine, getNextSearchTime, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
 import type { RailRouteContext } from './rail.utils';
 
 const FROM = { id: 3700, nameEn: 'Tel Aviv - Savidor Center', nameHe: 'תל אביב - סבידור מרכז' };
@@ -96,5 +96,17 @@ describe('formatRouteMessage()', () => {
       '',
       '[Check on the Israel Railways website](https://www.rail.co.il/?x=1)',
     ]);
+  });
+});
+
+describe('getUserLanguage()', () => {
+  test.each([
+    { code: undefined, expected: 'he' },
+    { code: 'he', expected: 'he' },
+    { code: 'HE-il', expected: 'he' },
+    { code: 'en', expected: 'en' },
+    { code: 'ru', expected: 'en' },
+  ])('should return $expected for $code', ({ code, expected }) => {
+    expect(getUserLanguage(code)).toEqual(expected);
   });
 });

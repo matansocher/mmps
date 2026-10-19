@@ -1,1 +1,1 @@
-export { createRateLimiter } from './rate-limit';
+export { createRateLimitCounter, createRateLimiter } from './rate-limit';
