@@ -97,6 +97,7 @@ describe('isReadOnlyToolCall()', () => {
     { name: 'gmail', args: { action: 'list' }, expected: true },
     { name: 'gmail', args: { action: 'send' }, expected: false },
     { name: 'github', args: { action: 'merge_pr' }, expected: false },
+    { name: 'github', args: { action: 'get_job_log' }, expected: true },
     { name: 'calendar', args: {}, expected: false },
     { name: 'unknown_tool', args: {}, expected: false },
   ])('should return $expected for $name $args', ({ name, args, expected }) => {

@@ -87,3 +87,56 @@ export type MergePullRequestResult = {
   readonly message: string;
   readonly sha?: string;
 };
+
+export type WorkflowRun = {
+  readonly id: number;
+  readonly runNumber: number;
+  readonly name: string | null;
+  readonly workflowPath: string;
+  readonly event: string;
+  readonly branch: string | null;
+  readonly headSha: string;
+  readonly status: string | null;
+  readonly conclusion: string | null;
+  readonly createdAt: string;
+  readonly url: string;
+};
+
+export type WorkflowJob = {
+  readonly id: number;
+  readonly name: string;
+  readonly status: string;
+  readonly conclusion: string | null;
+  readonly failedSteps: readonly string[];
+  readonly url: string | null;
+};
+
+export type CheckAnnotation = {
+  readonly jobId: number;
+  readonly path: string;
+  readonly startLine: number;
+  readonly level: string | null;
+  readonly title: string | null;
+  readonly message: string | null;
+};
+
+export type WorkflowRunDetails = {
+  readonly run: WorkflowRun;
+  readonly jobs: readonly WorkflowJob[];
+  readonly annotations: readonly CheckAnnotation[];
+};
+
+export type ListWorkflowRunsInput = {
+  readonly workflow?: string;
+  readonly branch?: string;
+  readonly status?: string;
+  readonly limit?: number;
+};
+
+export type JobLogExcerpt = {
+  readonly jobId: number;
+  readonly totalLines: number;
+  readonly errorLines: readonly string[];
+  readonly excerpt: string;
+  readonly truncated: boolean;
+};
