@@ -5,6 +5,8 @@ export { rainRadarTool } from './rain-radar';
 
 export { earthquakeTool } from './earthquake';
 
+export { israelRailTool } from './israel-rail';
+
 export { competitionMatchesTool, competitionTableTool, competitionsListTool, matchSummaryTool, matchPredictionTool, topMatchesForPredictionTool } from './sports';
 
 export { makavdiaTool } from './makavdia';
