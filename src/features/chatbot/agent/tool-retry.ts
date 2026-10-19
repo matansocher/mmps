@@ -24,7 +24,7 @@ const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>>
   worldly_summary: true,
   calendar: ['list', 'upcoming'],
   gmail: ['list'],
-  github: ['get_issue', 'list_issues', 'list_prs', 'get_pr', 'get_pr_checks', 'list_pr_files', 'get_pr_reviews'],
+  github: ['get_issue', 'list_issues', 'list_prs', 'get_pr', 'get_pr_checks', 'list_pr_files', 'get_pr_reviews', 'list_workflow_runs', 'get_workflow_run', 'get_job_log'],
   spotify: ['search_track', 'search_artist', 'get_track_info', 'search_playlist', 'get_artist_top_tracks', 'get_user_playlists'],
   spotify_podcast: ['search', 'list'],
   google_places: true,
