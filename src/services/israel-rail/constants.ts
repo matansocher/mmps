@@ -1,3 +1,5 @@
+export const RAIL_WEBSITE_URL = 'https://www.rail.co.il';
+
 export const RAIL_API_SEARCH_URL = 'https://rail-api.rail.co.il/rjpa/api/v1/timetable/searchTrain';
 
 // Public key bundled in rail.co.il's main.js (not a personal secret). If requests start failing with 401, grab the new one from the site's bundle.

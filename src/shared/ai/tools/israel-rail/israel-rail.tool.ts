@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { findStations, RAIL_STATIONS, searchTrains } from '@services/israel-rail';
+import { buildRailSearchUrl, findStations, RAIL_STATIONS, searchTrains } from '@services/israel-rail';
 import type { RailStation } from '@services/israel-rail';
 
 const schema = z.object({
@@ -49,6 +49,7 @@ async function runner({ from, to, date, time, limit }: z.infer<typeof schema>) {
     searchedFrom: `${searchDate} ${searchTime}`,
     trains: travels,
     alerts: messages,
+    railWebsiteUrl: buildRailSearchUrl({ fromStationId: origin.station.id, toStationId: destination.station.id, date: searchDate, time: searchTime }),
   };
 }
 
@@ -62,6 +63,7 @@ Rules:
 - For every train with transfers, ALWAYS include each transfer from transferDetails, without being asked: the transfer station, arrival platform → departure platform, the connecting train number and its departure time, and the wait time.
 - A visual route card (timeline with platforms and transfers) of the trains whose departure times you mention is sent automatically right before your reply, so keep the text compact.
 - Add any alerts briefly at the end.
+- ALWAYS end the reply with railWebsiteUrl as a markdown link (e.g. [Verify on rail.co.il](url) / [לבדיקה באתר הרכבת](url)) so the user can open the same search on the website.
 - Use station names in the user's language (nameHe for Hebrew, nameEn for English).`,
   schema,
 });
