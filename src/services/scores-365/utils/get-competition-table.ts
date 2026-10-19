@@ -1,5 +1,5 @@
 import { DEFAULT_TIMEZONE } from '@core/config';
-import { CompetitionTableDetails } from '../interface';
+import type { CompetitionTableDetails, CompetitionTableZone } from '../interface';
 import { APP_TYPE_ID, COMPETITIONS, COUNTRY_ID, LANGUAGE_ID, SCORES_365_API_URL } from '../scores-365.config';
 import { scores365Get } from './scores-365-get';
 
@@ -19,10 +19,18 @@ export async function getCompetitionTable(competitionId: number): Promise<Compet
   if (!relevantCompetitionData || !relevantCompetitionTableData) {
     return undefined;
   }
-  const competitionTable = relevantCompetitionTableData.rows.map(({ competitor, points, gamePlayed }) => ({
+  const zones = new Map<number, CompetitionTableZone>((relevantCompetitionTableData.destinations ?? []).map(({ num, name, color }) => [num, { name: name?.trim(), color }]));
+  const competitionTable = relevantCompetitionTableData.rows.map(({ competitor, points, gamePlayed, position, gamesWon, gamesEven, gamesLost, for: goalsFor, against, destinationNum }) => ({
     competitor: { id: competitor.id, name: competitor.name },
     points,
     gamesPlayed: gamePlayed,
+    position,
+    gamesWon,
+    gamesDrawn: gamesEven,
+    gamesLost,
+    goalsFor,
+    goalsAgainst: against,
+    zone: zones.get(destinationNum),
   }));
   const competitionRawDetails = COMPETITIONS.find((c) => c.id === competitionId);
   const competition = { id: relevantCompetitionData.id, name: relevantCompetitionData.name, icon: competitionRawDetails.icon };
