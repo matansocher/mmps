@@ -129,15 +129,16 @@ function drawCard(ctx: CanvasRenderingContext2D, travel: TrainTravel, top: numbe
   const oppositeAlign = rtl ? 'left' : 'right';
   const dir = rtl ? -1 : 1;
 
-  // Header: "departure → arrival" in reading order, then duration · transfers · date
+  // Header: "departure → arrival · date" in reading order, then duration · transfers
   const titleY = top + PADDING + 18;
   const afterDeparture = drawText(ctx, travel.departureTime, start, titleY, 28, COLORS.text, align);
   const arrowStart = afterDeparture + dir * 12;
   const arrowEnd = arrowStart + dir * 30;
   drawArrow(ctx, arrowStart, arrowEnd, titleY);
-  drawText(ctx, travel.arrivalTime, arrowEnd + dir * 12, titleY, 28, COLORS.text, align);
+  const afterArrival = drawText(ctx, travel.arrivalTime, arrowEnd + dir * 12, titleY, 28, COLORS.text, align);
   const [, month, day] = travel.date.split('-');
-  const meta = [labels.minutes(travel.durationMinutes), labels.transfers(travel.transfers), `${day}.${month}`].join('  ·  ');
+  drawText(ctx, `·  ${day}.${month}`, afterArrival + dir * 12, titleY, 20, COLORS.muted, align);
+  const meta = [labels.minutes(travel.durationMinutes), labels.transfers(travel.transfers)].join('  ·  ');
   drawText(ctx, meta, start, titleY + 34, 15, COLORS.muted, align);
 
   const lineX = start + dir * 10;
