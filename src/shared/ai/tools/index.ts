@@ -6,6 +6,7 @@ export { rainRadarTool } from './rain-radar';
 export { earthquakeTool } from './earthquake';
 
 export { israelRailTool } from './israel-rail';
+export { lightRailTool } from './light-rail';
 
 export { competitionMatchesTool, competitionTableTool, competitionsListTool, matchSummaryTool, matchPredictionTool, topMatchesForPredictionTool } from './sports';
 export type { CompetitionTableToolResult, CompetitionTableToolRow } from './sports';

@@ -1,4 +1,4 @@
-import { type Bot, type Context, InputFile } from 'grammy';
+import { type Bot, type Context, InputFile, Keyboard } from 'grammy';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { createRateLimitCounter } from '@core/express';
 import { deleteFile, getErrorMessage, Logger } from '@core/utils';
@@ -8,7 +8,7 @@ import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-fr
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage, type UserDetails } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
 import { saveUserDetails } from './mongo';
-import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
+import { BOT_CONFIG, BOT_PROFILE, LOCATION_BUTTON_TEXT, LOCATION_QUERY, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import { buildRouteKeyboard, formatRouteMessage, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
 
@@ -32,6 +32,7 @@ export class RailController {
     this.bot.command(BOT_CONFIG.commands.START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on(['message:voice', 'message:audio'], (ctx) => this.audioHandler(ctx));
+    this.bot.on('message:location', (ctx) => this.locationHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
     this.syncBotProfile().catch((err) => this.logger.error(`Failed to set bot profile: ${getErrorMessage(err)}`));
   }
@@ -50,7 +51,7 @@ export class RailController {
   private async startHandler(ctx: Context): Promise<void> {
     const { userDetails } = getMessageData(ctx);
     const saveResult = await saveUserDetails(userDetails);
-    await ctx.reply(START_MESSAGE);
+    await ctx.reply(START_MESSAGE, { reply_markup: new Keyboard().requestLocation(LOCATION_BUTTON_TEXT).resized() });
     notify(BOT_CONFIG, { action: 'START', isNewUser: saveResult === 'created' }, userDetails);
   }
 
@@ -112,6 +113,20 @@ export class RailController {
       }
       const answer = await this.answerQuery(ctx, chatId, transcript, detectLanguage(transcript));
       notifyConversation('VOICE_MESSAGE', transcript, answer, userDetails);
+    });
+  }
+
+  private async locationHandler(ctx: Context): Promise<void> {
+    const { chatId, messageId, userDetails } = getMessageData(ctx);
+    const { latitude, longitude } = ctx.message.location;
+    const language = getUserLanguage(ctx.from?.language_code);
+    if (await this.isRateLimited(ctx, language)) return;
+
+    const query = LOCATION_QUERY[language](latitude, longitude);
+    const messageLoader = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '⚡' });
+    await messageLoader.handleMessageWithLoader(async () => {
+      const answer = await this.answerQuery(ctx, chatId, query, language);
+      notifyConversation('LOCATION', `📍 ${latitude}, ${longitude}`, answer, userDetails);
     });
   }
 

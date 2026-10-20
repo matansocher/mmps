@@ -1,4 +1,5 @@
 import { createMongoConnection } from '@core/mongo';
+import { warmLightRailTimetable } from '@services/light-rail';
 import { provideTelegramBot } from '@services/telegram';
 import { DB_NAME } from './mongo';
 import { BOT_CONFIG } from './rail.config';
@@ -13,4 +14,5 @@ export async function initRail(): Promise<void> {
   const railController = new RailController(railService, bot);
 
   railController.init();
+  warmLightRailTimetable();
 }
