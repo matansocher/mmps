@@ -10,3 +10,4 @@ export { toMatchCard, toMatchCardGroups, upcomingMatchesToCardGroups } from './m
 export type { MatchCard, MatchCardGroup } from './match-cards';
 export { generateMatchCardsImage, MAX_MATCHES_IN_IMAGE, toMatchCardSections } from './match-cards-image';
 export type { MatchCardSection } from './match-cards-image';
+export { loadLogos } from './sports-logos';

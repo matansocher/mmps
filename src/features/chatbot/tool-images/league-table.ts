@@ -22,7 +22,7 @@ export function selectHighlightedPositions(rows: readonly CompetitionTableToolRo
   return (others.length ? others : mentioned).slice(0, MAX_HIGHLIGHTED_TEAMS).map((row) => row.position);
 }
 
-export function buildLeagueTableImage(toolResults: readonly ToolResult[], replyText: string): Buffer | null {
+export async function buildLeagueTableImage(toolResults: readonly ToolResult[], replyText: string): Promise<Buffer | null> {
   const table = selectLeagueTable(toolResults);
   if (!table) {
     return null;

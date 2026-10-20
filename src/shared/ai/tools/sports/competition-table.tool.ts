@@ -12,6 +12,7 @@ const schema = z.object({
 export type CompetitionTableToolRow = {
   readonly position: number;
   readonly team: string;
+  readonly teamId?: number;
   readonly played: number;
   readonly won?: number;
   readonly drawn?: number;
@@ -33,6 +34,7 @@ function toCompetitionTableToolResult({ competition, competitionTable }: Competi
   const table = competitionTable.map((row, index) => ({
     position: row.position ?? index + 1,
     team: row.competitor.name,
+    teamId: row.competitor.id,
     played: row.gamesPlayed,
     won: row.gamesWon,
     drawn: row.gamesDrawn,

@@ -50,12 +50,12 @@ describe('getZoneColors()', () => {
 });
 
 describe('buildLeagueTableImage()', () => {
-  test('should return null without a table result', () => {
-    expect(buildLeagueTableImage([], 'hi')).toEqual(null);
+  test('should return null without a table result', async () => {
+    expect(await buildLeagueTableImage([], 'hi')).toEqual(null);
   });
 
-  test('should render a PNG for a table result', () => {
-    const image = buildLeagueTableImage([{ toolName: 'competition_table', data: { competition: 'פרמייר ליג', table: rows } }], 'ארסנל שנייה');
+  test('should render a PNG for a table result', async () => {
+    const image = await buildLeagueTableImage([{ toolName: 'competition_table', data: { competition: 'פרמייר ליג', table: rows } }], 'ארסנל שנייה');
     expect(image?.subarray(1, 4).toString()).toEqual('PNG');
   });
 });
