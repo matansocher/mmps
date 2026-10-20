@@ -1,4 +1,4 @@
-name: '🚀 Deploy to Heroku'
+name: '🚀 Deploy'
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: 'Deploy to Heroku'
+    name: Deploy
     if: github.actor == 'matansocher' || contains(github.actor, 'mmps-companion')
     runs-on: ubuntu-latest
     timeout-minutes: 10
