@@ -34,7 +34,9 @@ runs:
         MAX_COMMITS: ${{ inputs.max-commits }}
       run: |
         export GIT_TERMINAL_PROMPT=0
-        PREV_SHA="$(git ls-remote "https://:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git" refs/heads/main | cut -f1)"
+        # Credentials go through a helper, not the URL: git drops URL credentials when Heroku redirects.
+        PREV_SHA="$(git -c credential.helper= -c credential.helper='!f() { test "$1" = get && echo username=heroku && echo "password=${HEROKU_API_KEY}"; }; f' \
+          ls-remote "https://git.heroku.com/${HEROKU_APP_NAME}.git" refs/heads/main | cut -f1)"
 
         if [ -z "$PREV_SHA" ]; then
           commits="(no previous deploy found)"
