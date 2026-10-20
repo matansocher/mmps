@@ -39,7 +39,7 @@ export function selectMatchCardGroups(groups: readonly MatchCardGroup[], replyTe
 }
 
 function buildFootballMatchesImage(toolName: string, focusOnMentioned: boolean) {
-  return (toolResults: readonly ToolResult[], replyText: string): Buffer | null => {
+  return async (toolResults: readonly ToolResult[], replyText: string): Promise<Buffer | null> => {
     const allGroups = collectMatchCardGroups(toolResults, [toolName]);
     const groups = focusOnMentioned ? selectMatchCardGroups(allGroups, replyText) : allGroups;
     if (!groups.length) {

@@ -22,3 +22,4 @@ export { getAthleteDetails } from './get-athlete-details';
 export { getStandings } from './get-standings';
 export { getBrackets } from './get-brackets';
 export { getHeadToHead } from './get-head-to-head';
+export { getCompetitionLogoUrl, getTeamLogoUrl } from './get-logo-urls';

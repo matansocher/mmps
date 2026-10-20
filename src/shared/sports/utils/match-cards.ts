@@ -10,6 +10,8 @@ export type MatchCard = {
   readonly time: string; // Format: "HH:mm" (Asia/Jerusalem)
   readonly home: string;
   readonly away: string;
+  readonly homeId?: number;
+  readonly awayId?: number;
   readonly homeScore: number | null;
   readonly awayScore: number | null;
   readonly status: MatchStatus;
@@ -19,6 +21,7 @@ export type MatchCard = {
 
 export type MatchCardGroup = {
   readonly competition: string;
+  readonly competitionId?: number;
   readonly matches: MatchCard[];
 };
 
@@ -34,6 +37,8 @@ export function toMatchCard(match: MatchDetails): MatchCard {
     time: formatInTimeZone(match.startTime, DEFAULT_TIMEZONE, 'HH:mm'),
     home: match.homeCompetitor.name,
     away: match.awayCompetitor.name,
+    homeId: match.homeCompetitor.id,
+    awayId: match.awayCompetitor.id,
     homeScore: status === 'scheduled' ? null : toScore(match.homeCompetitor.score),
     awayScore: status === 'scheduled' ? null : toScore(match.awayCompetitor.score),
     status,
@@ -47,12 +52,16 @@ export function toMatchCardGroups(details: readonly CompetitionDetails[]): Match
     .filter((detail) => detail?.matches?.length)
     .map(({ competition, matches }) => ({
       competition: competition.name,
+      competitionId: competition.id,
       matches: [...matches].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).map(toMatchCard),
     }));
 }
 
-export function upcomingMatchesToCardGroups(matches: readonly Pick<UpcomingMatch, 'id' | 'competitionName' | 'startTime' | 'homeTeam' | 'awayTeam'>[]): MatchCardGroup[] {
+type UpcomingCardMatch = Pick<UpcomingMatch, 'id' | 'competitionName' | 'startTime' | 'homeTeam' | 'awayTeam'> & Partial<Pick<UpcomingMatch, 'competitionId'>>;
+
+export function upcomingMatchesToCardGroups(matches: readonly UpcomingCardMatch[]): MatchCardGroup[] {
   const groups = new Map<string, MatchCard[]>();
+  const competitionIds = new Map<string, number>();
   const sorted = [...matches].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   for (const match of sorted) {
     const cards = groups.get(match.competitionName) ?? [];
@@ -62,6 +71,8 @@ export function upcomingMatchesToCardGroups(matches: readonly Pick<UpcomingMatch
       time: formatInTimeZone(match.startTime, DEFAULT_TIMEZONE, 'HH:mm'),
       home: match.homeTeam.name,
       away: match.awayTeam.name,
+      homeId: match.homeTeam.id,
+      awayId: match.awayTeam.id,
       homeScore: null,
       awayScore: null,
       status: 'scheduled',
@@ -69,6 +80,9 @@ export function upcomingMatchesToCardGroups(matches: readonly Pick<UpcomingMatch
       channel: null,
     });
     groups.set(match.competitionName, cards);
+    if (match.competitionId && !competitionIds.has(match.competitionName)) {
+      competitionIds.set(match.competitionName, match.competitionId);
+    }
   }
-  return [...groups.entries()].map(([competition, cards]) => ({ competition, matches: cards }));
+  return [...groups.entries()].map(([competition, cards]) => ({ competition, competitionId: competitionIds.get(competition), matches: cards }));
 }

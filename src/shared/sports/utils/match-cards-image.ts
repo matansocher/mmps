@@ -1,10 +1,12 @@
-import type { CanvasRenderingContext2D } from 'canvas';
+import type { CanvasRenderingContext2D, Image } from 'canvas';
 import { COLORS, createScaledCanvas, drawText, font, roundRect } from '@shared/image-card';
 import type { ImageLanguage } from '@shared/image-card';
 import type { MatchCard, MatchCardGroup } from './match-cards';
+import { loadLogos } from './sports-logos';
 
 export type MatchCardSection = {
   readonly competition: string;
+  readonly competitionId?: number;
   readonly date: string;
   readonly matches: MatchCard[];
 };
@@ -35,6 +37,11 @@ const FOOTER_HEIGHT = 34;
 const CENTER_WIDTH = 120;
 const TEAM_GAP = 10;
 const SCORE_OFFSET = 20;
+const LOGO_SIZE = 26;
+const LOGO_GAP = 8;
+const COMPETITION_LOGO_SIZE = 22;
+
+type TeamLogos = ReadonlyMap<number, Image>;
 
 const LABELS: Record<ImageLanguage, Labels> = {
   he: {
@@ -69,7 +76,7 @@ export function toMatchCardSections(groups: readonly MatchCardGroup[], maxMatche
       byDate.set(match.date, [...(byDate.get(match.date) ?? []), match]);
     }
     for (const [date, matches] of byDate) {
-      sections.push({ competition: group.competition, date, matches });
+      sections.push({ competition: group.competition, competitionId: group.competitionId, date, matches });
     }
   }
   return { sections, hiddenCount };
@@ -120,17 +127,33 @@ function teamColor(match: MatchCard, side: 'home' | 'away'): string {
   return (side === 'home') === homeWon ? COLORS.text : COLORS.muted;
 }
 
-function drawMatchRow(ctx: CanvasRenderingContext2D, match: MatchCard, top: number, labels: Labels, rtl: boolean): void {
+// Fits the logo inside a size x size box, keeping its aspect ratio.
+function drawLogo(ctx: CanvasRenderingContext2D, logo: Image, centerX: number, centerY: number, size = LOGO_SIZE): void {
+  const scale = Math.min(size / logo.width, size / logo.height);
+  const width = logo.width * scale;
+  const height = logo.height * scale;
+  ctx.drawImage(logo, centerX - width / 2, centerY - height / 2, width, height);
+}
+
+function drawMatchRow(ctx: CanvasRenderingContext2D, match: MatchCard, top: number, labels: Labels, rtl: boolean, logos: TeamLogos | null): void {
   const cardLeft = MARGIN;
   const cardRight = WIDTH - MARGIN;
   const centerX = WIDTH / 2;
   const dir = rtl ? -1 : 1;
-  const teamWidth = (cardRight - cardLeft - INNER_PADDING * 2 - CENTER_WIDTH) / 2 - TEAM_GAP;
+  const logoSpace = logos ? LOGO_SIZE + LOGO_GAP : 0;
+  const teamWidth = (cardRight - cardLeft - INNER_PADDING * 2 - CENTER_WIDTH) / 2 - TEAM_GAP - logoSpace;
   const middleY = top + ROW_HEIGHT / 2;
 
-  // Home sits on the reading-start side, both team names hug the center column.
-  const homeEdge = centerX - dir * (CENTER_WIDTH / 2 + TEAM_GAP);
-  const awayEdge = centerX + dir * (CENTER_WIDTH / 2 + TEAM_GAP);
+  // Home sits on the reading-start side, both team names hug the center column with their logos in between.
+  const homeEdge = centerX - dir * (CENTER_WIDTH / 2 + TEAM_GAP + logoSpace);
+  const awayEdge = centerX + dir * (CENTER_WIDTH / 2 + TEAM_GAP + logoSpace);
+  if (logos) {
+    const logoOffset = CENTER_WIDTH / 2 + TEAM_GAP + LOGO_SIZE / 2;
+    const homeLogo = logos.get(match.homeId);
+    const awayLogo = logos.get(match.awayId);
+    if (homeLogo) drawLogo(ctx, homeLogo, centerX - dir * logoOffset, middleY);
+    if (awayLogo) drawLogo(ctx, awayLogo, centerX + dir * logoOffset, middleY);
+  }
   drawText(ctx, ellipsize(ctx, match.home, 16, teamWidth), homeEdge, middleY, 16, teamColor(match, 'home'), rtl ? 'left' : 'right');
   drawText(ctx, ellipsize(ctx, match.away, 16, teamWidth), awayEdge, middleY, 16, teamColor(match, 'away'), rtl ? 'right' : 'left');
 
@@ -162,14 +185,20 @@ function drawMatchRow(ctx: CanvasRenderingContext2D, match: MatchCard, top: numb
   }
 }
 
-function drawSection(ctx: CanvasRenderingContext2D, section: MatchCardSection, top: number, labels: Labels, rtl: boolean): number {
-  const start = rtl ? WIDTH - MARGIN - 4 : MARGIN + 4;
+function drawSection(ctx: CanvasRenderingContext2D, section: MatchCardSection, top: number, labels: Labels, rtl: boolean, logos: TeamLogos | null, competitionLogo: Image | null): number {
+  const dir = rtl ? -1 : 1;
+  const titleEdge = rtl ? WIDTH - MARGIN - 4 : MARGIN + 4;
+  const competitionLogoSpace = competitionLogo ? COMPETITION_LOGO_SIZE + LOGO_GAP : 0;
+  const start = titleEdge + dir * competitionLogoSpace;
   const end = rtl ? MARGIN + 4 : WIDTH - MARGIN - 4;
   const headerY = top + SECTION_HEADER_HEIGHT / 2;
   const dateLabel = formatDateLabel(section.date, labels);
   ctx.font = font(13);
   const dateWidth = ctx.measureText(dateLabel).width;
-  const titleWidth = WIDTH - MARGIN * 2 - dateWidth - 24;
+  const titleWidth = WIDTH - MARGIN * 2 - dateWidth - 24 - competitionLogoSpace;
+  if (competitionLogo) {
+    drawLogo(ctx, competitionLogo, titleEdge + (dir * COMPETITION_LOGO_SIZE) / 2, headerY, COMPETITION_LOGO_SIZE);
+  }
   drawText(ctx, ellipsize(ctx, section.competition, 18, titleWidth), start, headerY, 18, COLORS.text, rtl ? 'right' : 'left');
   drawText(ctx, dateLabel, end, headerY, 13, COLORS.muted, rtl ? 'left' : 'right');
 
@@ -192,17 +221,23 @@ function drawSection(ctx: CanvasRenderingContext2D, section: MatchCardSection, t
       ctx.lineTo(WIDTH - MARGIN - INNER_PADDING, rowTop);
       ctx.stroke();
     }
-    drawMatchRow(ctx, match, rowTop, labels, rtl);
+    drawMatchRow(ctx, match, rowTop, labels, rtl, logos);
   });
 
   return SECTION_HEADER_HEIGHT + cardHeight;
 }
 
-export function generateMatchCardsImage(groups: readonly MatchCardGroup[], language: ImageLanguage = 'he'): Buffer | null {
+export async function generateMatchCardsImage(groups: readonly MatchCardGroup[], language: ImageLanguage = 'he'): Promise<Buffer | null> {
   const { sections, hiddenCount } = toMatchCardSections(groups);
   if (!sections.length) {
     return null;
   }
+
+  const teamIds = sections.flatMap((section) => section.matches.flatMap((match) => [match.homeId, match.awayId])).filter(Boolean);
+  const competitionIds = sections.map((section) => section.competitionId).filter(Boolean);
+  const [loadedLogos, competitionLogos] = await Promise.all([loadLogos('team', teamIds), loadLogos('competition', competitionIds)]);
+  // Space for logos is reserved only when at least one loaded, so a logo outage falls back to the plain layout.
+  const logos = loadedLogos.size ? loadedLogos : null;
 
   const labels = LABELS[language];
   const rtl = language === 'he';
@@ -212,7 +247,7 @@ export function generateMatchCardsImage(groups: readonly MatchCardGroup[], langu
 
   let top = MARGIN - 4;
   for (const section of sections) {
-    top += drawSection(ctx, section, top, labels, rtl) + SECTION_GAP;
+    top += drawSection(ctx, section, top, labels, rtl, logos, competitionLogos.get(section.competitionId) ?? null) + SECTION_GAP;
   }
   if (hiddenCount) {
     drawCenteredText(ctx, labels.more(hiddenCount), WIDTH / 2, top - SECTION_GAP + FOOTER_HEIGHT / 2 + 4, 13, COLORS.muted);
