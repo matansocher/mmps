@@ -23,3 +23,11 @@ export const LIGHT_RAIL_STATION_ALIASES: Record<string, readonly string[]> = {
   ארליך: ['erlich'],
   איסקוב: ['iskov'],
 };
+
+export const NEARBY_CANDIDATES = 3;
+export const NEARBY_CACHE_MINUTES = 24 * 60;
+// Used when the walking-route lookup is unavailable: streets are ~30% longer than a straight line, walking speed ~80 m/min.
+export const WALKING_DETOUR_FACTOR = 1.3;
+export const WALKING_METERS_PER_MINUTE = 80;
+export const ROUTE_MATRIX_URL = 'https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix';
+export const ROUTE_MATRIX_TIMEOUT_MS = 8000;

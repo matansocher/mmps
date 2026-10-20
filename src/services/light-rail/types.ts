@@ -41,3 +41,26 @@ export type FindDeparturesParams = {
   readonly time: string; // Format: "HH:mm"
   readonly limit?: number;
 };
+
+export type GeoPoint = {
+  readonly lat: number;
+  readonly lon: number;
+};
+
+export type NearbyLightRailStation = {
+  readonly station: LightRailStation;
+  readonly straightLineMeters: number;
+  readonly walkingMeters: number;
+  readonly walkingMinutes: number;
+  readonly walkingIsEstimate: boolean;
+};
+
+export type NearbyLightRailResult = {
+  readonly origin: GeoPoint & { readonly label?: string };
+  readonly stations: NearbyLightRailStation[];
+};
+
+export type WalkingRoute = {
+  readonly meters: number;
+  readonly minutes: number;
+};
