@@ -11,7 +11,9 @@ export function normalizeStationName(name: string): string {
     .trim();
 }
 
-const SEARCHABLE_STATIONS = RAIL_STATIONS.map((station) => {
+const PUBLIC_STATIONS: readonly RailStation[] = RAIL_STATIONS.map(({ id, nameEn, nameHe }) => ({ id, nameEn, nameHe }));
+
+const SEARCHABLE_STATIONS = PUBLIC_STATIONS.map((station) => {
   const aliases = Object.entries(STATION_ALIASES)
     .filter(([, id]) => id === station.id)
     .map(([alias]) => normalizeStationName(alias));
@@ -20,7 +22,7 @@ const SEARCHABLE_STATIONS = RAIL_STATIONS.map((station) => {
 });
 
 export function getStationById(id: number): RailStation | undefined {
-  return RAIL_STATIONS.find((station) => station.id === id);
+  return PUBLIC_STATIONS.find((station) => station.id === id);
 }
 
 // Returns a single station on an exact name/alias hit, otherwise every station whose names contain all query words.

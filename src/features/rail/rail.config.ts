@@ -16,8 +16,9 @@ export const RAIL_LIMITS = {
   globalMaxRequests: 300,
   maxVoiceSeconds: 60,
   conversationIdleMs: 30 * 60 * 1000,
-  modelCallLimitPerRun: 4,
-  toolCallLimitPerRun: 3,
+  modelCallLimitPerRun: 5,
+  toolCallLimitPerRun: 4,
+  webSearchCallLimitPerRun: 1,
 };
 
 // Shown by Telegram before the first /start (description, max 512 chars) and on the bot profile (short description, max 120 chars).
@@ -25,25 +26,25 @@ export const BOT_PROFILE = {
   en: {
     description: `🚆 Israel Rail trains and the Tel Aviv light rail Red Line in one message.
 
-Tell me where from, where to and (optionally) when, by text or voice, in English or Hebrew. I'll send the next trains with departure and arrival times, platforms, transfers and delays, plus a route picture and a link to rail.co.il.
+Tell me where from, where to (station or any place) and when, by text or voice, in English or Hebrew. I'll send the next trains with departure and arrival times, platforms, transfers and delays, plus a route picture and a link to rail.co.il.
 
 Try:
 • Tel Aviv Savidor to Haifa Hof HaCarmel
 • Tomorrow at 8 from Beer Sheva to Tel Aviv HaShalom
 • Light rail from Allenby to Petah Tikva
-• Nearest light rail station to Dizengoff Center`,
+• Dizengoff Center to the Grand Canyon mall in Haifa`,
     shortDescription: '🚆 Next Israel Rail trains with platforms, transfers and a route picture. Just ask, by text or voice.',
   },
   he: {
     description: `🚆 הרכבות הקרובות - רכבת ישראל והקו האדום של הרכבת הקלה - בהודעה אחת.
 
-כתבו או שלחו הודעה קולית - מאיפה, לאן, ואם צריך גם מתי - בעברית או באנגלית. אחזיר את הרכבות הבאות עם שעות יציאה והגעה, רציפים, החלפות ועיכובים, תמונה של המסלול וקישור לאתר רכבת ישראל.
+כתבו או שלחו הודעה קולית - מאיפה, לאן (תחנה, כתובת או מקום), ואם צריך גם מתי - בעברית או באנגלית. אחזיר את הרכבות הבאות עם שעות יציאה והגעה, רציפים, החלפות ועיכובים, תמונה של המסלול וקישור לאתר רכבת ישראל.
 
 נסו:
 • סבידור לחיפה חוף הכרמל
 • מחר ב-8 מבאר שבע לתל אביב השלום
 • רכבת קלה מאלנבי לפתח תקווה
-• מה תחנת הרכבת הקלה הקרובה לדיזנגוף סנטר?`,
+• מדיזנגוף סנטר לגרנד קניון בחיפה`,
     shortDescription: '🚆 הרכבות הקרובות עם רציפים, החלפות ותמונת מסלול. פשוט שואלים, בכתב או בקול.',
   },
 };
@@ -51,10 +52,12 @@ Try:
 export const RAIL_AGENT_PROMPT = `You are a friendly Israel trains assistant. Your only job is finding upcoming trains: Israel Railways with the israel_rail tool, and the Tel Aviv light rail Red Line (הרכבת הקלה / הקו האדום) with the light_rail tool.
 - Users write (or speak, transcribed) in Hebrew or English, sometimes mixed. Station names can be in either language, with typos, slang or abbreviations (e.g. "ת״א סבידור", "נתב״ג", "Haifa Hof HaCarmel", "TLV HaHagana"). Pass the station name as the user wrote it — the tool matches Hebrew and English names.
 - Every message is a train question unless clearly not. Extract origin, destination, date and time and call israel_rail, or light_rail when the user mentions the light rail / Red Line or both stations are Red Line stops. Missing date/time means now. Understand relative times in both languages ("מחר ב-8", "בעוד שעה", "tomorrow at 8", "in an hour").
-- For "closest / nearest light rail station" questions or a shared location ("[מיקום ששותף: lat, lon]" / "[Shared location: lat, lon]"), call light_rail with action "nearest_station" (place, or lat/lon). If the user also wants trains from there, call light_rail departures from the nearest station afterwards.
+- Origin and destination can also be places instead of stations: an address, landmark, mall, university, hotel or neighbourhood, or where the user is right now ("אני בקניון עזריאלי", "I'm at the Technion", "אני רוצה להגיע לכותל"). Pass them to israel_rail as fromPlace / toPlace - the tool finds the nearest train station with Google Maps and the walk to/from it. You don't get the user's live location, so if they ask "from here" / "מכאן" without saying where they are, ask where they are now (a place, address or nearby station).
+- For "closest / nearest train station" questions, call israel_rail with action "nearest_station" (place). For "closest / nearest light rail station" questions, call light_rail with action "nearest_station" (place). If the user also wants trains from there, call light_rail departures from the nearest station afterwards.
+- Use web_search only for train-related info the rail tools don't have: strikes, service disruptions or line closures, planned works, new or temporarily closed stations, station facilities (parking, accessibility, opening hours), fares and Rav-Kav, or to identify a place the user named so you can pass a clearer fromPlace / toPlace. Search in the user's language and include "רכבת ישראל" / "Israel Railways" in the query. Never use it for train times - always use israel_rail / light_rail for those. Cite the 1-2 most relevant sources as markdown links.
 - If the origin or destination is missing, ask for it briefly. Use earlier messages in the conversation for context (e.g. "and back?", "ובחזרה?", "what about tomorrow at 8?").
 - Always reply in the language of the user's latest message: Hebrew for Hebrew, English for English. Keep it short and clear.
-- If asked about anything unrelated to trains, say politely that you only help with train and light rail schedules.`;
+- If asked about anything unrelated to trains, say politely that you only help with trains and the light rail - don't web search it.`;
 
 export const START_MESSAGE = `היי! 🚆 אני הבוט של הרכבת.
 פשוט כתבו או שלחו הודעה קולית - מאיפה ולאן, ואם צריך גם מתי - ואחזיר את הרכבות הקרובות עם תמונה של המסלול.
@@ -65,7 +68,8 @@ export const START_MESSAGE = `היי! 🚆 אני הבוט של הרכבת.
 • נתב״ג לירושלים נבון בעוד שעה
 • רכבת קלה מאלנבי לפתח תקווה 🚊
 • מה תחנת הרכבת הקלה הקרובה לעזריאלי?
-📍 אפשר גם ללחוץ על הכפתור למטה ולשתף מיקום כדי לקבל את תחנת הרכבת הקלה הקרובה.
+• אני בדיזנגוף סנטר ורוצה להגיע לגרנד קניון בחיפה 📍
+• מה תחנת הרכבת הכי קרובה לטכניון?
 
 —
 
@@ -77,14 +81,8 @@ Examples:
 • Tomorrow at 8 from Beer Sheva to Tel Aviv HaShalom
 • Light rail from Allenby to Petah Tikva 🚊
 • Nearest light rail station to Azrieli
-📍 You can also tap the button below and share your location to get the nearest light rail station.`;
-
-export const LOCATION_BUTTON_TEXT = '📍 התחנה הקרובה אליי · Nearest station';
-
-export const LOCATION_QUERY = {
-  he: (lat: number, lon: number) => `[מיקום ששותף: ${lat}, ${lon}] מה תחנת הרכבת הקלה הקרובה אליי?`,
-  en: (lat: number, lon: number) => `[Shared location: ${lat}, ${lon}] What is the nearest light rail station to me?`,
-};
+• I'm at Dizengoff Center, how do I get to the Grand Canyon mall in Haifa? 📍
+• Nearest train station to the Technion`;
 
 export const MESSAGES = {
   userRateLimited: {

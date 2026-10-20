@@ -4,6 +4,11 @@ export type RailStation = {
   readonly nameHe: string;
 };
 
+export type RailStationWithLocation = RailStation & {
+  readonly lat: number;
+  readonly lon: number;
+};
+
 export type RailApiEtaDiff = {
   readonly stationId: number;
   readonly difMin: number;
@@ -94,4 +99,17 @@ export type TrainTravel = {
 export type SearchTrainsResult = {
   readonly travels: readonly TrainTravel[];
   readonly messages: readonly string[];
+};
+
+export type NearbyRailStation = {
+  readonly station: RailStationWithLocation;
+  readonly straightLineMeters: number;
+  readonly walkingMeters: number;
+  readonly walkingMinutes: number;
+  readonly walkingIsEstimate: boolean;
+};
+
+export type NearbyRailStationsResult = {
+  readonly origin: { readonly lat: number; readonly lon: number; readonly label?: string };
+  readonly stations: NearbyRailStation[];
 };
