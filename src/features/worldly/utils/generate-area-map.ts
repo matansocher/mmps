@@ -30,6 +30,19 @@ const FONT_FAMILY = 'sans-serif';
 const FIT_RATIO = 0.48;
 const FIT_OFFSET_Y = 18;
 const MIN_SPAN_DEG = 14;
+// Countries get a wider view so neighbours and coastlines give enough context to place them
+const COUNTRY_FIT_RATIO = 0.4;
+const COUNTRY_MIN_VIEW_DEG = 30;
+const COUNTRY_MIN_MARGIN_DEG = 12;
+// Per-country view width in degrees, for cases where the size-based rule isn't enough
+const COUNTRY_VIEW_OVERRIDES: Record<string, number> = {
+  Iceland: 45,
+  Kiribati: 70,
+  'Marshall Islands': 60,
+  Mauritius: 40,
+  'New Zealand': 70,
+  Seychelles: 45,
+};
 const MAX_SPAN_DEG = 220;
 const MAIN_POLYGON_RATIO = 0.12;
 const SMALL_TARGET_PX = 28;
@@ -109,7 +122,7 @@ function createProjection(centerLon: number, centerY: number, scale: number, ori
 }
 
 // Auto-fit a Mercator projection so the target's main landmass fills about half the frame
-function fitProjection(target: Area): Projection {
+function fitProjection(target: Area, isState: boolean): Projection {
   let x0 = Infinity,
     x1 = -Infinity,
     y0 = Infinity,
@@ -125,10 +138,17 @@ function fitProjection(target: Area): Projection {
   }
   const spanX = Math.max((x1 - x0) * D2R, 1e-6);
   const spanY = Math.max(y1 - y0, 1e-6);
-  let scale = Math.min((WIDTH * FIT_RATIO) / spanX, (HEIGHT * FIT_RATIO) / spanY);
-  scale = Math.min(scale, WIDTH / (MIN_SPAN_DEG * D2R));
+  let scale = isState ? Math.min((WIDTH * FIT_RATIO) / spanX, (HEIGHT * FIT_RATIO) / spanY, WIDTH / (MIN_SPAN_DEG * D2R)) : WIDTH / getCountryViewSpan(target, Math.max(spanX, spanY));
   scale = Math.max(scale, WIDTH / (MAX_SPAN_DEG * D2R));
   return createProjection(target.lon + (x0 + x1) / 2, (y0 + y1) / 2, scale, WIDTH / 2, HEIGHT / 2 + FIT_OFFSET_Y);
+}
+
+function getCountryViewSpan(target: Area, span: number): number {
+  const override = COUNTRY_VIEW_OVERRIDES[target.name];
+  if (override) {
+    return override * D2R;
+  }
+  return Math.max(COUNTRY_MIN_VIEW_DEG * D2R, span / COUNTRY_FIT_RATIO, span + 2 * COUNTRY_MIN_MARGIN_DEG * D2R);
 }
 
 function tracePath(ctx: CanvasRenderingContext2D, area: Area, projection: Projection): void {
@@ -371,7 +391,7 @@ export function generateAreaMap(allAreas: Area[], areaName: string, isState = fa
     return undefined;
   }
   const areas = allAreas.filter((a) => a.geometry);
-  const projection = fitProjection(area);
+  const projection = fitProjection(area, isState);
   const backdrop = [...contextAreas.filter((a) => a.geometry), ...areas].filter((a) => isInViewport(a, projection));
 
   const canvas = createCanvas(WIDTH, HEIGHT);
