@@ -10,7 +10,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgentService, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
+import { AiService, createAgentService, createDanglingToolCallsMiddleware, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARIZATION_TRIGGER, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
@@ -74,10 +74,13 @@ export class ChatbotService {
     // and returns clear errors the model can act on. Calls with side effects are never retried.
     const toolRetry = createToolRetryMiddleware();
 
+    // Patches tool calls left without a result (e.g. a turn cut off by a restart) so the thread keeps working.
+    const danglingToolCalls = createDanglingToolCallsMiddleware();
+
     this.aiService = createAgentService(agent(), {
       model: this.model,
       checkpointer,
-      middleware: [summarization, modelCallLimit, toolCallLimit, toolRetry, createStructuredResponseMiddleware()],
+      middleware: [summarization, modelCallLimit, toolCallLimit, toolRetry, danglingToolCalls, createStructuredResponseMiddleware()],
       toolCallbackOptions,
     });
   }

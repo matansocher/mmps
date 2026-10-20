@@ -15,6 +15,26 @@ function isStructuredResult(result: unknown): result is ModelCallResult {
 
 export const FINAL_REPLY_TOOL_NAME = 'final_reply';
 
+// When the model calls final_reply in parallel with regular tools, langchain ends the turn and the other
+// calls never run, so their results (e.g. match cards for the image) never reach the reply.
+// Dropping final_reply instead lets the regular tools run; the model calls final_reply again afterwards.
+// (A failed final_reply retry in the same situation leaves the other calls unanswered - see dangling-tool-calls.ts.)
+function withoutFinalReply(response: AIMessage | undefined): AIMessage | undefined {
+  const toolCalls = response?.tool_calls ?? [];
+  const otherToolCalls = toolCalls.filter((toolCall) => toolCall.name !== FINAL_REPLY_TOOL_NAME);
+  if (otherToolCalls.length === 0 || otherToolCalls.length === toolCalls.length) {
+    return undefined;
+  }
+  return new AIMessage({
+    content: response.content,
+    id: response.id,
+    tool_calls: otherToolCalls,
+    additional_kwargs: response.additional_kwargs,
+    response_metadata: response.response_metadata,
+    usage_metadata: response.usage_metadata,
+  });
+}
+
 // The final answer is returned as a tool call, so the caller's schema is wrapped in an envelope
 // that also carries the user-facing reply text.
 export function buildResponseEnvelope(responseSchema: z.ZodTypeAny) {
@@ -52,6 +72,11 @@ export function createStructuredResponseMiddleware() {
       const result: unknown = await handler({ ...request, responseFormat: toolStrategy(buildFinalReplyToolSchema(responseSchema)) });
       if (!isStructuredResult(result)) {
         return result as Awaited<ReturnType<typeof handler>>;
+      }
+
+      const toolsOnlyResponse = withoutFinalReply(result.messages[0]);
+      if (toolsOnlyResponse) {
+        return toolsOnlyResponse as unknown as Awaited<ReturnType<typeof handler>>;
       }
 
       const envelope = result.structuredResponse as z.infer<ReturnType<typeof buildResponseEnvelope>>;
