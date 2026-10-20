@@ -1,7 +1,8 @@
-import type { CanvasRenderingContext2D } from 'canvas';
+import type { CanvasRenderingContext2D, Image } from 'canvas';
 import type { CompetitionTableToolRow } from '@shared/ai/tools';
 import { COLORS, createScaledCanvas, drawText, font, roundRect } from '@shared/image-card';
 import type { ImageLanguage } from '@shared/image-card';
+import { loadLogos } from '@shared/sports';
 
 export type LeagueTableImageInput = {
   readonly competition: string;
@@ -24,6 +25,8 @@ const ZONE_STRIP_WIDTH = 4;
 const POSITION_CENTER = PADDING + 22;
 const TEAM_START = PADDING + 42;
 const TEAM_END_MARGIN = 236;
+const LOGO_SIZE = 18;
+const LOGO_GAP = 8;
 
 const COLUMNS: readonly Column[] = [
   { key: 'played', center: 216 },
@@ -76,6 +79,14 @@ function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return `${truncated.trimEnd()}...`;
 }
 
+// Fits the logo inside a LOGO_SIZE box, keeping its aspect ratio.
+function drawLogo(ctx: CanvasRenderingContext2D, logo: Image, centerX: number, centerY: number): void {
+  const scale = Math.min(LOGO_SIZE / logo.width, LOGO_SIZE / logo.height);
+  const width = logo.width * scale;
+  const height = logo.height * scale;
+  ctx.drawImage(logo, centerX - width / 2, centerY - height / 2, width, height);
+}
+
 function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color: string): void {
   ctx.font = font(size);
   ctx.fillStyle = color;
@@ -84,7 +95,10 @@ function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y:
   ctx.fillText(text, x, y);
 }
 
-export function generateLeagueTableImage({ competition, rows, highlightedPositions, language }: LeagueTableImageInput): Buffer {
+export async function generateLeagueTableImage({ competition, rows, highlightedPositions, language }: LeagueTableImageInput): Promise<Buffer> {
+  const logos = await loadLogos('team', rows.map((row) => row.teamId).filter(Boolean));
+  // Space for logos is reserved only when at least one loaded, so a logo outage falls back to the plain layout.
+  const logoSpace = logos.size ? LOGO_SIZE + LOGO_GAP : 0;
   const rtl = language === 'he';
   const labels = LABELS[language];
   const rowHeight = rows.length > 24 ? 26 : 30;
@@ -133,8 +147,12 @@ export function generateLeagueTableImage({ competition, rows, highlightedPositio
 
     const textColor = highlighted ? COLORS.infoText : COLORS.text;
     drawCentered(ctx, `${row.position}`, fromStart(POSITION_CENTER), centerY, 13, highlighted ? COLORS.infoText : COLORS.muted);
+    const logo = logos.get(row.teamId);
+    if (logo) {
+      drawLogo(ctx, logo, fromStart(TEAM_START + LOGO_SIZE / 2), centerY);
+    }
     ctx.font = font(14);
-    drawText(ctx, truncate(ctx, row.team, WIDTH - TEAM_START - TEAM_END_MARGIN), fromStart(TEAM_START), centerY, 14, textColor, startAlign);
+    drawText(ctx, truncate(ctx, row.team, WIDTH - TEAM_START - TEAM_END_MARGIN - logoSpace), fromStart(TEAM_START + logoSpace), centerY, 14, textColor, startAlign);
     COLUMNS.forEach(({ key, center }) => {
       const isPoints = key === 'points';
       drawCentered(ctx, formatValue(row, key), fromEnd(center), centerY, isPoints ? 15 : 13, isPoints || highlighted ? textColor : COLORS.muted);
