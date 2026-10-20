@@ -61,8 +61,10 @@ export class WorldlyService {
     );
 
     if (descriptor.mode === 'map' || descriptor.mode === 'us_map') {
-      const allAreas = descriptor.isState ? await getAllStates() : await getAllCountries();
-      const imagePath = getAreaMap(allAreas, descriptor.imageAreaName!, descriptor.isState);
+      const [allCountries, allStates] = await Promise.all([getAllCountries(), descriptor.isState ? getAllStates() : []]);
+      const allAreas = descriptor.isState ? allStates : allCountries;
+      const contextAreas = descriptor.isState ? allCountries.filter((c) => c.name !== 'United States') : [];
+      const imagePath = getAreaMap(allAreas, descriptor.imageAreaName!, descriptor.isState, contextAreas);
       await this.bot.api.sendPhoto(chatId, new InputFile(fs.createReadStream(imagePath)), { reply_markup: keyboard, caption: descriptor.captionText });
       return;
     }

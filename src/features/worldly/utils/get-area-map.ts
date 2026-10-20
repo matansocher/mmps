@@ -29,11 +29,11 @@ function saveAreaMapLocally(areaName: string, canvas: Canvas): string {
   return filePath;
 }
 
-export function getAreaMap(allAreas: Area[], name: string, isState = false): string {
+export function getAreaMap(allAreas: Area[], name: string, isState = false, contextAreas: Area[] = []): string {
   const localAreaMap = getLocalAreaMap(name);
   if (localAreaMap) {
     return localAreaMap;
   }
-  const canvas = generateAreaMap(allAreas, name, isState);
+  const canvas = generateAreaMap(allAreas, name, isState, contextAreas);
   return saveAreaMapLocally(name, canvas);
 }
