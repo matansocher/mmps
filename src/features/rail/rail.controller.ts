@@ -83,9 +83,10 @@ export class RailController {
   ) {}
 
   init(): void {
-    const { START, ACTIONS } = BOT_CONFIG.commands;
+    const { START, ACTIONS, PRIVACY } = BOT_CONFIG.commands;
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
+    this.bot.command(PRIVACY.command.replace('/', ''), (ctx) => this.privacyHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on(['message:voice', 'message:audio'], (ctx) => this.audioHandler(ctx));
     this.bot.on('message:location', (ctx) => this.locationHandler(ctx));
@@ -136,6 +137,13 @@ export class RailController {
     const language = (await getUserLanguagePreference(chatId)) ?? getUserLanguage(ctx.from?.language_code);
     await ctx.reply(MESSAGES.actionsTitle[language], { reply_markup: buildActionsKeyboard(language, getContactUrl(MY_USER_NAME)) });
     notify(BOT_CONFIG, { action: 'ACTIONS' }, userDetails);
+  }
+
+  private async privacyHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
+    const language = (await getUserLanguagePreference(chatId)) ?? getUserLanguage(ctx.from?.language_code);
+    await ctx.reply(MESSAGES.privacy[language]);
+    notify(BOT_CONFIG, { action: 'PRIVACY' }, userDetails);
   }
 
   private async menuActionHandler(ctx: Context, action: RailMenuAction): Promise<void> {

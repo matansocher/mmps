@@ -7,13 +7,14 @@ export const BOT_CONFIG: TelegramBotConfig = {
   commands: {
     START: { command: '/start', description: '🚆 איך משתמשים' },
     ACTIONS: { command: '/actions', description: '⚙️ שפה ויצירת קשר' },
+    PRIVACY: { command: '/privacy', description: '🔒 פרטיות' },
   },
 };
 
 // Per-chat command menu, set when the user picks a language in /actions.
 export const COMMAND_DESCRIPTIONS = {
-  he: { START: '🚆 איך משתמשים', ACTIONS: '⚙️ שפה ויצירת קשר' },
-  en: { START: '🚆 How to use', ACTIONS: '⚙️ Language & contact' },
+  he: { START: '🚆 איך משתמשים', ACTIONS: '⚙️ שפה ויצירת קשר', PRIVACY: '🔒 פרטיות' },
+  en: { START: '🚆 How to use', ACTIONS: '⚙️ Language & contact', PRIVACY: '🔒 Privacy' },
 } as const;
 
 export const ACTIONS_CALLBACK_PREFIX = 'actions';
@@ -43,28 +44,30 @@ export const WAKE_ALERT_CONFIG = {
 // Shown by Telegram before the first /start (description, max 512 chars) and on the bot profile (short description, max 120 chars).
 export const BOT_PROFILE = {
   en: {
-    description: `🚆 Israel Rail trains and the Tel Aviv light rail Red Line in one message.
+    description: `🚆 Israel Rail and the Tel Aviv light rail Red Line, in one chat.
 
-Tell me where from, where to (station or any place) and when, by text or voice, in English or Hebrew. I'll send the next trains with departure and arrival times, platforms, transfers and delays, plus a route picture and a link to rail.co.il.
+Ask by text or voice: where from, where to and when. Use a station, an address or a place, search by arrival time, or share your location for the nearest stations.
+
+You get platforms, transfers, delays, crowding and the last train home. Each result has buttons for the stops, a live train map and a wake-up before your stop.
 
 Try:
-• Tel Aviv Savidor to Haifa Hof HaCarmel
-• Tomorrow at 8 from Beer Sheva to Tel Aviv HaShalom
-• Light rail from Allenby to Petah Tikva
-• Dizengoff Center to the Grand Canyon mall in Haifa`,
-    shortDescription: '🚆 Next Israel Rail trains with platforms, transfers and a route picture. Just ask, by text or voice.',
+• Savidor to Haifa Hof HaCarmel
+• Be in Jerusalem by 9 tomorrow
+• Allenby to Ben Gurion Airport`,
+    shortDescription: '🚆 Israel Rail + light rail: next trains, platforms, crowding, a live train map and a wake-up before your stop.',
   },
   he: {
-    description: `🚆 הרכבת הבאה ברכבת ישראל ובקו האדום של הרכבת הקלה, בהודעה אחת.
+    description: `🚆 רכבת ישראל והקו האדום של הרכבת הקלה, בצ'אט אחד.
 
-כתבו או הקליטו מאיפה, לאן ומתי. אפשר תחנה, כתובת או מקום.
-תקבלו שעות, רציפים, החלפות ועיכובים, עם תמונת מסלול.
+כתבו או הקליטו מאיפה, לאן ומתי. אפשר תחנה, כתובת או מקום, לחפש לפי שעת הגעה, או לשלוח מיקום ולקבל את התחנות הקרובות.
+
+תקבלו רציפים, החלפות, עיכובים, עומס ואת הרכבת האחרונה הביתה. מכל תוצאה אפשר לראות עצירות ומפה חיה של הרכבת, ולקבל התראה לפני התחנה.
 
 נסו:
 • סבידור לחיפה חוף הכרמל
-• מחר ב-8 מבאר שבע לתל אביב
-• רכבת קלה מאלנבי לפתח תקווה`,
-    shortDescription: '🚆 הרכבת הבאה ברכבת ישראל וברכבת הקלה, עם רציפים, החלפות ומפת מסלול. פשוט שואלים, בכתב או בקול.',
+• להגיע לירושלים עד 9 מחר
+• מאלנבי לנתב״ג`,
+    shortDescription: '🚆 רכבת ישראל והרכבת הקלה: הרכבות הבאות, רציפים, עומס, מפה חיה של הרכבת והתראה לפני התחנה.',
   },
 };
 
@@ -83,10 +86,14 @@ export const RAIL_AGENT_PROMPT = `You are a friendly Israel trains assistant. Yo
 export const START_MESSAGE = {
   he: `היי! 🚆 כתבו או שלחו הודעה קולית - מאיפה, לאן ואם צריך גם מתי.
 למשל: מחר ב-8 מסבידור לחיפה חוף הכרמל
-⚙️ /actions - שפה ויצירת קשר`,
+📍 שלחו מיקום ואמצא את התחנות הקרובות
+⚙️ /actions - שפה ויצירת קשר
+🔒 /privacy - פרטיות`,
   en: `Hi! 🚆 Type or send a voice message with where from, where to and (optionally) when.
 For example: Tomorrow at 8 from Tel Aviv Savidor to Haifa Hof HaCarmel
-⚙️ /actions - Language & contact`,
+📍 Share your location and I'll find the nearest stations
+⚙️ /actions - Language & contact
+🔒 /privacy - Privacy`,
 } as const;
 
 export const ONBOARDING_SAMPLE_ROUTE = { fromStationId: 3700, toStationId: 2300 } as const;
@@ -120,6 +127,22 @@ The result has buttons for stops, where your train is and a wake-up before your 
 } as const;
 
 export const MESSAGES = {
+  privacy: {
+    he: `🔒 פרטיות
+• אני שומר את השם והמשתמש שלכם בטלגרם, את השפה שבחרתם ואת שלב ההיכרות, כדי לזכור את ההגדרות שלכם.
+• ההודעות, ההקלטות והמיקומים מעובדים ב-OpenAI (כדי להבין אותם) וב-Google Maps (כדי למצוא מקומות ומסלולי הליכה). זמני הרכבות מגיעים מרכבת ישראל וממשרד התחבורה.
+• השיחה נשמרת עד 30 דקות בלי פעילות ואז נמחקת. מיקומים לא נשמרים.
+• התראות לפני התחנה נמחקות שבוע אחרי שהרכבת מגיעה.
+• המפתח רואה שאלות ותשובות, כדי לתקן באגים ולשפר את הבוט.
+• רוצים שהמידע שלכם יימחק? כתבו דרך /actions ← יצירת קשר.`,
+    en: `🔒 Privacy
+• I save your Telegram name, username, chosen language and onboarding progress, so I remember your settings.
+• Your messages, voice notes and locations are processed by OpenAI (to understand them) and Google Maps (to find places and walking routes). Train times come from Israel Railways and the Ministry of Transport.
+• The conversation is kept for 30 minutes of inactivity and then deleted. Locations aren't saved.
+• Wake-up alerts are deleted a week after the train arrives.
+• The developer can see questions and answers, to fix bugs and improve the bot.
+• Want your data deleted? Write via /actions → Contact.`,
+  },
   userRateLimited: {
     he: 'רגע, יותר מדי בקשות 🙏 נסו שוב בעוד כמה דקות.',
     en: 'Too many requests 🙏 Please try again in a few minutes.',
