@@ -48,33 +48,33 @@ export class ChatbotSchedulerService {
   ) {}
 
   init(): void {
-    createSchedule(`00 23 * * *`, async () => dailySummary(this.bot));
+    createSchedule(`00 23 * * *`, async () => dailySummary(this.bot, this.chatbotService));
 
-    createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot));
+    createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot, this.chatbotService));
 
     createSchedule(`59 12,23 * * *`, async () => footballUpdate(this.bot, this.chatbotService));
 
     createSchedule(`30 9 * * *`, async () => makavdiaUpdate(this.bot, this.chatbotService));
 
-    createSchedule(`00 10 * * 0,3`, async () => sportsCalendar(this.bot));
+    createSchedule(`00 10 * * 0,3`, async () => sportsCalendar(this.bot, this.chatbotService));
 
     createSchedule(`0 19 * * *`, async () => exerciseReminder(this.bot, this.chatbotService));
 
-    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot));
+    createSchedule(`0 22 * * 6`, async () => weeklyExerciseSummary(this.bot, this.chatbotService));
 
-    createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot));
+    createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot, this.chatbotService));
 
-    createSchedule(`00 12,20 * * *`, async () => emailCleanup(this.bot));
+    createSchedule(`00 12,20 * * *`, async () => emailCleanup(this.bot, this.chatbotService));
 
     createSchedule(`0 10 1 * *`, async () => modelPricingCheck(this.bot));
 
-    createSchedule(`*/15 * * * *`, async () => reminderCheck(this.bot));
+    createSchedule(`*/15 * * * *`, async () => reminderCheck(this.bot, this.chatbotService));
 
-    createSchedule(`*/15 * * * *`, async () => upcomingEventAlert(this.bot));
+    createSchedule(`*/15 * * * *`, async () => upcomingEventAlert(this.bot, this.chatbotService));
 
     createSchedule(`*/${LOOKBACK_MINUTES} * * * *`, async () => earthquakeMonitor(this.bot));
 
-    createSchedule(`5 16 * * 1`, async () => polymarketUpdate(this.bot));
+    createSchedule(`5 16 * * 1`, async () => polymarketUpdate(this.bot, this.chatbotService));
 
     createSchedule(`6 9-22 * * *`, async () => spotifyPodcastUpdate(this.bot));
 
@@ -84,17 +84,17 @@ export class ChatbotSchedulerService {
 
     createSchedule(`30 * * * *`, async () => socialMediaCollect(['telegram']));
 
-    createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot));
+    createSchedule(`45 22 * * *`, async () => socialMediaDigest(this.bot, this.chatbotService));
 
-    createSchedule(`0 17 * * *`, async () => hotelPriceCheck(this.bot));
+    createSchedule(`0 17 * * *`, async () => hotelPriceCheck(this.bot, this.chatbotService));
 
     createSchedule(`15 11 * * *`, async () => gameReleaseCheck(this.bot));
 
-    createSchedule(`20 11 * * 0`, async () => gameReleaseDigest(this.bot));
+    createSchedule(`20 11 * * 0`, async () => gameReleaseDigest(this.bot, this.chatbotService));
 
-    createSchedule(`30 11 * * *`, async () => gamePriceCheck(this.bot));
+    createSchedule(`30 11 * * *`, async () => gamePriceCheck(this.bot, this.chatbotService));
 
-    createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService));
+    createSchedule(`30 23 * * *`, async () => secretaryDailyDigest(this.bot, this.secretaryMessageService, this.chatbotService));
 
     createSchedule(`13 11 * * 1,2,3`, async () => secretaryCheckIn(this.bot, this.secretaryMessageService));
 

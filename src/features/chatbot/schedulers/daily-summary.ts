@@ -12,6 +12,7 @@ import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
 import { CHATBOT_CONFIG } from '../chatbot.config';
+import type { ChatbotService } from '../chatbot.service';
 import { formatEventTime } from './utils/events';
 
 const logger = new Logger('chatbot:scheduler:daily-summary');
@@ -82,7 +83,7 @@ function buildRemindersSection(reminders: Reminder[]): string | null {
   return ['**⏰ Unfinished reminders**', '', '| Due | Reminder |', '|:----|:---------|', ...rows].join('\n');
 }
 
-export async function dailySummary(bot: Bot): Promise<void> {
+export async function dailySummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const [forecast, events, reminders] = await Promise.all([
       getTomorrowHourlyForecast(CHATBOT_CONFIG.summaryLocation).catch((err) => {
@@ -101,6 +102,7 @@ export async function dailySummary(bot: Bot): Promise<void> {
     const message = sections.filter(Boolean).join('\n\n');
     if (message) {
       await sendImageThenText(bot, MY_USER_ID, { image: () => buildAgendaImage(events), fileName: 'daily-agenda.png', text: message });
+      await chatbotService.recordProactiveMessage(MY_USER_ID, message, 'daily-summary');
     }
   } catch (err) {
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create your nightly summary.').catch(() => {});

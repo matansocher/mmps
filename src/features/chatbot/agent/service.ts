@@ -93,6 +93,15 @@ export class AiService {
     return this.agent.stream(createMessage(message, opts), this.createOptions(opts));
   }
 
+  // Appends messages to a thread without running the agent. Without `asNode`, LangGraph attributes
+  // the write to the last node that ran, so a finished thread stays finished (no pending tasks).
+  async appendMessages(messages: BaseMessage[], opts: Partial<InvokeOptions> = {}) {
+    if (!opts.threadId) {
+      throw new Error('threadId is required to append messages');
+    }
+    return this.agent.graph.updateState(this.createOptions(opts), { messages });
+  }
+
   async getState(opts: Partial<InvokeOptions> = {}) {
     return this.agent.graph.getState(this.createOptions(opts));
   }

@@ -17,6 +17,11 @@ export const CHATBOT_CONFIG = {
   usageTracking: env.CHATBOT_USAGE_TRACKING !== 'false',
   // Location used by the nightly summary's weather section.
   summaryLocation: env.CHATBOT_SUMMARY_LOCATION || 'Kfar Saba',
+  // Scheduled messages are appended to the chat's agent thread so follow-up replies have context.
+  // Long digests are cut to this many characters; summarization compresses the thread over time.
+  proactiveMemory: {
+    maxChars: 6000,
+  },
   summarization: {
     // Summarize once the retained history grows past this many tokens. Token-based bounding is
     // the primary guard: message counts don't bound context or checkpoint size, since a single

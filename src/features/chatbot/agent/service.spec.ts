@@ -1,3 +1,4 @@
+import { AIMessage } from '@langchain/core/messages';
 import { describe, expect, it, vi } from 'vitest';
 import { ChatbotAgent } from './factory';
 import { AiService } from './service';
@@ -5,9 +6,10 @@ import { AiService } from './service';
 function createService() {
   const invoke = vi.fn().mockResolvedValue({ messages: [] });
   const stream = vi.fn();
-  const graph = { invoke, stream, graph: { getState: vi.fn() } } as unknown as ChatbotAgent;
+  const updateState = vi.fn().mockResolvedValue({});
+  const graph = { invoke, stream, graph: { getState: vi.fn(), updateState } } as unknown as ChatbotAgent;
   const service = new AiService(graph, { name: 'CHATBOT' });
-  return { service, invoke };
+  return { service, invoke, updateState };
 }
 
 describe('AiService invocation metadata', () => {
@@ -51,5 +53,27 @@ describe('AiService invocation metadata', () => {
 
     const config = invoke.mock.calls[0][1];
     expect(JSON.stringify(config.metadata)).not.toContain('super secret prompt');
+  });
+});
+
+describe('AiService.appendMessages()', () => {
+  it('appends the messages to the thread without a node attribution', async () => {
+    const { service, updateState } = createService();
+    const messages = [new AIMessage('digest')];
+
+    await service.appendMessages(messages, { threadId: '123' });
+
+    expect(updateState).toHaveBeenCalledTimes(1);
+    const [config, values, asNode] = updateState.mock.calls[0];
+    expect(config.configurable).toEqual({ thread_id: '123' });
+    expect(values).toEqual({ messages });
+    expect(asNode).toBeUndefined();
+  });
+
+  it('throws when no threadId is given', async () => {
+    const { service, updateState } = createService();
+
+    await expect(service.appendMessages([new AIMessage('digest')])).rejects.toThrow('threadId is required');
+    expect(updateState).not.toHaveBeenCalled();
   });
 });

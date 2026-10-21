@@ -3,8 +3,11 @@ import { MY_USER_ID } from '@core/config';
 import { listEvents } from '@services/google-calendar';
 import type { CalendarEvent } from '@services/google-calendar';
 import { getEventOutcomes } from '@services/polymarket';
+import type { ChatbotService } from '../chatbot.service';
 import { parseMatchTeams, upcomingEventAlert } from './upcoming-event-alert';
 import { findMatchEventSlug } from './utils';
+
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 
 vi.mock('@services/google-calendar', () => ({
   listEvents: vi.fn(),
@@ -49,6 +52,7 @@ describe('upcomingEventAlert()', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-22T22:15:00+03:00'));
     sendMessage.mockReset();
+    vi.mocked(chatbotService.recordProactiveMessage).mockClear();
     vi.mocked(listEvents).mockReset();
     vi.mocked(getEventOutcomes).mockReset();
     vi.mocked(findMatchEventSlug).mockReset();
@@ -63,17 +67,18 @@ describe('upcomingEventAlert()', () => {
     vi.mocked(findMatchEventSlug).mockResolvedValue('lal-esp-rea-2026-08-22');
     vi.mocked(getEventOutcomes).mockResolvedValue({} as never);
 
-    await upcomingEventAlert(bot);
+    await upcomingEventAlert(bot, chatbotService);
 
     expect(findMatchEventSlug).toHaveBeenCalledWith('Real Madrid', 'Espanyol', new Date('2026-08-22T22:30:00+03:00'));
     expect(sendMessage).toHaveBeenCalledWith(MY_USER_ID, expect.stringContaining('📊 *Polymarket odds*'), { parse_mode: 'Markdown' });
+    expect(chatbotService.recordProactiveMessage).toHaveBeenCalledWith(MY_USER_ID, sendMessage.mock.calls[0][1], 'upcoming-event-alert');
   });
 
   it('should send the plain alert when no market is found', async () => {
     vi.mocked(listEvents).mockResolvedValue([createCalendarEvent()]);
     vi.mocked(findMatchEventSlug).mockResolvedValue(null);
 
-    await upcomingEventAlert(bot);
+    await upcomingEventAlert(bot, chatbotService);
 
     expect(getEventOutcomes).not.toHaveBeenCalled();
     expect(sendMessage).toHaveBeenCalledWith(MY_USER_ID, expect.not.stringContaining('Polymarket'), { parse_mode: 'Markdown' });
@@ -83,7 +88,7 @@ describe('upcomingEventAlert()', () => {
     vi.mocked(listEvents).mockResolvedValue([createCalendarEvent()]);
     vi.mocked(findMatchEventSlug).mockRejectedValue(new Error('503'));
 
-    await upcomingEventAlert(bot);
+    await upcomingEventAlert(bot, chatbotService);
 
     expect(sendMessage).toHaveBeenCalledWith(MY_USER_ID, expect.stringContaining('⚽ Real Madrid vs Espanyol'), { parse_mode: 'Markdown' });
     expect(sendMessage).toHaveBeenCalledWith(MY_USER_ID, expect.not.stringContaining('Polymarket'), { parse_mode: 'Markdown' });
@@ -92,7 +97,7 @@ describe('upcomingEventAlert()', () => {
   it('should not look up odds for events not managed by the sports calendar', async () => {
     vi.mocked(listEvents).mockResolvedValue([createCalendarEvent({ summary: 'Dentist appointment', extendedProperties: undefined })]);
 
-    await upcomingEventAlert(bot);
+    await upcomingEventAlert(bot, chatbotService);
 
     expect(findMatchEventSlug).not.toHaveBeenCalled();
     expect(sendMessage).toHaveBeenCalledTimes(1);
@@ -101,7 +106,7 @@ describe('upcomingEventAlert()', () => {
   it('should not look up odds for a managed event whose title is not a fixture', async () => {
     vi.mocked(listEvents).mockResolvedValue([createCalendarEvent({ summary: '⚽ Training session' })]);
 
-    await upcomingEventAlert(bot);
+    await upcomingEventAlert(bot, chatbotService);
 
     expect(findMatchEventSlug).not.toHaveBeenCalled();
   });
@@ -109,7 +114,7 @@ describe('upcomingEventAlert()', () => {
   it('should skip cancelled events', async () => {
     vi.mocked(listEvents).mockResolvedValue([createCalendarEvent({ status: 'cancelled' })]);
 
-    await upcomingEventAlert(bot);
+    await upcomingEventAlert(bot, chatbotService);
 
     expect(sendMessage).not.toHaveBeenCalled();
   });

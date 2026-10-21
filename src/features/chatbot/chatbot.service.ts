@@ -1,3 +1,4 @@
+import { AIMessage } from '@langchain/core/messages';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
@@ -5,7 +6,7 @@ import { toZonedTime } from 'date-fns-tz';
 import { modelCallLimitMiddleware, toolCallLimitMiddleware } from 'langchain';
 import { env } from 'node:process';
 import { z } from 'zod';
-import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
+import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
@@ -13,7 +14,7 @@ import { agent } from './agent';
 import { AiService, createAgentService, createDanglingToolCallsMiddleware, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARIZATION_TRIGGER, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
-import { formatAgentResponse } from './utils';
+import { buildProactiveMessageContent, formatAgentResponse, getThreadId } from './utils';
 
 function isProcessMessageOptions(value: unknown): value is ProcessMessageOptions {
   return typeof value === 'object' && value !== null && !('_def' in value);
@@ -98,7 +99,7 @@ export class ChatbotService {
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
-      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+      const threadId = getThreadId(chatId);
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();
@@ -143,6 +144,19 @@ export class ChatbotService {
         toolResults: [],
         timestamp: new Date().toISOString(),
       };
+    }
+  }
+
+  // Best effort: a scheduler's send must never fail because recording it in memory did.
+  async recordProactiveMessage(chatId: number, text: string, source: string): Promise<void> {
+    if (!text?.trim()) {
+      return;
+    }
+    try {
+      const content = buildProactiveMessageContent(text, source, CHATBOT_CONFIG.proactiveMemory.maxChars);
+      await this.aiService.appendMessages([new AIMessage(content)], { threadId: getThreadId(chatId), invocationSource: `chatbot-proactive-${source}` });
+    } catch (err) {
+      this.logger.warn(`Failed to record ${source} message in memory for chat ${chatId}: ${getErrorMessage(err)}`);
     }
   }
 }
