@@ -29,7 +29,7 @@ import {
 import { buildToolImages } from './tool-images';
 import { ToolStatusReporter } from './tool-status';
 import type { ChatbotResponse, ProcessMessageOptions } from './types';
-import { fileToDataUrl } from './utils';
+import { fileToDataUrl, getReplyContextText, withReplyContext } from './utils';
 
 const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
 const AGENT_ERROR_REPLY = 'Something went wrong. Please try again.';
@@ -281,7 +281,7 @@ export class ChatbotController {
   private async messageHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
     const { chatId, text } = getMessageData(ctx);
-    await this.runWithLoader(ctx, '🤔', () => this.replyWithAgent(chatId, text));
+    await this.runWithLoader(ctx, '🤔', () => this.replyWithAgent(chatId, withReplyContext(text, getReplyContextText(ctx.message))));
   }
 
   private async photoHandler(ctx: Context): Promise<void> {
@@ -291,7 +291,7 @@ export class ChatbotController {
     await this.runWithLoader(ctx, '👀', async () => {
       const imageDataUrl = await this.withDownloadedFile(photo[photo.length - 1].file_id, fileToDataUrl);
       const prompt = text?.trim() ? text : 'Please take a look at this image and respond helpfully.';
-      await this.replyWithAgent(chatId, prompt, { images: [imageDataUrl] });
+      await this.replyWithAgent(chatId, withReplyContext(prompt, getReplyContextText(ctx.message)), { images: [imageDataUrl] });
     });
   }
 
@@ -301,7 +301,7 @@ export class ChatbotController {
 
     await this.runWithLoader(ctx, '🤔', async () => {
       const transcribedText = await this.withDownloadedFile(audio.file_id, getTranscriptFromAudio);
-      await this.replyWithAgent(chatId, transcribedText);
+      await this.replyWithAgent(chatId, withReplyContext(transcribedText, getReplyContextText(ctx.message)));
     });
   }
 

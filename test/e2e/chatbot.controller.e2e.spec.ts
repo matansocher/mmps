@@ -72,6 +72,16 @@ describe('ChatbotController E2E', () => {
     expect(reply.payload.rich_message.markdown).toEqual('stub reply');
   });
 
+  it('prefixes the prompt with the replied-to message text', async () => {
+    const update = buildTextMessageUpdate({ text: 'remind me about this tomorrow' });
+    (update.message as any).reply_to_message = { message_id: 1, date: 0, chat: update.message.chat, text: 'Dentist on Sunday at 10:00' };
+
+    await simulateUpdate(testBot, update);
+
+    expect(processMessage).toHaveBeenCalledTimes(1);
+    expect(processMessage.mock.calls[0][0]).toEqual('[Replying to: "Dentist on Sunday at 10:00"]\n\nremind me about this tomorrow');
+  });
+
   it('ignores a text message from a non-owner and notifies the owner', async () => {
     await simulateUpdate(testBot, buildTextMessageUpdate({ text: 'hello bot', userId: NON_OWNER_USER_ID }));
 
