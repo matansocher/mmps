@@ -4,6 +4,7 @@ import { CROWDING_EMOJI, getTravelCrowding } from '@services/israel-rail';
 import type { CrowdingLevel, RailStation, TrainLeg, TrainTravel } from '@services/israel-rail';
 import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
+import { buildWakeButton } from './rail-wake.utils';
 
 // 'stops' carries the chosen train's own date and departure time instead of a search time.
 export type RailSearchAction = 'later' | 'reverse' | 'stops' | 'refresh';
@@ -82,6 +83,8 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
   ];
   const keyboard = buildInlineKeyboard(stopsButtons, STOPS_BUTTONS_PER_ROW);
   buttons.forEach((button) => keyboard.text(button.text, button.data));
+  const wakeButton = buildWakeButton(context.from.id, context.to.id, context.searchedFrom, language);
+  keyboard.row().text(wakeButton.text, wakeButton.data);
   return keyboard;
 }
 
