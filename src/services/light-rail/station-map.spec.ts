@@ -1,4 +1,5 @@
-import { buildLightRailNetwork, buildStaticMapUrl, fitMapFrame } from './station-map';
+import { createCanvas } from 'canvas';
+import { buildLightRailNetwork, buildStaticMapUrl, fitMapFrame, generateLightRailStationMap } from './station-map';
 import type { LightRailStation, LightRailTimetable, LightRailTrip } from './types';
 
 const station = (id: string, lat: number, lon: number): LightRailStation => ({ id, nameHe: id, nameEn: id, lat, lon });
@@ -47,5 +48,35 @@ describe('buildStaticMapUrl()', () => {
     expect(url).toContain('scale=2');
     expect(url).toContain('style=feature%3Apoi%7Cvisibility%3Aoff');
     expect(url).toContain('style=feature%3Atransit%7Cvisibility%3Aoff');
+  });
+});
+
+describe('generateLightRailStationMap()', () => {
+  const tile = createCanvas(1, 1).toBuffer('image/png');
+  const fetchMock = vi.fn(async () => new Response(new Uint8Array(tile)));
+  const trips = [...Array(10)].map(() => trip([0, 1, 2, 3]));
+
+  beforeEach(() => {
+    vi.stubEnv('GOOGLE_MAPS_API_KEY', 'KEY');
+    vi.stubGlobal('fetch', fetchMock);
+    fetchMock.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  test('should reuse the image across timetable rebuilds and redraw when the network changes', async () => {
+    const first = await generateLightRailStationMap({ builtAt: 1, stations, trips } as unknown as LightRailTimetable, 'he');
+    const calls = fetchMock.mock.calls.length;
+    expect(calls).toBeGreaterThan(0);
+
+    expect(await generateLightRailStationMap({ builtAt: 2, stations, trips } as unknown as LightRailTimetable, 'he')).toBe(first);
+    expect(fetchMock.mock.calls.length).toEqual(calls);
+
+    const moved = [station('A', 32.12, 34.88), ...stations.slice(1)];
+    expect(await generateLightRailStationMap({ builtAt: 3, stations: moved, trips } as unknown as LightRailTimetable, 'he')).not.toBe(first);
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(calls);
   });
 });

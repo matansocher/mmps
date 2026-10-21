@@ -36,7 +36,7 @@ const LABELS: Record<ImageLanguage, { readonly title: string; readonly subtitle:
   en: { title: 'Light Rail · Red Line', subtitle: (count) => `${count} stations · Petah Tikva ↔ Bat Yam` },
 };
 
-const cache = new Map<string, Buffer>();
+const cache = new Map<ImageLanguage, { readonly networkKey: string; readonly image: Buffer }>();
 
 export function buildLightRailNetwork(timetable: LightRailTimetable): LightRailNetwork {
   const patterns = new Map<string, number>();
@@ -224,18 +224,19 @@ export function drawLightRailNetwork(
   }
 }
 
-// Google Static Maps base layer with the Red Line, its stations and their names drawn on top. Cached per timetable build and language.
+// Google Static Maps base layer with the Red Line, its stations and their names drawn on top.
+// Cached per language until the drawn network (stations, coordinates, edges) changes, so daily timetable rebuilds reuse it.
 export async function generateLightRailStationMap(timetable: LightRailTimetable, language: ImageLanguage): Promise<Buffer> {
-  const cacheKey = `${timetable.builtAt}:${language}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return cached;
-
-  const apiKey = env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) throw new Error('GOOGLE_MAPS_API_KEY is not configured');
-
   const network = buildLightRailNetwork(timetable);
   const used = [...new Set(network.edges.flat())].map((index) => network.stations[index]);
   if (!used.length) throw new Error('No light rail stations to draw');
+
+  const networkKey = JSON.stringify([used.map(({ id, nameHe, nameEn, lat, lon }) => [id, nameHe, nameEn, lat, lon]), network.edges]);
+  const cached = cache.get(language);
+  if (cached?.networkKey === networkKey) return cached.image;
+
+  const apiKey = env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) throw new Error('GOOGLE_MAPS_API_KEY is not configured');
 
   const frame = fitMapFrame(used);
   const tiles = planTiles(frame);
@@ -258,6 +259,6 @@ export async function generateLightRailStationMap(timetable: LightRailTimetable,
   drawLightRailNetwork(ctx, network, project, language, { left: 4, top: 4, right: frame.width - 4, bottom: frame.height - 4 }, [header]);
 
   const image = canvas.toBuffer('image/png');
-  cache.set(cacheKey, image);
+  cache.set(language, { networkKey, image });
   return image;
 }
