@@ -45,7 +45,7 @@ describe('findBenGurionFlights()', () => {
 
     const flights = await findBenGurionFlights('LY 1');
 
-    expect(JSON.parse(vi.mocked(axios.get).mock.calls[0][1].params.filters)).toEqual({ CHOPER: 'LY', CHFLTN: ['1', '001', '0001'] });
+    expect(JSON.parse((vi.mocked(axios.get).mock.calls[0][1] as { params: { filters: string } }).params.filters)).toEqual({ CHOPER: 'LY', CHFLTN: ['1', '001', '0001'] });
     expect(flights).toEqual([
       {
         flightNumber: 'LY 001',
