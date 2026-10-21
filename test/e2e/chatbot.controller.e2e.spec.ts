@@ -145,6 +145,16 @@ describe('ChatbotController E2E', () => {
     expect(deleteFile).toHaveBeenCalledWith('/tmp/downloaded-file');
   });
 
+  it('prefixes the document prompt with the replied-to message text', async () => {
+    prepareSummary.mockResolvedValue({ prompt: 'summarize', images: [] });
+    const update = buildDocumentMessageUpdate({ filename: 'doc.pdf', mimeType: 'application/pdf', fileSize: 1000 });
+    (update.message as any).reply_to_message = { message_id: 1, date: 0, chat: update.message.chat, text: 'Compare it with last year' };
+
+    await simulateUpdate(testBot, update);
+
+    expect(processMessage.mock.calls[0][0]).toEqual('[Replying to: "Compare it with last year"]\n\nsummarize');
+  });
+
   it('passes the photo to the agent and deletes the downloaded file', async () => {
     await simulateUpdate(testBot, buildPhotoMessageUpdate({ caption: 'what is this?' }));
 
