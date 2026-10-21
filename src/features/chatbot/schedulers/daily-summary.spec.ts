@@ -8,7 +8,10 @@ import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
+import type { ChatbotService } from '../chatbot.service';
 import { dailySummary } from './daily-summary';
+
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 
 vi.mock('@services/telegram', () => {
   const sendRichMessage = vi.fn();
@@ -93,7 +96,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(getTomorrowHourlyForecast).toHaveBeenCalledTimes(1);
     expect(getTomorrowEvents).toHaveBeenCalledTimes(1);
@@ -103,7 +106,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).toContain('**🌤 Weather for tomorrow**\n\n| Time | Temp | Conditions |');
@@ -115,7 +118,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentMessage().startsWith('**🌤 Weather for tomorrow**')).toBe(true);
   });
@@ -124,7 +127,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Dentist', 'Weizmann 12')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).toContain('| Time | Event | Location |');
@@ -135,7 +138,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup'), createEvent('Dana birthday')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).toContain('🎂 Dana birthday');
@@ -147,7 +150,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentMessage()).not.toContain('Birthdays');
   });
@@ -156,7 +159,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).not.toContain('Good night');
@@ -167,7 +170,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup'), createEvent('Dana birthday')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).toContain('**📅 Calendar**\n\n| Time |');
@@ -178,7 +181,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).toContain('**🌤 Weather for tomorrow**\n\n| Time |');
@@ -192,7 +195,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue({ ...createForecast(), hourly: [] });
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentMessage()).toContain('**🌤 Weather for tomorrow**\n\nNot available');
   });
@@ -201,7 +204,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Yoman', 'Zoom\nmeeting\n  id 123')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentMessage()).toContain('| 09:00-10:00 | Yoman | Zoom meeting id 123 |');
   });
@@ -210,7 +213,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('BI weekly | backlog', 'Room | 2')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentMessage()).toContain('| 09:00-10:00 | BI weekly \\| backlog | Room \\| 2 |');
   });
@@ -219,7 +222,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockRejectedValue(new Error('weather down'));
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(vi.mocked(sendRichMessage).mock.calls[0][2]).toContain('Not available');
     expect(lastSentMessage()).toContain('Standup');
@@ -230,7 +233,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([createReminder('Call plumber', '2026-08-16T09:00:00+03:00')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).toContain('**⏰ Unfinished reminders**\n\n| Due | Reminder |');
@@ -242,7 +245,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([createReminder('Call plumber', '2026-08-16T09:00:00+03:00')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentForm().reply_markup).toBeUndefined();
   });
@@ -252,7 +255,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentForm().reply_markup).toBeUndefined();
   });
@@ -262,7 +265,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentMessage()).not.toContain('Unfinished reminders');
   });
@@ -272,7 +275,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([createReminder('Buy milk | eggs', '2026-08-16T09:00:00+03:00')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(lastSentMessage()).toContain('| 2026-08-16 09:00 | Buy milk \\| eggs |');
   });
@@ -282,7 +285,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Standup')]);
     vi.mocked(getPendingRemindersDueOnOrBefore).mockRejectedValue(new Error('mongo down'));
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
     expect(message).toContain('Standup');
@@ -295,7 +298,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([createEvent('Dentist', 'Weizmann 12'), createEvent('Dana birthday')]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
     vi.useRealTimers();
 
     expect(sendImageThenText).toHaveBeenCalledWith(bot, expect.any(Number), expect.objectContaining({ fileName: 'daily-agenda.png', text: lastSentMessage() }));
@@ -312,7 +315,7 @@ describe('dailySummary()', () => {
     vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
     vi.mocked(getTomorrowEvents).mockResolvedValue([]);
 
-    await dailySummary(bot);
+    await dailySummary(bot, chatbotService);
 
     expect(generateAgendaImage).not.toHaveBeenCalled();
     expect(lastSentMessage()).toContain('Nothing scheduled');

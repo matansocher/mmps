@@ -1,8 +1,12 @@
 import type { Bot } from 'grammy';
+import { MY_USER_ID } from '@core/config';
 import { fetchUserEmails, trashEmail } from '@services/gmail';
 import { getResponse } from '@services/openai';
 import { sendShortenedMessage } from '@services/telegram';
+import type { ChatbotService } from '../chatbot.service';
 import { buildClassifierUnavailableWarning, buildCleanupReport, emailCleanup } from './email-cleanup';
+
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 
 vi.mock('@services/gmail', () => ({ fetchUserEmails: vi.fn(), trashEmail: vi.fn() }));
 vi.mock('@services/openai', () => ({ getResponse: vi.fn() }));
@@ -34,12 +38,13 @@ describe('emailCleanup()', () => {
       response([classification('e', 0.99, 'keep'), classification('c', 0.76), classification('a', 0.75), classification('d', 0.9, 'spam'), classification('b', 0.1)]),
     );
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(vi.mocked(trashEmail).mock.calls).toEqual([['c'], ['d']]);
     expect(sendShortenedMessage).toHaveBeenCalledTimes(1);
     expect(vi.mocked(sendShortenedMessage).mock.calls[0][2]).toContain('Subject c (76% confidence)');
     expect(vi.mocked(sendShortenedMessage).mock.calls[0][2]).toContain('Subject d (90% confidence)');
+    expect(chatbotService.recordProactiveMessage).toHaveBeenCalledWith(MY_USER_ID, vi.mocked(sendShortenedMessage).mock.calls[0][2], 'email-cleanup');
   });
 
   it('should classify 50 emails in three requests of 20, 20, and 10 using the cheap model without storage', async () => {
@@ -49,7 +54,7 @@ describe('emailCleanup()', () => {
       vi.mocked(getResponse).mockResolvedValueOnce(response(batch.map(({ id }) => classification(id, 0.99, 'keep'))));
     }
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(fetchUserEmails).toHaveBeenCalledWith('in:inbox is:unread newer_than:1d', 50);
     expect(getResponse).toHaveBeenCalledTimes(3);
@@ -77,7 +82,7 @@ describe('emailCleanup()', () => {
     vi.mocked(fetchUserEmails).mockResolvedValue([email('a'), email('b')]);
     vi.mocked(getResponse).mockResolvedValue(response(results));
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(trashEmail).not.toHaveBeenCalled();
     expect(vi.mocked(sendShortenedMessage).mock.calls).toEqual([[bot, expect.any(Number), buildClassifierUnavailableWarning(2)]]);
@@ -92,7 +97,7 @@ describe('emailCleanup()', () => {
     vi.mocked(fetchUserEmails).mockResolvedValue([email('a')]);
     vi.mocked(getResponse).mockResolvedValue({ id: 'response-id', result });
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(trashEmail).not.toHaveBeenCalled();
     expect(sendShortenedMessage).toHaveBeenCalledTimes(1);
@@ -102,7 +107,7 @@ describe('emailCleanup()', () => {
     vi.mocked(fetchUserEmails).mockResolvedValue([email('a'), email('a')]);
     vi.mocked(getResponse).mockResolvedValue(response([classification('a'), classification('a')]));
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(trashEmail).not.toHaveBeenCalled();
   });
@@ -117,7 +122,7 @@ describe('emailCleanup()', () => {
     }
     vi.mocked(getResponse).mockResolvedValueOnce(response([classification('20')]));
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(vi.mocked(trashEmail).mock.calls).toEqual([['20']]);
     expect(sendShortenedMessage).toHaveBeenCalledTimes(1);
@@ -128,7 +133,7 @@ describe('emailCleanup()', () => {
     vi.mocked(fetchUserEmails).mockResolvedValue(Array.from({ length: 21 }, (_, index) => email(`${index}`)));
     vi.mocked(getResponse).mockRejectedValue(new Error('OpenAI API key not configured'));
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(getResponse).toHaveBeenCalledTimes(2);
     expect(trashEmail).not.toHaveBeenCalled();
@@ -141,7 +146,7 @@ describe('emailCleanup()', () => {
       .mockRejectedValueOnce(new Error('OpenAI unavailable'))
       .mockResolvedValueOnce(response([classification('20', 0.99, 'keep')]));
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(trashEmail).not.toHaveBeenCalled();
     expect(sendShortenedMessage).not.toHaveBeenCalled();
@@ -152,7 +157,7 @@ describe('emailCleanup()', () => {
     vi.mocked(getResponse).mockResolvedValue(response([classification('a'), classification('b')]));
     vi.mocked(trashEmail).mockRejectedValueOnce(new Error('Gmail down')).mockResolvedValueOnce('b');
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(vi.mocked(trashEmail).mock.calls).toEqual([['a'], ['b']]);
     expect(vi.mocked(sendShortenedMessage).mock.calls[0][2]).toEqual(buildCleanupReport([{ ...email('b'), confidence: 0.9 }]));
@@ -172,7 +177,7 @@ describe('emailCleanup()', () => {
       return id;
     });
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(trashEmail).toHaveBeenCalledTimes(20);
     expect(maxActive).toEqual(5);
@@ -184,7 +189,7 @@ describe('emailCleanup()', () => {
     vi.mocked(getResponse).mockResolvedValue(response([classification('a')]));
     vi.mocked(trashEmail).mockRejectedValue(new Error('Gmail down'));
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(sendShortenedMessage).not.toHaveBeenCalled();
   });
@@ -192,7 +197,7 @@ describe('emailCleanup()', () => {
   test.each([{ emails: [] }, { emails: undefined }])('should do nothing for an empty inbox $emails', async ({ emails }) => {
     vi.mocked(fetchUserEmails).mockResolvedValue(emails);
 
-    await emailCleanup(bot);
+    await emailCleanup(bot, chatbotService);
 
     expect(getResponse).not.toHaveBeenCalled();
     expect(sendShortenedMessage).not.toHaveBeenCalled();

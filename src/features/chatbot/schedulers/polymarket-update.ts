@@ -4,12 +4,13 @@ import { generateOddsImage, getEventOutcomes, getMarketById } from '@services/po
 import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
 import { getSubscriptionsGroupedByChatId, removeSubscription, updateSubscription } from '@shared/polymarket-follower';
 import type { Subscription } from '@shared/polymarket-follower';
+import type { ChatbotService } from '../chatbot.service';
 import { buildPolymarketUpdateCards, formatDailyUpdateMessage, formatExpiredMarketsSection, formatMultiOutcomeUpdateMessage, toOutcomeSnapshots } from './utils';
 import type { ExpiredMarketInfo, MarketUpdate, MultiOutcomeUpdate } from './utils';
 
 const logger = new Logger('chatbot:scheduler:polymarket-update');
 
-export async function polymarketUpdate(bot: Bot): Promise<void> {
+export async function polymarketUpdate(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   const subscriptionsByChatId = await getSubscriptionsGroupedByChatId();
 
   if (subscriptionsByChatId.size === 0) {
@@ -17,11 +18,11 @@ export async function polymarketUpdate(bot: Bot): Promise<void> {
   }
 
   for (const [chatId, subscriptions] of subscriptionsByChatId) {
-    await processSubscriptionsForChat(bot, chatId, subscriptions);
+    await processSubscriptionsForChat(bot, chatbotService, chatId, subscriptions);
   }
 }
 
-async function processSubscriptionsForChat(bot: Bot, chatId: number, subscriptions: Subscription[]): Promise<void> {
+async function processSubscriptionsForChat(bot: Bot, chatbotService: ChatbotService, chatId: number, subscriptions: Subscription[]): Promise<void> {
   const updates: MarketUpdate[] = [];
   const multiUpdates: MultiOutcomeUpdate[] = [];
   const expiredMarkets: ExpiredMarketInfo[] = [];
@@ -56,6 +57,7 @@ async function processSubscriptionsForChat(bot: Bot, chatId: number, subscriptio
     text: message,
     sendText: sendPolymarketText,
   });
+  await chatbotService.recordProactiveMessage(chatId, message, 'polymarket-update');
 }
 
 async function sendPolymarketText(bot: Bot, chatId: number, message: string): Promise<void> {

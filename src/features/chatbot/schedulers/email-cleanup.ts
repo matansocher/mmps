@@ -7,6 +7,7 @@ import { getResponse } from '@services/openai';
 import { CHAT_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage } from '@services/telegram';
 import { CHATBOT_CONFIG } from '../chatbot.config';
+import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('chatbot:scheduler:email-cleanup');
 
@@ -70,7 +71,7 @@ async function classifyBatch(emails: ReadonlyArray<CandidateEmail>) {
   return new Map(results.map((result) => [result.id, result]));
 }
 
-export async function emailCleanup(bot: Bot): Promise<void> {
+export async function emailCleanup(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   const { threshold, maxEmails, batchSize } = CHATBOT_CONFIG.emailCleanup;
   try {
     const emails = (await fetchUserEmails(EMAIL_QUERY, maxEmails)) ?? [];
@@ -114,7 +115,9 @@ export async function emailCleanup(bot: Bot): Promise<void> {
     if (classificationFailures === emails.length) {
       await sendShortenedMessage(bot, MY_USER_ID, buildClassifierUnavailableWarning(classificationFailures));
     } else if (trashed.length) {
-      await sendShortenedMessage(bot, MY_USER_ID, buildCleanupReport(trashed));
+      const report = buildCleanupReport(trashed);
+      await sendShortenedMessage(bot, MY_USER_ID, report);
+      await chatbotService.recordProactiveMessage(MY_USER_ID, report, 'email-cleanup');
     }
   } catch (err) {
     logger.error(`Failed to run email cleanup: ${getErrorMessage(err)}`);

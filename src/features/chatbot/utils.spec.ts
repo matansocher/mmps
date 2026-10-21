@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
 import { describe, expect, it, test } from 'vitest';
-import { formatAgentResponse, getReplyContextText, withReplyContext } from './utils';
+import { buildProactiveMessageContent, formatAgentResponse, getReplyContextText, withReplyContext } from './utils';
 
 describe('formatAgentResponse()', () => {
   it('should pair a single tool call with its result by tool_call_id', () => {
@@ -131,5 +131,18 @@ describe('withReplyContext()', () => {
     { replyText: 'meeting at 5', expected: '[Replying to: "meeting at 5"]\n\ndo it' },
   ])('should return $expected when replyText is $replyText', ({ replyText, expected }) => {
     expect(withReplyContext('do it', replyText)).toEqual(expected);
+  });
+});
+
+describe('buildProactiveMessageContent()', () => {
+  // 2025-06-01 07:30 UTC is 10:30 in Asia/Jerusalem (IDT)
+  const now = new Date('2025-06-01T07:30:00Z');
+
+  test.each([
+    { text: 'hello', maxChars: 10, expectedBody: 'hello' },
+    { text: '1234567890', maxChars: 10, expectedBody: '1234567890' },
+    { text: '12345678901', maxChars: 10, expectedBody: '1234567890…(truncated)' },
+  ])('should produce body "$expectedBody" for "$text" with maxChars $maxChars', ({ text, maxChars, expectedBody }) => {
+    expect(buildProactiveMessageContent(text, 'daily-summary', maxChars, now)).toEqual(`[Scheduled message: daily-summary, sent 2025-06-01 10:30 (Asia/Jerusalem)]\n\n${expectedBody}`);
   });
 });

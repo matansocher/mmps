@@ -2,7 +2,10 @@ import type { Bot } from 'grammy';
 import { getHotelPrice } from '@services/booking';
 import { getActiveWatches, updateLowestPrice } from '@shared/hotel-watcher';
 import type { HotelWatch } from '@shared/hotel-watcher';
+import type { ChatbotService } from '../chatbot.service';
 import { hotelPriceCheck } from './hotel-price-check';
+
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 
 vi.mock('@services/booking', () => ({
   getHotelPrice: vi.fn(),
@@ -52,7 +55,7 @@ describe('hotelPriceCheck()', () => {
         checkinDate: watch.checkinDate,
         checkoutDate: watch.checkoutDate,
       });
-      await hotelPriceCheck(bot);
+      await hotelPriceCheck(bot, chatbotService);
     }
 
     expect(sendMessage).toHaveBeenCalledTimes(3);
@@ -71,7 +74,7 @@ describe('hotelPriceCheck()', () => {
       checkoutDate: watch.checkoutDate,
     });
 
-    await hotelPriceCheck(bot);
+    await hotelPriceCheck(bot, chatbotService);
 
     expect(sendMessage).not.toHaveBeenCalled();
     expect(updateLowestPrice).not.toHaveBeenCalled();

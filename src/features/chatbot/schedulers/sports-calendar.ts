@@ -8,6 +8,7 @@ import { createEvent, deleteEvent, listEvents, updateEvent } from '@services/goo
 import { COMPETITION_IDS_MAP, getCompetitionTable, getUpcomingMatches } from '@services/scores-365';
 import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
 import { generateMatchCardsImage, upcomingMatchesToCardGroups } from '@shared/sports';
+import type { ChatbotService } from '../chatbot.service';
 import { SPORTS_CALENDAR_EVENT_DURATION_HOURS, SPORTS_CALENDAR_SOURCE } from './sports-calendar.config';
 import { selectSportsCalendarMatches } from './utils';
 import type { SelectedSportsMatch } from './utils';
@@ -172,18 +173,20 @@ function formatSummary(matches: SelectedSportsMatch[], result: SyncResult): stri
   return `✅ Sports calendar synced (${changes}):\n${matchList}`;
 }
 
-export async function sportsCalendar(bot: Bot): Promise<void> {
+export async function sportsCalendar(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const { startDate, endDate } = getDateRange();
     const [matches, table, existingEvents] = await Promise.all([getUpcomingMatches(startDate, endDate), getIsraeliPremierLeagueTable(), getManagedEvents(startDate, endDate)]);
     const selectedMatches = selectSportsCalendarMatches(matches, table);
     const result = await syncSportsCalendar(selectedMatches, existingEvents);
+    const summary = formatSummary(selectedMatches, result);
     await sendImageThenText(bot, MY_USER_ID, {
       image: () => (selectedMatches.length ? generateMatchCardsImage(upcomingMatchesToCardGroups(selectedMatches), 'en') : null),
       fileName: 'sports-calendar.png',
-      text: formatSummary(selectedMatches, result),
+      text: summary,
       sendText: sendShortenedMessage,
     });
+    await chatbotService.recordProactiveMessage(MY_USER_ID, summary, 'sports-calendar');
   } catch (err) {
     logger.error(`Failed to sync sports calendar: ${getErrorMessage(err)}`);
   }

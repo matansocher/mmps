@@ -6,7 +6,10 @@ import { getCompetitionTable, getUpcomingMatches } from '@services/scores-365';
 import type { UpcomingMatch } from '@services/scores-365';
 import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
 import type { SendImageThenTextOptions } from '@services/telegram';
+import type { ChatbotService } from '../chatbot.service';
 import { sportsCalendar } from './sports-calendar';
+
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 
 vi.mock('@services/google-calendar', () => ({
   createEvent: vi.fn(),
@@ -91,7 +94,7 @@ describe('sportsCalendar()', () => {
   it('should create a provider-backed calendar event without invoking AI', async () => {
     vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(getUpcomingMatches).toHaveBeenCalledWith('2026-08-12', '2026-08-15');
     expect(createEvent).toHaveBeenCalledWith(
@@ -120,7 +123,7 @@ describe('sportsCalendar()', () => {
       }),
     ]);
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(updateEvent).toHaveBeenCalledWith('event-123', expect.objectContaining({ location: 'Bernabéu' }));
     expect(deleteEvent).toHaveBeenCalledWith('stale');
@@ -130,7 +133,7 @@ describe('sportsCalendar()', () => {
   it('should not mutate the calendar when fixture retrieval fails', async () => {
     vi.mocked(getUpcomingMatches).mockRejectedValue(new Error('provider unavailable'));
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(createEvent).not.toHaveBeenCalled();
     expect(updateEvent).not.toHaveBeenCalled();
@@ -141,7 +144,7 @@ describe('sportsCalendar()', () => {
   it('should send a match cards image before the summary when matches are selected', async () => {
     vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     const { image, fileName, sendText } = getImageOptions();
     expect(fileName).toEqual('sports-calendar.png');
@@ -153,7 +156,7 @@ describe('sportsCalendar()', () => {
   it('should skip the image when no matches are selected', async () => {
     vi.mocked(getUpcomingMatches).mockResolvedValue([]);
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     const { image } = getImageOptions();
     expect(typeof image === 'function' ? await image() : image).toBeNull();
@@ -163,7 +166,7 @@ describe('sportsCalendar()', () => {
     vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
     vi.mocked(getCompetitionTable).mockRejectedValue(new Error('standings unavailable'));
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(createEvent).toHaveBeenCalledTimes(1);
   });
