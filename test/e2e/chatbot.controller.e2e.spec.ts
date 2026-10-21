@@ -64,7 +64,7 @@ describe('ChatbotController E2E', () => {
   it('routes a plain text message through ChatbotService and sends the styled reply', async () => {
     await simulateUpdate(testBot, buildTextMessageUpdate({ text: 'what is the weather?' }));
 
-    expect(processMessage).toHaveBeenCalledWith('what is the weather?', expect.any(Number), undefined);
+    expect(processMessage).toHaveBeenCalledWith('what is the weather?', expect.any(Number), expect.objectContaining({ callbacks: expect.any(Array) }));
 
     const sent = testBot.transport.callsByMethod('sendRichMessage');
     expect(sent.length).toBeGreaterThanOrEqual(1);
@@ -138,7 +138,7 @@ describe('ChatbotController E2E', () => {
   it('passes the photo to the agent and deletes the downloaded file', async () => {
     await simulateUpdate(testBot, buildPhotoMessageUpdate({ caption: 'what is this?' }));
 
-    expect(processMessage).toHaveBeenCalledWith('what is this?', expect.any(Number), { images: ['data:image/jpeg;base64,abc'] });
+    expect(processMessage).toHaveBeenCalledWith('what is this?', expect.any(Number), expect.objectContaining({ images: ['data:image/jpeg;base64,abc'], callbacks: expect.any(Array) }));
     expect(deleteFile).toHaveBeenCalledWith('/tmp/downloaded-file');
   });
 
