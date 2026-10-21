@@ -35,8 +35,6 @@ export class MessageLoader {
     try {
       await this.#startLoader();
       await action();
-    } catch (err) {
-      await this.#stopLoader();
     } finally {
       await this.#stopLoader();
     }

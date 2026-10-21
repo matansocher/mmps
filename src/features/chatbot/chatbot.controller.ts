@@ -27,10 +27,11 @@ import {
   updateActionStatus,
 } from './secretary';
 import { buildToolImages } from './tool-images';
-import type { ChatbotResponse } from './types';
+import type { ChatbotResponse, ProcessMessageOptions } from './types';
 import { fileToDataUrl } from './utils';
 
 const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
+const AGENT_ERROR_REPLY = 'Something went wrong. Please try again.';
 
 const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
 
@@ -109,8 +110,7 @@ export class ChatbotController {
 
   private async transcribeBusinessVoice(fileId: string): Promise<string> {
     try {
-      const audioFilePath = await downloadFile(this.bot, fileId, LOCAL_FILES_PATH);
-      return await getTranscriptFromAudio(audioFilePath);
+      return await this.withDownloadedFile(fileId, getTranscriptFromAudio);
     } catch (err) {
       this.logger.error(`Failed to transcribe business voice: ${getErrorMessage(err)}`);
       return '';
@@ -279,18 +279,77 @@ export class ChatbotController {
 
   private async messageHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
-    const { text } = getMessageData(ctx);
-    await this.runAgentReply(ctx, text, '🤔');
+    const { chatId, text } = getMessageData(ctx);
+    await this.runWithLoader(ctx, '🤔', () => this.replyWithAgent(chatId, text));
   }
 
-  private async runAgentReply(ctx: Context, prompt: string, reactionEmoji: ReactionTypeEmoji['emoji']): Promise<void> {
-    const { chatId, messageId } = getMessageData(ctx);
+  private async photoHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
+    const { chatId, photo, text } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      const response = await this.chatbotService.processMessage(prompt, chatId);
-      await this.handleBotResponse(chatId, response);
+    await this.runWithLoader(ctx, '👀', async () => {
+      const imageDataUrl = await this.withDownloadedFile(photo[photo.length - 1].file_id, fileToDataUrl);
+      const prompt = text?.trim() ? text : 'Please take a look at this image and respond helpfully.';
+      await this.replyWithAgent(chatId, prompt, { images: [imageDataUrl] });
     });
+  }
+
+  private async audioHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
+    const { chatId, audio } = getMessageData(ctx);
+
+    await this.runWithLoader(ctx, '🤔', async () => {
+      const transcribedText = await this.withDownloadedFile(audio.file_id, getTranscriptFromAudio);
+      await this.replyWithAgent(chatId, transcribedText);
+    });
+  }
+
+  private async documentHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
+    const { chatId, file, text } = getMessageData(ctx);
+    if (!file?.file_id) return;
+
+    const metadata = {
+      filename: file.file_name ?? 'telegram-document',
+      mimeType: file.mime_type ?? '',
+      sizeBytes: file.file_size ?? 0,
+    };
+    const rejection = getFileSummaryRejection(metadata);
+    if (rejection) {
+      await ctx.reply(rejection.message);
+      return;
+    }
+
+    await this.runWithLoader(ctx, '👀', async () => {
+      const prepared = await this.withDownloadedFile(file.file_id, (localPath) => this.fileSummaryService.prepareSummary({ ...metadata, localPath, caption: text }));
+      await this.replyWithAgent(chatId, prepared.prompt, { images: prepared.images });
+    });
+  }
+
+  // Tells the user the request failed, then rethrows so bot.catch logs it.
+  private async runWithLoader(ctx: Context, reactionEmoji: ReactionTypeEmoji['emoji'], action: () => Promise<void>): Promise<void> {
+    const { chatId, messageId } = getMessageData(ctx);
+    const messageLoader = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji });
+    try {
+      await messageLoader.handleMessageWithLoader(action);
+    } catch (err) {
+      await ctx.reply(AGENT_ERROR_REPLY).catch(() => {});
+      throw err;
+    }
+  }
+
+  private async withDownloadedFile<T>(fileId: string, use: (localPath: string) => Promise<T>): Promise<T> {
+    const localPath = await downloadFile(this.bot, fileId, LOCAL_FILES_PATH);
+    try {
+      return await use(localPath);
+    } finally {
+      await deleteFile(localPath);
+    }
+  }
+
+  private async replyWithAgent(chatId: number, prompt: string, options?: ProcessMessageOptions): Promise<void> {
+    const response = await this.chatbotService.processMessage(prompt, chatId, options);
+    await this.handleBotResponse(chatId, response);
   }
 
   private async handleBotResponse(chatId: number, { message: replyText, toolResults }: ChatbotResponse): Promise<void> {
@@ -308,72 +367,5 @@ export class ChatbotController {
         this.logger.error(`Failed to send tool image ${fileName}: ${getErrorMessage(err)}`);
       }
     }
-  }
-
-  private async photoHandler(ctx: Context): Promise<void> {
-    if (this.denyIfNotOwner(ctx)) return;
-    const { chatId, messageId, photo, text } = getMessageData(ctx);
-
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      const imageLocalPath = await downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
-      const imageDataUrl = await fileToDataUrl(imageLocalPath);
-
-      await deleteFile(imageLocalPath);
-
-      const prompt = text?.trim() ? text : 'Please take a look at this image and respond helpfully.';
-      const { message } = await this.chatbotService.processMessage(prompt, chatId, { images: [imageDataUrl] });
-
-      await sendRichMessage(this.bot, chatId, message);
-    });
-  }
-
-  private async audioHandler(ctx: Context): Promise<void> {
-    if (this.denyIfNotOwner(ctx)) return;
-    const { chatId, messageId, audio } = getMessageData(ctx);
-
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      const audioFileLocalPath = await downloadFile(this.bot, audio.file_id, LOCAL_FILES_PATH);
-
-      const transcribedText = await getTranscriptFromAudio(audioFileLocalPath);
-      const response = await this.chatbotService.processMessage(transcribedText, chatId);
-
-      await this.handleBotResponse(chatId, response);
-
-      deleteFile(audioFileLocalPath);
-    });
-  }
-
-  private async documentHandler(ctx: Context): Promise<void> {
-    if (this.denyIfNotOwner(ctx)) return;
-    const { chatId, messageId, file, text } = getMessageData(ctx);
-    if (!file?.file_id) return;
-
-    const metadata = {
-      filename: file.file_name ?? 'telegram-document',
-      mimeType: file.mime_type ?? '',
-      sizeBytes: file.file_size ?? 0,
-    };
-    const rejection = getFileSummaryRejection(metadata);
-    if (rejection) {
-      await ctx.reply(rejection.message);
-      return;
-    }
-
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      let documentLocalPath = '';
-      try {
-        documentLocalPath = await downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
-        const prepared = await this.fileSummaryService.prepareSummary({ ...metadata, localPath: documentLocalPath, caption: text });
-        const { message } = await this.chatbotService.processMessage(prepared.prompt, chatId, { images: prepared.images });
-        await sendRichMessage(this.bot, chatId, message);
-      } finally {
-        if (documentLocalPath) {
-          await deleteFile(documentLocalPath);
-        }
-      }
-    });
   }
 }
