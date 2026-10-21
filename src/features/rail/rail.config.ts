@@ -79,32 +79,45 @@ export const RAIL_AGENT_PROMPT = `You are a friendly Israel trains assistant. Yo
 - Always reply in the language of the user's latest message: Hebrew for Hebrew, English for English. Keep it short and clear.
 - If asked about anything unrelated to trains, say politely that you only help with trains and the light rail - don't web search it.`;
 
-export const START_MESSAGE = `היי! 🚆 אני הבוט של הרכבת.
-פשוט כתבו או שלחו הודעה קולית - מאיפה ולאן, ואם צריך גם מתי - ואחזיר את הרכבות הקרובות עם תמונה של המסלול.
+// Short /start reply for users who already finished or skipped onboarding.
+export const START_MESSAGE = {
+  he: `היי! 🚆 כתבו או שלחו הודעה קולית - מאיפה, לאן ואם צריך גם מתי.
+למשל: מחר ב-8 מסבידור לחיפה חוף הכרמל
+⚙️ /actions - שפה ויצירת קשר`,
+  en: `Hi! 🚆 Type or send a voice message with where from, where to and (optionally) when.
+For example: Tomorrow at 8 from Tel Aviv Savidor to Haifa Hof HaCarmel
+⚙️ /actions - Language & contact`,
+} as const;
 
-דוגמאות:
-• סבידור לחיפה חוף הכרמל
-• מחר ב-8 מבאר שבע לתל אביב השלום
-• נתב״ג לירושלים נבון בעוד שעה
-• רכבת קלה מאלנבי לפתח תקווה 🚊
-• מה תחנת הרכבת הקלה הקרובה לעזריאלי?
-• אני בדיזנגוף סנטר ורוצה להגיע לגרנד קניון בחיפה 📍
-• מה תחנת הרכבת הכי קרובה לטכניון?
+export const ONBOARDING_SAMPLE_ROUTE = { fromStationId: 3700, toStationId: 2300 } as const;
 
-—
-
-Hi! 🚆 I'm the Israel Rail bot.
-Just type or send a voice message with where from, where to and (optionally) when, and I'll send the next trains with a route picture.
-
-Examples:
-• Tel Aviv Savidor to Haifa Hof HaCarmel
-• Tomorrow at 8 from Beer Sheva to Tel Aviv HaShalom
-• Light rail from Allenby to Petah Tikva 🚊
-• Nearest light rail station to Azrieli
-• I'm at Dizengoff Center, how do I get to the Grand Canyon mall in Haifa? 📍
-• Nearest train station to the Technion
-
-⚙️ /actions - שפה ויצירת קשר · Language & contact`;
+export const ONBOARDING_MESSAGES = {
+  language: `היי! 🚆 אני הבוט של הרכבת. באיזו שפה נדבר?
+Hi! 🚆 I'm the Israel Rail bot. Which language do you prefer?`,
+  features: {
+    he: `(2/3) הנה מה שאני יודע לעשות:
+🚆 רכבת ישראל - הרכבות הבאות, רציפים ועיכובים, גם לפי שעת הגעה
+🚊 הרכבת הקלה - הקו האדום, גם בשילוב עם רכבת ישראל
+📍 מקומות - כתובת או מיקום ששלחתם, ואמצא את התחנה הקרובה
+🎙️ הודעות קוליות - פשוט תגידו מאיפה ולאן`,
+    en: `(2/3) Here's what I can do:
+🚆 Israel Rail - next trains, platforms and delays, also by arrival time
+🚊 Light rail - the Tel Aviv Red Line, also combined with Israel Rail
+📍 Places - an address or a shared location, and I'll find the nearest station
+🎙️ Voice messages - just say where from and where to`,
+  },
+  tryIt: {
+    he: `(3/3) בואו ננסה! לחצו על הכפתור לרכבות הקרובות מסבידור לחיפה חוף הכרמל.
+בתשובה יש כפתורים לעצירות, מיקום הרכבת והתראה לפני התחנה 🚀`,
+    en: `(3/3) Let's try it! Tap the button for the next trains from Tel Aviv Savidor to Haifa Hof HaCarmel.
+The result has buttons for stops, where your train is and a wake-up before your stop 🚀`,
+  },
+  buttons: {
+    he: { next: 'המשך ➡️', skip: 'דילוג ⏭', tryIt: '🚆 סבידור ← חיפה חוף הכרמל' },
+    en: { next: 'Next ➡️', skip: 'Skip ⏭', tryIt: '🚆 Savidor → Haifa Hof HaCarmel' },
+  },
+  languageButtons: { he: 'עברית 🇮🇱', en: 'English 🇬🇧' },
+} as const;
 
 export const MESSAGES = {
   userRateLimited: {
