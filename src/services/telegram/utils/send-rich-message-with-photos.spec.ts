@@ -26,7 +26,7 @@ describe('sendRichMessageWithPhotos()', () => {
     const { bot, sendRichMessage, sendPhoto } = createBot();
     await sendRichMessageWithPhotos(bot, 1, '**hello**', [PHOTO, { ...PHOTO, fileName: 'b.png' }], FORM);
     expect(sendRichMessage).toHaveBeenCalledTimes(1);
-    const [chatId, richMessage, form] = sendRichMessage.mock.calls[0] as unknown as [number, InputRichMessage<InputFile>, object];
+    const [chatId, richMessage, form] = sendRichMessage.mock.calls[0] as unknown as [number, InputRichMessage, object];
     expect(chatId).toEqual(1);
     expect(form).toEqual(FORM);
     expect(richMessage.markdown).toEqual('![](tg://photo?id=photo_0)\n\n![](tg://photo?id=photo_1)\n\n**hello**');
