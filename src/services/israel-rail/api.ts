@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { trainSearchCache } from './cache';
 import { DEFAULT_TRAINS_LIMIT, RAIL_API_HEADERS, RAIL_API_SEARCH_URL } from './constants';
+import { getCrowdingLevel } from './crowding';
 import { getStationById } from './station-search';
 import type { RailApiSearchResponse, RailApiTrain, RailApiTravel, RailStation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainScheduleType, TrainTransfer, TrainTravel } from './types';
 
@@ -28,6 +29,7 @@ function toLeg(train: RailApiTrain): TrainLeg {
     destinationPlatform: train.destPlatform,
     delayMinutes: train.etaDiffTimes?.find((eta) => eta.stationId === train.orignStation)?.difMin ?? 0,
     predictedLoadPercent: train.predictedPctLoad ?? undefined,
+    crowding: getCrowdingLevel(train.predictedPctLoad ?? undefined),
     intermediateStops: train.stopStations?.length ?? 0,
   };
 }

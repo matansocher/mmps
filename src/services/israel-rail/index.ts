@@ -1,5 +1,6 @@
 export * from './api';
 export { STATION_BUFFER_MINUTES } from './constants';
+export * from './crowding';
 export * from './last-train';
 export * from './leave-by';
 export * from './nearby';
@@ -8,6 +9,7 @@ export * from './search-url';
 export * from './station-search';
 export { RAIL_STATIONS } from './stations';
 export type {
+  CrowdingLevel,
   NearbyRailStation,
   NearbyRailStationsResult,
   RailStation,

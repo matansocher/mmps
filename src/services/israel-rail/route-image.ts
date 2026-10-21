@@ -1,7 +1,8 @@
 import type { CanvasRenderingContext2D } from 'canvas';
 import { COLORS as BASE_COLORS, createScaledCanvas, drawArrow, drawBadge, drawDot, drawText, roundRect } from '@shared/image-card';
 import type { ImageLanguage } from '@shared/image-card';
-import type { RailStation, TrainLeg, TrainTravel } from './types';
+import { getTravelCrowding } from './crowding';
+import type { CrowdingLevel, RailStation, TrainLeg, TrainTravel } from './types';
 
 export type RouteImageLanguage = ImageLanguage;
 
@@ -27,6 +28,7 @@ type Labels = {
   readonly transfers: (n: number) => string;
   readonly onTime: string;
   readonly delay: (n: number) => string;
+  readonly crowding: Record<CrowdingLevel, string>;
 };
 
 const WIDTH = 640;
@@ -51,7 +53,15 @@ const COLORS = {
   onTimeText: BASE_COLORS.successText,
   delayBg: BASE_COLORS.dangerBg,
   delayText: BASE_COLORS.dangerText,
+  crowdingEmpty: '#d5dbe3',
 } as const;
+
+// Same idea as rail.co.il: three figures, filled 1/2/3 by crowding level.
+const CROWDING_ICON: Record<CrowdingLevel, { readonly filled: number; readonly color: string }> = {
+  quiet: { filled: 1, color: BASE_COLORS.successText },
+  moderate: { filled: 2, color: '#e0a800' },
+  busy: { filled: 3, color: BASE_COLORS.dangerText },
+};
 
 const LABELS: Record<RouteImageLanguage, Labels> = {
   he: {
@@ -63,6 +73,7 @@ const LABELS: Record<RouteImageLanguage, Labels> = {
     transfers: (n) => (n === 0 ? 'ישיר' : n === 1 ? 'החלפה אחת' : `${n} החלפות`),
     onTime: 'בזמן',
     delay: (n) => `עיכוב ${n} דק׳`,
+    crowding: { quiet: 'עומס נמוך', moderate: 'עומס בינוני', busy: 'עומס גבוה' },
   },
   en: {
     minutes: (n) => `${n} min`,
@@ -73,6 +84,7 @@ const LABELS: Record<RouteImageLanguage, Labels> = {
     transfers: (n) => (n === 0 ? 'Direct' : n === 1 ? '1 transfer' : `${n} transfers`),
     onTime: 'On time',
     delay: (n) => `${n} min late`,
+    crowding: { quiet: 'Quiet', moderate: 'Moderate', busy: 'Busy' },
   },
 };
 
@@ -100,6 +112,24 @@ function buildRows(travel: TrainTravel): Row[] {
 
   rows.push({ kind: 'stop', station: last.to, time: last.arrivalTime, platform: last.destinationPlatform, isEnd: true });
   return rows;
+}
+
+// Draws the people icon with its outer edge at `edgeX`, extending toward the card's center.
+function drawCrowdingIcon(ctx: CanvasRenderingContext2D, level: CrowdingLevel, edgeX: number, centerY: number, rtl: boolean): void {
+  const { filled, color } = CROWDING_ICON[level];
+  const spacing = 14;
+  const firstX = rtl ? edgeX + 6 : edgeX - 6 - spacing * 2;
+  for (let i = 0; i < 3; i++) {
+    const x = firstX + i * spacing;
+    // Fill from the outer edge inward so the icon reads the same in both directions.
+    const isFilled = rtl ? i < filled : 2 - i < filled;
+    ctx.fillStyle = isFilled ? color : COLORS.crowdingEmpty;
+    ctx.beginPath();
+    ctx.arc(x, centerY - 7, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    roundRect(ctx, x - 5.5, centerY - 1, 11, 11, 3);
+    ctx.fill();
+  }
 }
 
 function cardHeight(rows: readonly Row[]): number {
@@ -140,6 +170,12 @@ function drawCard(ctx: CanvasRenderingContext2D, travel: TrainTravel, top: numbe
   drawText(ctx, `·  ${day}.${month}`, afterArrival + dir * 12, titleY, 20, COLORS.muted, align);
   const meta = [labels.minutes(travel.durationMinutes), labels.transfers(travel.transfers)].join('  ·  ');
   drawText(ctx, meta, start, titleY + 34, 15, COLORS.muted, align);
+
+  const crowding = getTravelCrowding(travel);
+  if (crowding) {
+    drawCrowdingIcon(ctx, crowding, end, titleY - 2, rtl);
+    drawText(ctx, labels.crowding[crowding], end, titleY + 34, 15, CROWDING_ICON[crowding].color, oppositeAlign);
+  }
 
   const lineX = start + dir * 10;
   const textX = lineX + dir * 24;
