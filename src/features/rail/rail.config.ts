@@ -105,6 +105,10 @@ export const MESSAGES = {
     he: 'לא מצאתי רכבות לחיפוש הזה 🤷',
     en: 'No trains found for this search 🤷',
   },
+  trainNotFound: {
+    he: 'לא מצאתי את הרכבת הזו יותר, נסו לחפש שוב 🤷',
+    en: "I couldn't find that train anymore, please search again 🤷",
+  },
   error: {
     he: 'משהו השתבש, נסו שוב בעוד רגע 🙏',
     en: 'Something went wrong, please try again 🙏',

@@ -9,7 +9,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
 import type { ToolResult } from '@features/chatbot/types';
 import { formatAgentResponse } from '@features/chatbot/utils';
-import { buildRailSearchUrl, generateRouteImage, RAIL_STATIONS, searchTrains } from '@services/israel-rail';
+import { buildRailSearchUrl, generateRouteImage, RAIL_STATIONS, searchTrains, type TrainTravel } from '@services/israel-rail';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { israelRailTool, lightRailTool, recordModelUsage, UsageCallbackHandler, webSearchTool } from '@shared/ai';
 import type { ImageLanguage } from '@shared/image-card';
@@ -82,5 +82,11 @@ export class RailService {
     const railWebsiteUrl = buildRailSearchUrl({ fromStationId, toStationId, date, time });
     const image = travels.length ? generateRouteImage(travels, language) : null;
     return { context, railWebsiteUrl, image };
+  }
+
+  // The search results are cached briefly, so tapping a train's stops button right after a search does not hit the rail API again.
+  async findTrain(fromStationId: number, toStationId: number, date: string, departureTime: string): Promise<TrainTravel | null> {
+    const { travels } = await searchTrains({ fromStationId, toStationId, date, hour: departureTime, limit: 1 });
+    return travels.find((travel) => travel.date === date && travel.departureTime === departureTime) ?? null;
   }
 }

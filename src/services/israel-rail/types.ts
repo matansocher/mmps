@@ -66,6 +66,13 @@ export type SearchTrainsParams = {
   readonly limit?: number;
 };
 
+export type TrainStop = {
+  readonly station: RailStation;
+  readonly arrivalTime: string; // Format: "HH:mm"
+  readonly departureTime: string; // Format: "HH:mm"
+  readonly platform: number;
+};
+
 export type TrainLeg = {
   readonly trainNumber: number;
   readonly from: RailStation;
@@ -78,6 +85,7 @@ export type TrainLeg = {
   readonly predictedLoadPercent?: number;
   readonly crowding?: CrowdingLevel;
   readonly intermediateStops: number;
+  readonly stops: readonly TrainStop[];
 };
 
 export type CrowdingLevel = 'quiet' | 'moderate' | 'busy';

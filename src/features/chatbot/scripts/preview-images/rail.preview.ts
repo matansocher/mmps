@@ -17,8 +17,8 @@ const TRAVELS: readonly TrainTravel[] = [
     transfers: 1,
     transferDetails: [{ station: LOD, arrivalTime: '15:28', arrivalPlatform: 2, departureTime: '15:41', departurePlatform: 4, waitMinutes: 13, nextTrainNumber: 512 }],
     legs: [
-      { trainNumber: 133, from: TEL_AVIV, to: LOD, departureTime: '15:10', arrivalTime: '15:28', originPlatform: 3, destinationPlatform: 2, delayMinutes: 0, intermediateStops: 2 },
-      { trainNumber: 512, from: LOD, to: BEER_SHEVA, departureTime: '15:41', arrivalTime: '16:32', originPlatform: 4, destinationPlatform: 1, delayMinutes: 4, intermediateStops: 3 },
+      { trainNumber: 133, from: TEL_AVIV, to: LOD, departureTime: '15:10', arrivalTime: '15:28', originPlatform: 3, destinationPlatform: 2, delayMinutes: 0, intermediateStops: 2, stops: [] },
+      { trainNumber: 512, from: LOD, to: BEER_SHEVA, departureTime: '15:41', arrivalTime: '16:32', originPlatform: 4, destinationPlatform: 1, delayMinutes: 4, intermediateStops: 3, stops: [] },
     ],
   },
   {
@@ -28,7 +28,7 @@ const TRAVELS: readonly TrainTravel[] = [
     durationMinutes: 59,
     transfers: 0,
     transferDetails: [],
-    legs: [{ trainNumber: 61, from: TEL_AVIV, to: HAIFA, departureTime: '15:25', arrivalTime: '16:24', originPlatform: 1, destinationPlatform: 2, delayMinutes: 0, intermediateStops: 4 }],
+    legs: [{ trainNumber: 61, from: TEL_AVIV, to: HAIFA, departureTime: '15:25', arrivalTime: '16:24', originPlatform: 1, destinationPlatform: 2, delayMinutes: 0, intermediateStops: 4, stops: [] }],
   },
 ];
 

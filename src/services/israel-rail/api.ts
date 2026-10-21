@@ -31,6 +31,12 @@ function toLeg(train: RailApiTrain): TrainLeg {
     predictedLoadPercent: train.predictedPctLoad ?? undefined,
     crowding: getCrowdingLevel(train.predictedPctLoad ?? undefined),
     intermediateStops: train.stopStations?.length ?? 0,
+    stops: (train.stopStations ?? []).map((stop) => ({
+      station: toStation(stop.stationId),
+      arrivalTime: toTime(stop.arrivalTime),
+      departureTime: toTime(stop.departureTime),
+      platform: stop.platform,
+    })),
   };
 }
 

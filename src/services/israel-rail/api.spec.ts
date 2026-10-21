@@ -64,4 +64,25 @@ describe('searchTrains()', () => {
       expect(result.map(({ departureTime, arrivalTime }) => `${departureTime}-${arrivalTime}`)).toEqual(['07:28-08:24', '07:58-08:49']);
     });
   });
+
+  it('should map intermediate stops with station names, times and platforms', async () => {
+    vi.mocked(trainSearchCache.get).mockResolvedValue(null);
+    const train = {
+      trainNumber: 123,
+      orignStation: 3700,
+      destinationStation: 2300,
+      originPlatform: 3,
+      destPlatform: 1,
+      departureTime: '2025-01-01T08:00:00',
+      arrivalTime: '2025-01-01T08:55:00',
+      stopStations: [{ stationId: 3500, arrivalTime: '2025-01-01T08:08:00', departureTime: '2025-01-01T08:09:00', platform: 6 }],
+    };
+    const travel = { departureTime: train.departureTime, arrivalTime: train.arrivalTime, trains: [train] };
+    vi.mocked(axios.post).mockResolvedValue({ data: { result: { travels: [travel], startFromIndex: 0 } } });
+
+    const { travels } = await searchTrains({ ...params, hour: '08:00' });
+
+    expect(travels[0].legs[0].intermediateStops).toEqual(1);
+    expect(travels[0].legs[0].stops).toEqual([{ station: expect.objectContaining({ id: 3500 }), arrivalTime: '08:08', departureTime: '08:09', platform: 6 }]);
+  });
 });

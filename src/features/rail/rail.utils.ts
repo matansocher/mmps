@@ -1,11 +1,12 @@
 import { addMinutes, format, parse } from 'date-fns';
 import type { InlineKeyboard } from 'grammy';
 import { CROWDING_EMOJI, getTravelCrowding } from '@services/israel-rail';
-import type { CrowdingLevel, RailStation, TrainTravel } from '@services/israel-rail';
+import type { CrowdingLevel, RailStation, TrainLeg, TrainTravel } from '@services/israel-rail';
 import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
 
-export type RailSearchAction = 'later' | 'reverse';
+// 'stops' carries the chosen train's own date and departure time instead of a search time.
+export type RailSearchAction = 'later' | 'reverse' | 'stops';
 
 export type RailSearchRequest = {
   readonly action: RailSearchAction;
@@ -24,8 +25,10 @@ export type RailRouteContext = {
 };
 
 const CALLBACK_SEPARATOR = '|';
+const STOPS_BUTTONS_PER_ROW = 5;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
+const ACTIONS: readonly RailSearchAction[] = ['later', 'reverse', 'stops'];
 
 // Format: "later|3700|2300|2026-10-19|08:31|he" (well under Telegram's 64-byte limit)
 export function buildCallbackData(request: RailSearchRequest): string {
@@ -34,13 +37,13 @@ export function buildCallbackData(request: RailSearchRequest): string {
 
 export function parseCallbackData(data: string): RailSearchRequest | null {
   const [action, from, to, date, time, language] = data.split(CALLBACK_SEPARATOR);
-  if (action !== 'later' && action !== 'reverse') return null;
+  if (!ACTIONS.includes(action as RailSearchAction)) return null;
   const fromStationId = Number(from);
   const toStationId = Number(to);
   if (!Number.isInteger(fromStationId) || !Number.isInteger(toStationId)) return null;
   if (!DATE_PATTERN.test(date ?? '') || !TIME_PATTERN.test(time ?? '')) return null;
   if (language !== 'he' && language !== 'en') return null;
-  return { action, fromStationId, toStationId, date, time, language };
+  return { action: action as RailSearchAction, fromStationId, toStationId, date, time, language };
 }
 
 export function getNextSearchTime(trains: readonly TrainTravel[]): { readonly date: string; readonly time: string } | null {
@@ -59,11 +62,38 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
   const [date, time] = context.searchedFrom.split(' ');
   const next = getNextSearchTime(context.trains);
   const labels = language === 'he' ? { later: '⏭ רכבות מאוחרות יותר', reverse: '🔁 כיוון הפוך' } : { later: '⏭ Later trains', reverse: '🔁 Reverse direction' };
+  const stopsButtons = context.trains.map((train) => ({
+    text: `🛤 ${train.departureTime}`,
+    data: buildCallbackData({ action: 'stops', fromStationId: context.from.id, toStationId: context.to.id, date: train.date, time: train.departureTime, language }),
+  }));
   const buttons = [
     ...(next ? [{ text: labels.later, data: buildCallbackData({ action: 'later', fromStationId: context.from.id, toStationId: context.to.id, ...next, language }) }] : []),
     { text: labels.reverse, data: buildCallbackData({ action: 'reverse', fromStationId: context.to.id, toStationId: context.from.id, date, time, language }) },
   ];
-  return buildInlineKeyboard(buttons, 2);
+  const keyboard = buildInlineKeyboard(stopsButtons, STOPS_BUTTONS_PER_ROW);
+  buttons.forEach((button) => keyboard.text(button.text, button.data));
+  return keyboard;
+}
+
+function formatStopLine(time: string, station: RailStation, language: ImageLanguage, platform?: number): string {
+  const name = language === 'he' ? station.nameHe : station.nameEn;
+  if (!platform) return `${time} · ${name}`;
+  return `${time} · *${name}* (${language === 'he' ? 'רציף' : 'platform'} ${platform})`;
+}
+
+function formatLegStops(leg: TrainLeg, language: ImageLanguage): string {
+  const header = language === 'he' ? `🛤 *רכבת ${leg.trainNumber} · ${leg.from.nameHe} ← ${leg.to.nameHe}*` : `🛤 *Train ${leg.trainNumber} · ${leg.from.nameEn} → ${leg.to.nameEn}*`;
+  return [
+    header,
+    formatStopLine(leg.departureTime, leg.from, language, leg.originPlatform),
+    ...leg.stops.map((stop) => formatStopLine(stop.departureTime, stop.station, language)),
+    formatStopLine(leg.arrivalTime, leg.to, language, leg.destinationPlatform),
+  ].join('\n');
+}
+
+// One section per leg, so a trip with transfers lists each train's stops separately.
+export function formatStopsMessage(travel: TrainTravel, language: ImageLanguage): string {
+  return travel.legs.map((leg) => formatLegStops(leg, language)).join('\n\n');
 }
 
 const CROWDING_LABELS: Record<ImageLanguage, Record<CrowdingLevel, string>> = {
