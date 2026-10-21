@@ -35,6 +35,8 @@ export type RailRouteResult = {
   readonly image: Buffer | null;
 };
 
+const LANGUAGE_NAMES: Record<ImageLanguage, string> = { he: 'Hebrew', en: 'English' };
+
 export class RailService {
   private readonly logger = new Logger('rail:service');
   private readonly aiService: AiService;
@@ -117,10 +119,12 @@ export class RailService {
     }
   }
 
-  async processMessage(message: string, chatId: number, language: ImageLanguage): Promise<RailAgentReply> {
+  // isLanguageSaved: the user picked a language in /actions, so it overrides replying in the message's language.
+  async processMessage(message: string, chatId: number, language: ImageLanguage, isLanguageSaved = false): Promise<RailAgentReply> {
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
-      const system = `Current time: ${formattedTime} (${DEFAULT_TIMEZONE})`;
+      const languageRule = isLanguageSaved ? `\nThe user chose to always get replies in ${LANGUAGE_NAMES[language]} - reply in ${LANGUAGE_NAMES[language]} regardless of the message language.` : '';
+      const system = `Current time: ${formattedTime} (${DEFAULT_TIMEZONE})${languageRule}`;
       const threadId = await this.touchThread(chatId);
       const usageHandler = new UsageCallbackHandler();
       const startedAt = Date.now();
