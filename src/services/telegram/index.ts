@@ -18,5 +18,7 @@ export type { RichButtonData } from './utils/rich-message';
 export { sendImageThenText } from './utils/send-image-then-text';
 export type { ImageSource, SendImageThenTextOptions } from './utils/send-image-then-text';
 export { sendRichMessage, sendShortenedMessage, sendStyledMessage } from './utils/send-message';
+export { sendRichMessageWithPhotos } from './utils/send-rich-message-with-photos';
+export type { RichPhoto } from './utils/send-rich-message-with-photos';
 export * from './constants';
 export * from './types';

@@ -8,7 +8,7 @@ import { deleteFile, getErrorMessage, Logger } from '@core/utils';
 import { buildToolImages, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/tool-images';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
-import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage, type UserDetails } from '@services/telegram';
+import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessageWithPhotos, type UserDetails } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
 import { getAvatarHash, saveAvatarHash, saveUserDetails } from './mongo';
 import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
@@ -93,7 +93,7 @@ export class RailController {
 
     const messageLoader = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '⚡' });
     await messageLoader.handleMessageWithLoader(async () => {
-      const answer = await this.answerQuery(ctx, chatId, text, language);
+      const answer = await this.answerQuery(chatId, text, language);
       notifyConversation('MESSAGE', text, answer, userDetails);
     });
   }
@@ -125,22 +125,18 @@ export class RailController {
         notifyConversation('VOICE_MESSAGE', '(voice not understood)', MESSAGES.voiceNotUnderstood[fallbackLanguage], userDetails);
         return;
       }
-      const answer = await this.answerQuery(ctx, chatId, transcript, detectLanguage(transcript));
+      const answer = await this.answerQuery(chatId, transcript, detectLanguage(transcript));
       notifyConversation('VOICE_MESSAGE', transcript, answer, userDetails);
     });
   }
 
-  private async answerQuery(ctx: Context, chatId: number, text: string, language: ImageLanguage): Promise<string> {
+  private async answerQuery(chatId: number, text: string, language: ImageLanguage): Promise<string> {
     const { message, toolResults } = await this.railService.processMessage(text, chatId, language);
 
     const images = await buildToolImages(toolResults, message, [RAIL_ROUTE_IMAGE_BUILDER]);
-    for (const { fileName, image } of images) {
-      await ctx.replyWithPhoto(new InputFile(image, fileName)).catch((err) => this.logger.error(`Failed to send route image: ${getErrorMessage(err)}`));
-    }
-
     const context = getRouteContext(toolResults);
     const replyMarkup = context ? buildRouteKeyboard(context, detectLanguage(message)) : undefined;
-    await sendRichMessage(this.bot, chatId, message, replyMarkup ? { reply_markup: replyMarkup } : {});
+    await sendRichMessageWithPhotos(this.bot, chatId, message, images, replyMarkup ? { reply_markup: replyMarkup } : {});
     return message;
   }
 
@@ -162,11 +158,9 @@ export class RailController {
         notifyConversation(action, question, MESSAGES.noTrains[language], userDetails);
         return;
       }
-      if (result.image) {
-        await ctx.replyWithPhoto(new InputFile(result.image, 'rail-route.png'));
-      }
       const answer = formatRouteMessage(result.context, result.railWebsiteUrl, language);
-      await sendRichMessage(this.bot, chatId, answer, { reply_markup: buildRouteKeyboard(result.context, language) });
+      const photos = result.image ? [{ image: result.image, fileName: 'rail-route.png' }] : [];
+      await sendRichMessageWithPhotos(this.bot, chatId, answer, photos, { reply_markup: buildRouteKeyboard(result.context, language) });
       notifyConversation(action, `[button] ${result.context.from.nameEn} → ${result.context.to.nameEn} at ${date} ${time}`, answer, userDetails);
     } catch (err) {
       this.logger.error(`callbackQueryHandler failed: ${getErrorMessage(err)}`);
