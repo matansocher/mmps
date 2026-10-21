@@ -7,6 +7,7 @@ import { ensureUsageIndexes, USAGE_DB_NAME } from '@shared/ai';
 import { registerCalendarEventsRoutes } from '@shared/calendar-events';
 import { DB_NAME as COACH_DB_NAME } from '@shared/coach';
 import { ensureFlightTrafficIndexes } from '@shared/flight-traffic';
+import { ensureMemoryIndexes } from '@shared/memories';
 import { ensureReminderIndexes } from '@shared/reminders';
 import { ensureDigestDeliveryIndexes, ensurePendingPostIndexes } from '@shared/social-follower';
 import { ensureTransferTrackerIndexes } from '@shared/transfer-tracker';
@@ -26,6 +27,7 @@ export async function initChatbot(app: Express): Promise<void> {
 
   await ensureUsageIndexes();
   await ensureReminderIndexes();
+  await ensureMemoryIndexes();
   await ensureSecretaryMessageIndexes();
   await ensureTransferTrackerIndexes();
   await ensurePendingPostIndexes();

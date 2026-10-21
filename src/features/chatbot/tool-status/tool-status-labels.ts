@@ -31,6 +31,7 @@ export const TOOL_STATUS_LABELS: Readonly<Record<string, string>> = {
   match_prediction_data: '🔮 Analyzing the match',
   match_summary: '⚽ Getting the match summary',
   meetups: '🤝 Checking your meetups',
+  memory: '🧠 Checking my memory',
   polymarket: '📈 Checking Polymarket',
   rain_radar: '🌧️ Checking the rain radar',
   recipes: '🍳 Looking up recipes',

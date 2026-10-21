@@ -7,6 +7,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   token: 'CHATBOT_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: 'Start over', hide: true },
+    MEMORY: { command: '/memory', description: 'See and edit what I remember about you' },
   },
 };
 
@@ -65,6 +66,12 @@ export const CHATBOT_CONFIG = {
   imageDigest: {
     enabled: env.CHATBOT_IMAGE_DIGEST !== 'false',
     maxPostsPerChat: parseInt(env.CHATBOT_IMAGE_DIGEST_MAX_POSTS || '5', 10),
+  },
+  // Long-term memory facts appended to the system prompt on every model call (newest first).
+  memory: {
+    maxInjectedFacts: parseInt(env.CHATBOT_MEMORY_MAX_FACTS || '100', 10),
+    // ~2k tokens; older facts beyond this are dropped from the prompt (still reachable via recall).
+    maxInjectedChars: parseInt(env.CHATBOT_MEMORY_MAX_CHARS || '8000', 10),
   },
   emailCleanup: {
     threshold: 0.75,

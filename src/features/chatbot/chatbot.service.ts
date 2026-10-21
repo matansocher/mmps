@@ -10,7 +10,15 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgentService, createDanglingToolCallsMiddleware, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
+import {
+  AiService,
+  createAgentService,
+  createDanglingToolCallsMiddleware,
+  createMemoryContextMiddleware,
+  createSafeSummarizationMiddleware,
+  createStructuredResponseMiddleware,
+  createToolRetryMiddleware,
+} from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARIZATION_TRIGGER, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
 import { formatAgentResponse } from './utils';
@@ -77,10 +85,13 @@ export class ChatbotService {
     // Patches tool calls left without a result (e.g. a turn cut off by a restart) so the thread keeps working.
     const danglingToolCalls = createDanglingToolCallsMiddleware();
 
+    // Injects stored long-term memory facts into the system prompt so they survive summarization and the checkpoint TTL.
+    const memoryContext = createMemoryContextMiddleware({ maxFacts: CHATBOT_CONFIG.memory.maxInjectedFacts, maxChars: CHATBOT_CONFIG.memory.maxInjectedChars });
+
     this.aiService = createAgentService(agent(), {
       model: this.model,
       checkpointer,
-      middleware: [summarization, modelCallLimit, toolCallLimit, toolRetry, danglingToolCalls, createStructuredResponseMiddleware()],
+      middleware: [summarization, memoryContext, modelCallLimit, toolCallLimit, toolRetry, danglingToolCalls, createStructuredResponseMiddleware()],
       toolCallbackOptions,
     });
   }

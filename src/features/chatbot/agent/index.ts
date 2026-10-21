@@ -6,3 +6,4 @@ export { createDanglingToolCallsMiddleware } from './dangling-tool-calls';
 export { createSafeSummarizationMiddleware } from './safe-summarization';
 export { createStructuredResponseMiddleware } from './structured-response';
 export { createToolRetryMiddleware } from './tool-retry';
+export { createMemoryContextMiddleware } from './memory-context';
