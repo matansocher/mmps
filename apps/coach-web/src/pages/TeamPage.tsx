@@ -1,6 +1,7 @@
 import { messages } from '../lib/i18n';
 import { useState } from 'react';
 import { GameSummaryRow } from '../components/GameSummaryRow';
+import { NewsFeed } from '../components/NewsList';
 import { PageHeader } from '../components/PageHeader';
 import { PlayerPhoto } from '../components/PlayerPhoto';
 import { TeamLogo } from '../components/TeamLogo';
@@ -11,7 +12,7 @@ import { api } from '../lib/api';
 import { navigate } from '../lib/router';
 import type { SquadPlayer, TeamDetail } from '../types';
 
-type TeamTab = 'matches' | 'squad';
+type TeamTab = 'matches' | 'squad' | 'news';
 
 function groupSquad(squad: readonly SquadPlayer[]): [string, SquadPlayer[]][] {
   const groups = new Map<string, SquadPlayer[]>();
@@ -71,6 +72,7 @@ export function TeamPage({ id }: { readonly id: number }) {
             tabs={[
               { id: 'matches', label: messages().team.matches },
               { id: 'squad', label: messages().common.count(messages().team.squad, team.squad.length) },
+              { id: 'news', label: messages().common.news },
             ]}
             active={tab}
             onChange={setTab}
@@ -89,6 +91,7 @@ export function TeamPage({ id }: { readonly id: number }) {
               </Section>
             </div>
           )}
+          {tab === 'news' && <NewsFeed load={() => api.teamNews(team.id)} cacheKey={`team-news:${team.id}`} />}
           {tab === 'squad' && (
             <div className="grid gap-4 md:grid-cols-2">
               {groupSquad(team.squad).map(([position, players]) => (

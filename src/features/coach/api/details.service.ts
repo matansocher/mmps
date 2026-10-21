@@ -1,15 +1,17 @@
 import { getErrorMessage, Logger } from '@core/utils';
-import { COMPETITIONS, getAthleteDetails, getBrackets, getCompetitionGames, getCompetitorDetails, getCompetitorGames, getCompetitorSquad, getStandings } from '@services/scores-365';
+import { COMPETITIONS, getAthleteDetails, getBrackets, getCompetitionGames, getCompetitorDetails, getCompetitorGames, getCompetitorSquad, getNews, getStandings } from '@services/scores-365';
 import { getDashboardPreferences } from '@shared/coach';
+import type { ScoresNewsFilter } from '@services/scores-365';
 import type { DashboardLanguage } from '@shared/coach';
 import { LANGUAGE_IDS, LIVE_DATA_TTL_SEC } from './constants';
-import { toGameDetail, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables, toTeamDetail } from './detail-transformers';
+import { toGameDetail, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables, toTeamDetail, toNews } from './detail-transformers';
 import { getCachedGameDetails, getCachedGameStats, getCachedHeadToHead } from './scores-cache';
 import { classifyGameStatus, getCompetitionName, toDashboardGame } from './transformers';
 import { TtlCache } from './ttl-cache';
-import type { CompetitionDetailResponse, GameDetailResponse, PlayerDetailResponse, TeamDetailResponse } from './types';
+import type { CompetitionDetailResponse, GameDetailResponse, PlayerDetailResponse, TeamDetailResponse, NewsItem } from './types';
 
 const PROFILE_TTL_MS = 30 * 60_000;
+const NEWS_TTL_MS = 10 * 60_000;
 const COMPETITION_TTL_MS = 2 * 60_000;
 const LIVE_COMPETITION_TTL_MS = LIVE_DATA_TTL_SEC * 1000;
 
@@ -18,6 +20,7 @@ export class CoachDetailsService {
   private readonly teamCache = new TtlCache<TeamDetailResponse | null>();
   private readonly playerCache = new TtlCache<PlayerDetailResponse | null>();
   private readonly competitionCache = new TtlCache<CompetitionDetailResponse | null>();
+  private readonly newsCache = new TtlCache<NewsItem[]>();
 
   async getGame(telegramUserId: number, gameId: number, lang: DashboardLanguage): Promise<GameDetailResponse | null> {
     const details = await getCachedGameDetails(gameId, lang);
@@ -48,6 +51,27 @@ export class CoachDetailsService {
         getCompetitorSquad(teamId, langId).catch(() => []),
       ]);
       return team ? toTeamDetail({ team, results, fixtures, squad, lang }) : null;
+    });
+  }
+
+  async getTeamNews(teamId: number, lang: DashboardLanguage): Promise<NewsItem[]> {
+    return this.getNews({ type: 'competitors', id: teamId }, lang);
+  }
+
+  async getPlayerNews(athleteId: number, lang: DashboardLanguage): Promise<NewsItem[]> {
+    return this.getNews({ type: 'athletes', id: athleteId }, lang);
+  }
+
+  async getCompetitionNews(competitionId: number, lang: DashboardLanguage): Promise<NewsItem[]> {
+    return this.getNews({ type: 'competitions', id: competitionId }, lang);
+  }
+
+  // Hebrew coverage is sparse (especially for players), so fall back to English when it's empty.
+  private async getNews(filter: ScoresNewsFilter, lang: DashboardLanguage): Promise<NewsItem[]> {
+    return this.newsCache.get(`${filter.type}:${lang}:${filter.id}`, NEWS_TTL_MS, async () => {
+      const news = toNews(await getNews(filter, LANGUAGE_IDS[lang]));
+      if (news.length || lang === 'en') return news;
+      return toNews(await getNews(filter, LANGUAGE_IDS.en));
     });
   }
 

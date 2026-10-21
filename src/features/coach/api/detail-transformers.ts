@@ -8,6 +8,7 @@ import type {
   ScoresGameStat,
   ScoresHeadToHead,
   ScoresLineup,
+  ScoresNews,
   ScoresSquadAthlete,
   ScoresStandings,
 } from '@services/scores-365';
@@ -31,6 +32,7 @@ import type {
   StandingsTable,
   TeamDetailResponse,
   TeamLineup,
+  NewsItem,
 } from './types';
 
 const HALFTIME_STAGE_ID = 7;
@@ -152,6 +154,25 @@ type ToTeamDetailInput = {
   readonly squad: readonly ScoresSquadAthlete[];
   readonly lang: DashboardLanguage;
 };
+
+export function toNews(news: ScoresNews | undefined): NewsItem[] {
+  if (!news) return [];
+  const sources = new Map(news.sources.map((s) => [s.id, s.name]));
+  return news.news
+    .filter((n) => n.title && /^https?:\/\//.test(n.url ?? ''))
+    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+    .map((n) => {
+      const source = n.sourceId !== undefined ? sources.get(n.sourceId) : undefined;
+      return {
+        id: n.id,
+        title: n.title,
+        url: n.url,
+        ...(n.image ? { image: n.image } : {}),
+        ...(source ? { source } : {}),
+        publishedAt: n.publishDate,
+      };
+    });
+}
 
 export function toTeamDetail({ team, results, fixtures, squad, lang }: ToTeamDetailInput): TeamDetailResponse {
   const recent = [...results].sort((a, b) => b.startTime.localeCompare(a.startTime)).slice(0, 10);

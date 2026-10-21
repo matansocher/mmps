@@ -17,6 +17,8 @@ const en = {
   nav: { brand: 'Coach Live', label: 'Main', live: 'Live', leagues: 'Leagues', settings: 'Settings' },
   common: {
     back: 'Back',
+    news: 'News',
+    noNews: 'No recent news',
     close: 'Close',
     dismiss: 'Dismiss',
     loading: 'Loading…',
@@ -195,6 +197,7 @@ const en = {
     clubPage: 'Club page',
     thisSeason: 'This season',
     recentGames: 'Recent games',
+    overview: 'Overview',
   },
   leagues: {
     title: 'Leagues',
@@ -278,6 +281,8 @@ const he: Messages = {
   nav: { brand: 'Coach Live', label: 'ראשי', live: 'לייב', leagues: 'ליגות', settings: 'הגדרות' },
   common: {
     back: 'חזרה',
+    news: 'חדשות',
+    noNews: 'אין חדשות אחרונות',
     close: 'סגירה',
     dismiss: 'הסתרה',
     loading: 'טוען…',
@@ -456,6 +461,7 @@ const he: Messages = {
     clubPage: 'לעמוד הקבוצה',
     thisSeason: 'העונה',
     recentGames: 'משחקים אחרונים',
+    overview: 'סקירה',
   },
   leagues: {
     title: 'ליגות',

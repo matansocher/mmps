@@ -16,6 +16,7 @@ export { getGameStats } from './get-game-stats';
 export { searchCompetitors } from './search-competitors';
 export { getCompetitorDetails } from './get-competitor-details';
 export { getCompetitorSquad } from './get-competitor-squad';
+export { getNews } from './get-news';
 export { getCompetitorGames } from './get-competitor-games';
 export { getCompetitionGames } from './get-competition-games';
 export { getAthleteDetails } from './get-athlete-details';

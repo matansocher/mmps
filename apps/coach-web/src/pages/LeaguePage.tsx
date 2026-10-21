@@ -5,12 +5,14 @@ import { GameRow } from '../components/GameRow';
 import { CompetitionLogo } from '../components/CompetitionLogo';
 import { PageHeader } from '../components/PageHeader';
 import { MatchdayView } from '../components/MatchdayView';
+import { NewsFeed } from '../components/NewsList';
 import { LiveTableNote, StandingsTableView, ZonesLegend } from '../components/StandingsTableView';
 import { ErrorState, Loading, Section, Tabs } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
 import { useLiveCompetition } from '../hooks/useLiveCompetition';
+import { api } from '../lib/api';
 
-type LeagueTab = 'table' | 'matchdays' | 'knockout';
+type LeagueTab = 'table' | 'matchdays' | 'knockout' | 'news';
 
 export function LeaguePage({ id }: { readonly id: number }) {
   const resource = useLiveCompetition(id);
@@ -24,6 +26,8 @@ export function LeaguePage({ id }: { readonly id: number }) {
   if (competition?.tables.length) tabs.push({ id: 'table', label: competition.tables.length > 1 ? messages().league.groups : messages().league.table });
   if (competition?.matchdays?.length) tabs.push({ id: 'matchdays', label: messages().league.matchdays });
   if (competition?.knockout.length) tabs.push({ id: 'knockout', label: messages().league.knockout });
+  const hasData = tabs.length > 0;
+  tabs.push({ id: 'news', label: messages().common.news });
   const activeTab = tab && tabs.some((t) => t.id === tab) ? tab : tabs[0]?.id;
 
   return (
@@ -54,7 +58,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
             </Section>
           )}
           {tabs.length > 1 && <Tabs tabs={tabs} active={activeTab!} onChange={setTab} />}
-          {tabs.length === 0 && <p className="py-10 text-center text-sm text-text-muted">{messages().league.empty}</p>}
+          {!hasData && <p className="py-10 text-center text-sm text-text-muted">{messages().league.empty}</p>}
           {activeTab === 'table' && (
             <div className={`grid gap-3 ${competition.tables.length > 1 ? 'lg:grid-cols-2' : ''}`}>
               <div className="lg:col-span-full">
@@ -70,6 +74,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
           )}
           {activeTab === 'matchdays' && <MatchdayView matchdays={competition.matchdays} favoriteIds={favoriteIds} />}
           {activeTab === 'knockout' && <BracketView stages={competition.knockout} />}
+          {activeTab === 'news' && <NewsFeed load={() => api.competitionNews(competition.id)} cacheKey={`competition-news:${competition.id}`} />}
         </main>
       )}
     </div>

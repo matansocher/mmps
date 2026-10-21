@@ -429,3 +429,27 @@ export type ScoresHeadToHead = {
   readonly awayCompetitor: ScoresCompetitorRef & { readonly recentGames?: readonly ScoresGame[] };
   readonly h2hGames?: readonly ScoresGame[];
 };
+
+export type ScoresNewsItem = {
+  readonly id: number;
+  readonly title: string;
+  readonly url: string;
+  readonly image?: string;
+  readonly publishDate: string;
+  readonly sourceId?: number;
+};
+
+export type ScoresNewsSource = {
+  readonly id: number;
+  readonly name: string;
+};
+
+export type ScoresNewsFilter = {
+  readonly type: 'competitors' | 'competitions' | 'athletes';
+  readonly id: number;
+};
+
+export type ScoresNews = {
+  readonly news: readonly ScoresNewsItem[];
+  readonly sources: readonly ScoresNewsSource[];
+};

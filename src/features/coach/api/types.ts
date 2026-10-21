@@ -198,6 +198,15 @@ export type TeamDetailResponse = {
   readonly squad: SquadPlayer[];
 };
 
+export type NewsItem = {
+  readonly id: number;
+  readonly title: string;
+  readonly url: string;
+  readonly image?: string;
+  readonly source?: string;
+  readonly publishedAt: string;
+};
+
 export type PlayerDetailResponse = {
   readonly id: number;
   readonly name: string;

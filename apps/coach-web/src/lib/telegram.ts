@@ -5,6 +5,7 @@ type TgWebApp = {
   isVersionAtLeast?(version: string): boolean;
   setHeaderColor?(color: string): void;
   setBackgroundColor?(color: string): void;
+  openLink?(url: string): void;
   BackButton?: {
     show(): void;
     hide(): void;
@@ -57,6 +58,14 @@ export function showBackButton(onClick: () => void): () => void {
     back.offClick(onClick);
     back.hide();
   };
+}
+
+// Inside Telegram, plain target=_blank links can open in the mini app webview or be swallowed, so hand them to the client.
+export function openExternalLink(url: string): boolean {
+  const w = getWebApp();
+  if (!w?.initData || !w.openLink) return false;
+  w.openLink(url);
+  return true;
 }
 
 export function hapticSelect(): void {
