@@ -23,10 +23,11 @@ import {
   type UserDetails,
 } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
-import { getAvatarHash, getUserLanguagePreference, saveAvatarHash, saveUserDetails, setUserLanguagePreference } from './mongo';
+import { getAvatarHash, getOnboardingStatus, getUserLanguagePreference, saveAvatarHash, saveUserDetails, setOnboardingStatus, setUserLanguagePreference } from './mongo';
+import { buildFeaturesKeyboard, buildLanguageKeyboard, buildTryItKeyboard, type OnboardingCallback, parseOnboardingCallbackData } from './rail-onboarding.utils';
 import type { RailWakeService } from './rail-wake.service';
 import { buildWakeCancelKeyboard, buildWakeTrainPickerKeyboard, formatWakeConfirmation, parseWakeCallbackData, type WakeCallbackRequest } from './rail-wake.utils';
-import { BOT_CONFIG, BOT_PROFILE, COMMAND_DESCRIPTIONS, CONTACT_MESSAGE_TTL_MS, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
+import { BOT_CONFIG, BOT_PROFILE, COMMAND_DESCRIPTIONS, CONTACT_MESSAGE_TTL_MS, MESSAGES, ONBOARDING_MESSAGES, ONBOARDING_SAMPLE_ROUTE, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import {
   appendSourceFooter,
@@ -114,10 +115,19 @@ export class RailController {
     this.logger.log('Bot avatar updated');
   }
 
+  // First /start runs the onboarding; users who finished or skipped it get a short reminder.
   private async startHandler(ctx: Context): Promise<void> {
-    const { userDetails } = getMessageData(ctx);
+    const { chatId, userDetails } = getMessageData(ctx);
     const saveResult = await saveUserDetails(userDetails);
-    await ctx.reply(START_MESSAGE, { reply_markup: { remove_keyboard: true } });
+    const [onboardingStatus, savedLanguage] = await Promise.all([getOnboardingStatus(chatId), getUserLanguagePreference(chatId)]);
+    const language = savedLanguage ?? getUserLanguage(ctx.from?.language_code);
+
+    if (onboardingStatus === 'completed' || onboardingStatus === 'skipped') {
+      await ctx.reply(START_MESSAGE[language], { reply_markup: { remove_keyboard: true } });
+    } else {
+      await setOnboardingStatus(chatId, 'started');
+      await ctx.reply(ONBOARDING_MESSAGES.language, { reply_markup: buildLanguageKeyboard(language) });
+    }
     notify(BOT_CONFIG, { action: 'START', isNewUser: saveResult === 'created' }, userDetails);
   }
 
@@ -172,6 +182,32 @@ export class RailController {
     if (expiresAt === undefined) return false;
     this.pendingContact.delete(chatId);
     return expiresAt > Date.now();
+  }
+
+  private async onboardingHandler(ctx: Context, chatId: number, { action, language }: OnboardingCallback, userDetails: UserDetails): Promise<void> {
+    switch (action) {
+      case 'lang':
+        await setUserLanguagePreference(chatId, language);
+        await ctx.editMessageText(ONBOARDING_MESSAGES.features[language], { reply_markup: buildFeaturesKeyboard(language) });
+        return;
+      case 'next':
+        await ctx.editMessageText(ONBOARDING_MESSAGES.tryIt[language], { reply_markup: buildTryItKeyboard(language) });
+        return;
+      case 'skip':
+        await setOnboardingStatus(chatId, 'skipped');
+        await ctx.editMessageText(START_MESSAGE[language]);
+        notify(BOT_CONFIG, { action: 'ONBOARDING_SKIPPED' }, userDetails);
+        return;
+      case 'try': {
+        if (await this.isRateLimited(ctx, language)) return;
+        await setOnboardingStatus(chatId, 'completed');
+        await ctx.editMessageReplyMarkup().catch(() => {});
+        const nowLocal = getLocalNow();
+        const request = { ...ONBOARDING_SAMPLE_ROUTE, date: format(nowLocal, 'yyyy-MM-dd'), time: format(nowLocal, 'HH:mm'), language };
+        await this.sendRouteSearch(ctx, chatId, request, 'ONBOARDING_TRY_IT', userDetails, { nowLocal });
+        return;
+      }
+    }
   }
 
   // Counts every expensive request (text, voice, buttons) against a per-user and a bot-wide window.
@@ -292,6 +328,12 @@ export class RailController {
     }
     await ctx.answerCallbackQuery().catch(() => {});
 
+    const onboarding = data ? parseOnboardingCallbackData(data) : null;
+    if (chatId && onboarding) {
+      await this.onboardingHandler(ctx, chatId, onboarding, userDetails).catch((err) => this.logger.error(`onboardingHandler failed: ${getErrorMessage(err)}`));
+      return;
+    }
+
     const wakeRequest = data ? parseWakeCallbackData(data) : null;
     if (chatId && wakeRequest) {
       await this.wakeCallbackHandler(ctx, chatId, wakeRequest, userDetails);
@@ -317,6 +359,18 @@ export class RailController {
     const { fromStationId, toStationId } = request;
     const nowLocal = getLocalNow();
     const { date, time } = isRefresh ? getRefreshSearchTime(request.date, request.time, nowLocal) : request;
+    await this.sendRouteSearch(ctx, chatId, { fromStationId, toStationId, date, time, language }, action, userDetails, { nowLocal, isRefresh, messageId });
+  }
+
+  private async sendRouteSearch(
+    ctx: Context,
+    chatId: number,
+    request: Pick<RailSearchRequest, 'fromStationId' | 'toStationId' | 'date' | 'time' | 'language'>,
+    action: string,
+    userDetails: UserDetails,
+    { nowLocal, isRefresh = false, messageId }: { readonly nowLocal: Date; readonly isRefresh?: boolean; readonly messageId?: number },
+  ): Promise<void> {
+    const { fromStationId, toStationId, date, time, language } = request;
     const question = `[button] ${fromStationId} → ${toStationId} at ${date} ${time}`;
     try {
       const result = await this.railService.searchRoute(fromStationId, toStationId, date, time, language);
@@ -335,7 +389,7 @@ export class RailController {
       }
       notifyConversation(action, `[button] ${result.context.from.nameEn} → ${result.context.to.nameEn} at ${date} ${time}`, answer, userDetails);
     } catch (err) {
-      this.logger.error(`callbackQueryHandler failed: ${getErrorMessage(err)}`);
+      this.logger.error(`sendRouteSearch failed: ${getErrorMessage(err)}`);
       await ctx.reply(MESSAGES.error[language]);
       notifyConversation(action, question, `${MESSAGES.error[language]} (${getErrorMessage(err)})`, userDetails);
     }
