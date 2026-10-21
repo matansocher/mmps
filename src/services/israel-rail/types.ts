@@ -61,6 +61,8 @@ export type SearchTrainsParams = {
   readonly date: string; // Format: "YYYY-MM-DD"
   readonly hour: string; // Format: "HH:mm"
   readonly limit?: number;
+  // When true, "hour" is the latest arrival time and the last trains arriving by then are returned.
+  readonly arriveBy?: boolean;
 };
 
 export type TrainLeg = {

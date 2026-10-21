@@ -5,9 +5,10 @@ export type RailSearchUrlParams = {
   readonly toStationId: number;
   readonly date: string; // Format: "YYYY-MM-DD"
   readonly time: string; // Format: "HH:mm"
+  readonly arriveBy?: boolean;
 };
 
-export function buildRailSearchUrl({ fromStationId, toStationId, date, time }: RailSearchUrlParams): string {
+export function buildRailSearchUrl({ fromStationId, toStationId, date, time, arriveBy }: RailSearchUrlParams): string {
   const [hours = '00', minutes = '00'] = time.split(':');
   const params = new URLSearchParams({
     page: 'routePlanSearchResults',
@@ -16,7 +17,7 @@ export function buildRailSearchUrl({ fromStationId, toStationId, date, time }: R
     date,
     hours: hours.padStart(2, '0'),
     minutes: minutes.padStart(2, '0'),
-    scheduleType: '1',
+    scheduleType: arriveBy ? '2' : '1',
   });
   return `${RAIL_WEBSITE_URL}/?${params.toString()}`;
 }

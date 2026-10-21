@@ -5,6 +5,7 @@ export { rainRadarTool } from './rain-radar';
 
 export { earthquakeTool } from './earthquake';
 
+export { benGurionFlightTool } from './ben-gurion-flight';
 export { israelRailTool } from './israel-rail';
 export { lightRailTool } from './light-rail';
 

@@ -11,7 +11,7 @@ import type { ToolResult } from '@features/chatbot/types';
 import { formatAgentResponse } from '@features/chatbot/utils';
 import { buildRailSearchUrl, generateRouteImage, RAIL_STATIONS, searchTrains } from '@services/israel-rail';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
-import { israelRailTool, lightRailTool, recordModelUsage, UsageCallbackHandler, webSearchTool } from '@shared/ai';
+import { benGurionFlightTool, israelRailTool, lightRailTool, recordModelUsage, UsageCallbackHandler, webSearchTool } from '@shared/ai';
 import type { ImageLanguage } from '@shared/image-card';
 import { MESSAGES, RAIL_AGENT_PROMPT, RAIL_LIMITS } from './rail.config';
 import type { RailRouteContext } from './rail.utils';
@@ -40,7 +40,10 @@ export class RailService {
       toolCallLimitMiddleware({ runLimit: RAIL_LIMITS.toolCallLimitPerRun, exitBehavior: 'continue' }),
       toolCallLimitMiddleware({ toolName: webSearchTool.name, runLimit: RAIL_LIMITS.webSearchCallLimitPerRun, exitBehavior: 'continue' }),
     ];
-    this.aiService = createAgentService({ name: 'RAIL', prompt: RAIL_AGENT_PROMPT, tools: [israelRailTool, lightRailTool, webSearchTool] }, { model, checkpointer: this.checkpointer, middleware });
+    this.aiService = createAgentService(
+      { name: 'RAIL', prompt: RAIL_AGENT_PROMPT, tools: [israelRailTool, lightRailTool, benGurionFlightTool, webSearchTool] },
+      { model, checkpointer: this.checkpointer, middleware },
+    );
   }
 
   // The bot is public, so in-memory conversations are dropped after a period of inactivity to keep memory bounded.

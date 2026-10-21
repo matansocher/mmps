@@ -1,5 +1,5 @@
 import { tool } from '@langchain/core/tools';
-import { addMinutes, format } from 'date-fns';
+import { addMinutes, format, parse } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
@@ -39,7 +39,8 @@ const schema = z.object({
     ),
   place: z.string().optional().describe('nearest_station: a place, address or landmark as the user said it, with the city if known (e.g. "דיזנגוף סנטר", "Rothschild 22 Tel Aviv")'),
   date: z.string().optional().describe('trains: travel date in YYYY-MM-DD format, Israel time. Omit for today'),
-  time: z.string().optional().describe('trains: earliest departure time in HH:mm (24h) format, Israel time. Omit for now'),
+  time: z.string().optional().describe('trains: earliest departure time in HH:mm (24h) format, Israel time (with arriveBy: the latest arrival time). Omit for now'),
+  arriveBy: z.boolean().optional().describe('trains: true when the user must ARRIVE by "time" (e.g. "I need to be at the airport by 11:00"); returns the last trains arriving by then. Requires time'),
   limit: z.number().int().min(1).max(10).optional().describe('trains: how many upcoming trains to return (default 5)'),
 });
 
@@ -133,9 +134,13 @@ async function nearestStation(place: string | undefined) {
   };
 }
 
-async function runner({ action, from, to, fromPlace, toPlace, place, date, time, limit }: z.infer<typeof schema>) {
+async function runner({ action, from, to, fromPlace, toPlace, place, date, time, arriveBy, limit }: z.infer<typeof schema>) {
   if (action === 'nearest_station') {
     return nearestStation(place ?? fromPlace ?? toPlace);
+  }
+
+  if (arriveBy && !time) {
+    return { error: 'arriveBy requires the time to arrive by' };
   }
 
   const [origin, destination] = await Promise.all([resolveEndpoint(from, fromPlace, 'from'), resolveEndpoint(to, toPlace, 'to')]);
@@ -157,19 +162,20 @@ async function runner({ action, from, to, fromPlace, toPlace, place, date, time,
   // Leaving now from a place means catching trains after the walk to the station.
   const earliestLocal = addMinutes(nowLocal, date || time ? 0 : (origin.access?.walkingMinutes ?? 0));
   const searchDate = date ?? format(earliestLocal, 'yyyy-MM-dd');
-  const searchTime = time ?? format(earliestLocal, 'HH:mm');
+  // Arriving by a time at a place means reaching the destination station before the walk from it.
+  const searchTime = arriveBy ? format(addMinutes(parse(time, 'HH:mm', earliestLocal), -(destination.access?.walkingMinutes ?? 0)), 'HH:mm') : (time ?? format(earliestLocal, 'HH:mm'));
 
-  const { travels, messages } = await searchTrains({ fromStationId: origin.station.id, toStationId: destination.station.id, date: searchDate, hour: searchTime, limit });
+  const { travels, messages } = await searchTrains({ fromStationId: origin.station.id, toStationId: destination.station.id, date: searchDate, hour: searchTime, limit, arriveBy });
 
   return {
     from: origin.station,
     to: destination.station,
     ...(origin.access && { fromAccess: origin.access }),
     ...(destination.access && { toAccess: destination.access }),
-    searchedFrom: `${searchDate} ${searchTime}`,
+    ...(arriveBy ? { arriveBy: `${searchDate} ${searchTime}` } : { searchedFrom: `${searchDate} ${searchTime}` }),
     trains: travels,
     alerts: messages,
-    railWebsiteUrl: buildRailSearchUrl({ fromStationId: origin.station.id, toStationId: destination.station.id, date: searchDate, time: searchTime }),
+    railWebsiteUrl: buildRailSearchUrl({ fromStationId: origin.station.id, toStationId: destination.station.id, date: searchDate, time: searchTime, arriveBy }),
   };
 }
 
@@ -185,6 +191,7 @@ Rules:
 - If the result has fromAccess, start with how to reach the origin station: "walk ~N min (X m) to <station>" with fromAccess.walkingDirectionsUrl as a markdown link ([Walking directions](url) / [הוראות הליכה](url)); the trains already start after that walk. If it has toAccess, end the train list with the walk from the destination station to the place, with its walkingDirectionsUrl link. If walkingIsEstimate is true, say the walk is approximate ("בערך" / "about"). If farFromStation is true, say it is too far to walk and suggest a bus, the light rail or a taxi to/from that station (mention otherNearbyStations only if useful).
 - If the result says both sides are closest to the same station, tell the user the train does not help for this trip and share the walking info.
 - A visual route card (timeline with platforms and transfers) of the trains whose departure times you mention is sent automatically right before your reply, so keep the text compact.
+- With arriveBy, the trains are the last ones arriving by that time: recommend the latest one and mention one earlier option.
 - Add any alerts briefly at the end.
 - ALWAYS end the reply with railWebsiteUrl as a markdown link (e.g. [Verify on rail.co.il](url) / [לבדיקה באתר הרכבת](url)) so the user can open the same search on the website.
 - Use station names in the user's language (nameHe for Hebrew, nameEn for English).
