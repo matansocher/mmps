@@ -11,6 +11,7 @@ import { buildToolImages, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/too
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import {
+  buildInlineKeyboard,
   buildRichMessageWithPhotos,
   downloadFile,
   getCallbackQueryData,
@@ -53,7 +54,7 @@ const GLOBAL_KEY = 'all';
 const AVATAR_PATH = resolve(process.cwd(), 'assets/images/rail/avatar.png');
 const ROUTE_IMAGE_FILE_NAME = 'rail-route.png';
 
-const CALLBACK_ACTIONS: Record<Exclude<RailSearchAction, 'stops'>, string> = { later: 'LATER_TRAINS', reverse: 'REVERSE_DIRECTION', refresh: 'REFRESH' };
+const CALLBACK_ACTIONS: Record<Exclude<RailSearchAction, 'stops' | 'where'>, string> = { later: 'LATER_TRAINS', reverse: 'REVERSE_DIRECTION', refresh: 'REFRESH' };
 
 function getLocalNow(): Date {
   return toZonedTime(new Date(), DEFAULT_TIMEZONE);
@@ -306,6 +307,11 @@ export class RailController {
       return;
     }
 
+    if (request.action === 'where') {
+      await this.trainMapHandler(ctx, { ...request, language }, data, userDetails);
+      return;
+    }
+
     const action = CALLBACK_ACTIONS[request.action];
     const isRefresh = request.action === 'refresh';
     const { fromStationId, toStationId } = request;
@@ -403,6 +409,26 @@ export class RailController {
     } catch (err) {
       this.logger.error(`wakeCallbackHandler failed: ${getErrorMessage(err)}`);
       await ctx.reply(MESSAGES.error[language]);
+    }
+  }
+
+  private async trainMapHandler(ctx: Context, request: RailSearchRequest, callbackData: string, userDetails: UserDetails): Promise<void> {
+    const { language, trainNumber } = request;
+    const question = `[button] where is train ${trainNumber} (${request.fromStationId} → ${request.toStationId} at ${request.date} ${request.time})`;
+    try {
+      const result = await this.railService.getTrainMap(request);
+      if (!result) {
+        await ctx.reply(MESSAGES.trainNotFound[language]);
+        notifyConversation('TRAIN_MAP', question, MESSAGES.trainNotFound[language], userDetails);
+        return;
+      }
+      const replyMarkup = buildInlineKeyboard([{ text: MESSAGES.refreshTrainMap[language], data: callbackData }]);
+      await ctx.replyWithPhoto(new InputFile(result.image, 'rail-train-map.png'), { caption: result.caption, reply_markup: replyMarkup });
+      notifyConversation('TRAIN_MAP', question, result.caption, userDetails);
+    } catch (err) {
+      this.logger.error(`trainMapHandler failed: ${getErrorMessage(err)}`);
+      await ctx.reply(MESSAGES.error[language]);
+      notifyConversation('TRAIN_MAP', question, `${MESSAGES.error[language]} (${getErrorMessage(err)})`, userDetails);
     }
   }
 }

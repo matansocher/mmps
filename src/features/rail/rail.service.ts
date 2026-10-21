@@ -10,15 +10,25 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
 import type { ToolResult } from '@features/chatbot/types';
 import { formatAgentResponse } from '@features/chatbot/utils';
-import { buildRailSearchUrl, findRailStationsNearPoint, generateRouteImage, RAIL_STATIONS, searchTrains, type TrainTravel } from '@services/israel-rail';
+import {
+  buildRailSearchUrl,
+  estimateTrainProgress,
+  findRailStationsNearPoint,
+  generateRouteImage,
+  generateTrainMapImage,
+  getTrainLine,
+  RAIL_STATIONS,
+  searchTrains,
+  type TrainTravel,
+} from '@services/israel-rail';
 import { findLightRailDeparturesByDirection, findLightRailStationsNearPoint, findNearestLightRailStations, getLightRailTimetable } from '@services/light-rail';
 import type { GeoPoint, LightRailDirectionDepartures, LightRailTimetable } from '@services/light-rail';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { israelRailTool, lightRailTool, recordModelUsage, UsageCallbackHandler, webSearchTool } from '@shared/ai';
 import type { ImageLanguage } from '@shared/image-card';
 import { MESSAGES, RAIL_AGENT_PROMPT, RAIL_LIMITS } from './rail.config';
-import { buildLocationMemoryNote } from './rail.utils';
-import type { NearestStationsResult, RailRouteContext } from './rail.utils';
+import { buildLocationMemoryNote, formatTrainMapCaption } from './rail.utils';
+import type { NearestStationsResult, RailRouteContext, RailSearchRequest } from './rail.utils';
 
 // Beyond this straight-line distance the Red Line is irrelevant, so it's left out (and no walking route is requested).
 const MAX_LIGHT_RAIL_DISTANCE_METERS = 3000;
@@ -36,6 +46,11 @@ export type RailRouteResult = {
 };
 
 const LANGUAGE_NAMES: Record<ImageLanguage, string> = { he: 'Hebrew', en: 'English' };
+
+export type RailTrainMapResult = {
+  readonly image: Buffer;
+  readonly caption: string;
+};
 
 export class RailService {
   private readonly logger = new Logger('rail:service');
@@ -154,5 +169,14 @@ export class RailService {
   async findTrain(fromStationId: number, toStationId: number, date: string, departureTime: string): Promise<TrainTravel | null> {
     const { travels } = await searchTrains({ fromStationId, toStationId, date, hour: departureTime, limit: 1 });
     return travels.find((travel) => travel.date === date && travel.departureTime === departureTime) ?? null;
+  }
+
+  async getTrainMap({ fromStationId, toStationId, date, time, language, trainNumber }: RailSearchRequest): Promise<RailTrainMapResult | null> {
+    const line = await getTrainLine({ fromStationId, toStationId, date, hour: time, trainNumber });
+    if (!line?.stops.length) return null;
+    const now = new Date();
+    const progress = estimateTrainProgress(line, now);
+    const updatedAt = format(toZonedTime(now, DEFAULT_TIMEZONE), 'HH:mm');
+    return { image: generateTrainMapImage(line, progress, language, updatedAt), caption: formatTrainMapCaption(line, progress, language) };
   }
 }

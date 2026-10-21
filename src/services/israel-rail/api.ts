@@ -3,7 +3,21 @@ import { trainSearchCache } from './cache';
 import { DEFAULT_TRAINS_LIMIT, RAIL_API_HEADERS, RAIL_API_SEARCH_URL } from './constants';
 import { getCrowdingLevel } from './crowding';
 import { getStationById } from './station-search';
-import type { RailApiSearchResponse, RailApiTrain, RailApiTravel, RailStation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainScheduleType, TrainTransfer, TrainTravel } from './types';
+import type {
+  GetTrainLineParams,
+  RailApiSearchResponse,
+  RailApiTrain,
+  RailApiTravel,
+  RailStation,
+  SearchTrainsParams,
+  SearchTrainsResult,
+  TrainLeg,
+  TrainLine,
+  TrainLineStop,
+  TrainScheduleType,
+  TrainTransfer,
+  TrainTravel,
+} from './types';
 
 // API times are Israel local time without offset. Format: "YYYY-MM-DDTHH:mm:ss"
 function toTime(apiDateTime: string): string {
@@ -108,7 +122,7 @@ function selectTravels(travels: readonly RailApiTravel[], startFromIndex: number
     .slice(0, limit);
 }
 
-async function fetchTrains({ fromStationId, toStationId, date, hour, scheduleType = 'departure', limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): Promise<SearchTrainsResult> {
+async function requestTravels({ fromStationId, toStationId, date, hour, scheduleType = 'departure', limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): Promise<RailApiTravel[]> {
   const body = {
     fromStation: String(fromStationId),
     toStation: String(toStationId),
@@ -122,8 +136,11 @@ async function fetchTrains({ fromStationId, toStationId, date, hour, scheduleTyp
   const { data } = await axios.post<RailApiSearchResponse>(RAIL_API_SEARCH_URL, body, { headers: RAIL_API_HEADERS, timeout: 15000 });
   const { travels = [], startFromIndex = 0 } = data?.result ?? {};
   const requestedDateTime = `${date}T${hour.padStart(5, '0')}`;
-  const upcoming = selectTravels(travels, startFromIndex, requestedDateTime, scheduleType, limit);
+  return selectTravels(travels, startFromIndex, requestedDateTime, scheduleType, limit);
+}
 
+async function fetchTrains(params: SearchTrainsParams): Promise<SearchTrainsResult> {
+  const upcoming = await requestTravels(params);
   const messages = [
     ...new Set(
       upcoming
@@ -134,4 +151,31 @@ async function fetchTrains({ fromStationId, toStationId, date, hour, scheduleTyp
   ];
 
   return { travels: upcoming.map(toTravel), messages };
+}
+
+function toTrainLine(train: RailApiTrain, date: string): TrainLine {
+  const routeStations = train.routeStations ?? [];
+  const stops: TrainLineStop[] = routeStations.length
+    ? routeStations.map((stop) => ({ station: toStation(stop.stationId), time: stop.arrivalTime, platform: stop.platform }))
+    : [
+        { station: toStation(train.orignStation), time: toTime(train.departureTime), platform: train.originPlatform },
+        ...(train.stopStations ?? []).map((stop) => ({ station: toStation(stop.stationId), time: toTime(stop.arrivalTime), platform: stop.platform })),
+        { station: toStation(train.destinationStation), time: toTime(train.arrivalTime), platform: train.destPlatform },
+      ];
+  const position = train.trainPosition;
+  return {
+    trainNumber: train.trainNumber,
+    date,
+    stops,
+    boardingStationId: train.orignStation,
+    alightingStationId: train.destinationStation,
+    position: position?.currentLastStation ? { lastStationId: position.currentLastStation, nextStationId: position.nextStation || null, delayMinutes: position.calcDiffMinutes ?? 0 } : null,
+  };
+}
+
+// Not cached: the live train position is the whole point of this lookup.
+export async function getTrainLine({ fromStationId, toStationId, date, hour, trainNumber }: GetTrainLineParams): Promise<TrainLine | null> {
+  const travels = await requestTravels({ fromStationId, toStationId, date, hour });
+  const train = travels.flatMap((travel) => travel.trains).find((t) => t.trainNumber === trainNumber);
+  return train ? toTrainLine(train, train.departureTime.slice(0, 10)) : null;
 }

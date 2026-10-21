@@ -1,4 +1,4 @@
-import type { TrainTravel } from '@services/israel-rail';
+import type { TrainLine, TrainTravel } from '@services/israel-rail';
 import {
   appendSourceFooter,
   buildActionsKeyboard,
@@ -12,6 +12,7 @@ import {
   formatSourceFooter,
   formatStopsMessage,
   formatTrainLine,
+  formatTrainMapCaption,
   getAnswerSources,
   getContactUrl,
   getNextSearchTime,
@@ -59,8 +60,17 @@ describe('buildCallbackData() / parseCallbackData()', () => {
     expect(parseCallbackData(buildCallbackData(request))).toEqual(request);
   });
 
+  test('should round-trip a where request with its train number', () => {
+    const request = { action: 'where' as const, fromStationId: 3700, toStationId: 2300, date: '2026-10-19', time: '08:00', language: 'en' as const, trainNumber: 123 };
+    const data = buildCallbackData(request);
+    expect(data).toEqual('where|3700|2300|2026-10-19|08:00|en|123');
+    expect(parseCallbackData(data)).toEqual(request);
+  });
+
   test.each([
     { data: 'foo|1|2|2026-10-19|08:00|he' },
+    { data: 'where|1|2|2026-10-19|08:00|he' },
+    { data: 'where|1|2|2026-10-19|08:00|he|abc' },
     { data: 'later|x|2|2026-10-19|08:00|he' },
     { data: 'later|1|2|19-10-2026|08:00|he' },
     { data: 'later|1|2|2026-10-19|8|he' },
@@ -159,7 +169,7 @@ describe('getRouteContext()', () => {
 });
 
 describe('buildRouteKeyboard()', () => {
-  test('should build a stops button per train, then later-trains, reverse-direction, refresh and wake buttons', () => {
+  test('should build a stops button per train, then later-trains, reverse-direction, refresh, where-is-my-train and wake buttons', () => {
     const rows = buildRouteKeyboard(CONTEXT, 'he').inline_keyboard.filter((row) => row.length);
     expect(rows.map((row) => row.map((b) => [b.text, 'callback_data' in b ? b.callback_data : null]))).toEqual([
       [
@@ -171,6 +181,7 @@ describe('buildRouteKeyboard()', () => {
         ['🔁 כיוון הפוך', 'reverse|2300|3700|2026-10-19|07:50|he'],
         ['🔄 רענון', 'refresh|3700|2300|2026-10-19|07:50|he'],
       ],
+      [['🗺 איפה הרכבת שלי?', 'where|3700|2300|2026-10-19|08:00|he|123']],
       [['⏰ תעירו אותי לפני התחנה', 'wake|3700|2300|2026-10-19|07:50|he']],
     ]);
   });
@@ -377,5 +388,42 @@ describe('buildActionsKeyboard()', () => {
   test('should omit the url row without a contact url', () => {
     const rows = buildActionsKeyboard('he', null).inline_keyboard.filter((row) => row.length);
     expect(rows.length).toEqual(2);
+  });
+});
+
+describe('formatTrainMapCaption()', () => {
+  const MID = { id: 3500, nameEn: 'Hertsliya', nameHe: 'הרצליה' };
+  const LINE: TrainLine = {
+    trainNumber: 123,
+    date: '2026-10-19',
+    stops: [FROM, MID, TO].map((station, index) => ({ station, time: ['08:00', '08:10', '08:55'][index], platform: 1 })),
+    boardingStationId: FROM.id,
+    alightingStationId: TO.id,
+    position: null,
+  };
+
+  test.each([
+    {
+      progress: { status: 'not_started' as const, position: 0, delayMinutes: 0, isLive: false },
+      language: 'en' as const,
+      expected: '🚆 Train 123 · Tel Aviv - Savidor Center → Haifa - Hof HaCarmel\nNot departed yet · leaves Tel Aviv - Savidor Center at 08:00',
+    },
+    {
+      progress: { status: 'running' as const, position: 1.4, delayMinutes: 4, isLive: true },
+      language: 'en' as const,
+      expected: '🚆 Train 123 · Tel Aviv - Savidor Center → Haifa - Hof HaCarmel\n📍 Between Hertsliya and Haifa - Hof HaCarmel · ⚠️ 4 min late',
+    },
+    {
+      progress: { status: 'running' as const, position: 1, delayMinutes: 0, isLive: false },
+      language: 'he' as const,
+      expected: '🚆 רכבת 123 · תל אביב - סבידור מרכז ← חיפה - חוף הכרמל\n📍 בתחנת הרצליה · ✅ בזמן\nמיקום משוער לפי לוח הזמנים',
+    },
+    {
+      progress: { status: 'finished' as const, position: 2, delayMinutes: 0, isLive: true },
+      language: 'en' as const,
+      expected: '🚆 Train 123 · Tel Aviv - Savidor Center → Haifa - Hof HaCarmel\nArrived at Haifa - Hof HaCarmel',
+    },
+  ])('should describe a $progress.status train in $language', ({ progress, language, expected }) => {
+    expect(formatTrainMapCaption(LINE, progress, language)).toEqual(expected);
   });
 });
