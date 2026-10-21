@@ -7,11 +7,13 @@ import { deleteFile } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
+import { deleteAllMemories, deleteMemory, getMemories, getMemoryById, updateMemory } from '@shared/memories';
 import { getReminderById, updateReminderStatus } from '@shared/reminders';
 import { addExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { FileSummaryService, getFileSummaryRejection } from './file-summary';
+import { buildCancelEditKeyboard, buildClearConfirmKeyboard, buildMemoryView, MEMORY_CALLBACK_PREFIX, parseMemoryCallbackData } from './memory';
 import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
 import {
   ACTION_CALLBACK_PREFIX,
@@ -38,6 +40,8 @@ const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
 
 export class ChatbotController {
   private readonly logger = new Logger('chatbot:controller');
+  // chatId -> memory id awaiting its replacement text from the /memory ✏️ button.
+  private readonly pendingMemoryEdits = new Map<number, string>();
 
   constructor(
     private readonly chatbotService: ChatbotService,
@@ -49,10 +53,12 @@ export class ChatbotController {
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));
+    this.bot.command('memory', (ctx) => this.memoryHandler(ctx));
     this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
     this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
     this.bot.callbackQuery(new RegExp(`^${ACTION_CALLBACK_PREFIX}`), (ctx) => this.secretaryActionHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${MEMORY_CALLBACK_PREFIX}`), (ctx) => this.memoryCallbackHandler(ctx));
     this.bot.on('message:text', (ctx) => this.messageHandler(ctx));
     this.bot.on('message:photo', (ctx) => this.photoHandler(ctx));
     this.bot.on('message:document', (ctx) => this.documentHandler(ctx));
@@ -63,6 +69,89 @@ export class ChatbotController {
   private async startHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
     await ctx.reply('Hi, I am your chatbot! How can I assist you today?');
+  }
+
+  private async memoryHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
+    const { chatId } = getMessageData(ctx);
+    this.pendingMemoryEdits.delete(chatId);
+    const { text, keyboard } = buildMemoryView(await getMemories(chatId), 0);
+    await ctx.reply(text, { reply_markup: keyboard });
+  }
+
+  private async memoryCallbackHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    const { chatId, data } = getCallbackQueryData(ctx);
+    const callback = parseMemoryCallbackData(data);
+    if (!callback) {
+      await ctx.answerCallbackQuery().catch(() => {});
+      return;
+    }
+
+    try {
+      switch (callback.action) {
+        case 'page':
+          await this.renderMemoryView(ctx, chatId, callback.page);
+          await ctx.answerCallbackQuery().catch(() => {});
+          return;
+        case 'delete': {
+          const deleted = await deleteMemory(callback.memoryId, chatId);
+          await this.renderMemoryView(ctx, chatId, callback.page);
+          await ctx.answerCallbackQuery({ text: deleted ? '🗑 Forgotten' : 'Already gone' }).catch(() => {});
+          return;
+        }
+        case 'edit': {
+          const memory = await getMemoryById(callback.memoryId, chatId);
+          if (!memory) {
+            await ctx.answerCallbackQuery({ text: 'Memory not found.', show_alert: true }).catch(() => {});
+            return;
+          }
+          this.pendingMemoryEdits.set(chatId, callback.memoryId);
+          await ctx.answerCallbackQuery().catch(() => {});
+          await ctx.reply(`✏️ Send the corrected text for:\n\n${memory.content}`, { reply_markup: buildCancelEditKeyboard() });
+          return;
+        }
+        case 'cancel_edit':
+          this.pendingMemoryEdits.delete(chatId);
+          await ctx.editMessageText('Edit cancelled.').catch(() => {});
+          await ctx.answerCallbackQuery().catch(() => {});
+          return;
+        case 'clear':
+          await ctx.editMessageText('⚠️ Forget everything I remember about you? This cannot be undone.', { reply_markup: buildClearConfirmKeyboard() }).catch(() => {});
+          await ctx.answerCallbackQuery().catch(() => {});
+          return;
+        case 'clear_confirm': {
+          const count = await deleteAllMemories(chatId);
+          this.pendingMemoryEdits.delete(chatId);
+          await ctx.editMessageText(`🧹 Forgot ${count} fact${count === 1 ? '' : 's'}.`).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Memory cleared' }).catch(() => {});
+          return;
+        }
+      }
+    } catch (err) {
+      this.logger.error(`Error handling memory callback: ${getErrorMessage(err)}`);
+      await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
+    }
+  }
+
+  private async renderMemoryView(ctx: Context, chatId: number, page: number): Promise<void> {
+    const { text, keyboard } = buildMemoryView(await getMemories(chatId), page);
+    // Telegram rejects edits that change nothing (e.g. a double tap); that's harmless.
+    await ctx.editMessageText(text, { reply_markup: keyboard }).catch(() => {});
+  }
+
+  // Returns true when the text was consumed as the replacement for a pending /memory edit.
+  private async handlePendingMemoryEdit(ctx: Context, chatId: number, text: string): Promise<boolean> {
+    const memoryId = this.pendingMemoryEdits.get(chatId);
+    if (!memoryId || !text?.trim() || text.startsWith('/')) return false;
+    this.pendingMemoryEdits.delete(chatId);
+    const updated = await updateMemory(memoryId, chatId, text);
+    await ctx.reply(updated ? `🧠 Updated: ${text.trim()}` : 'That memory no longer exists.');
+    return true;
   }
 
   // Silently ignore anyone who is not the owner and ping the notifier bot.
@@ -281,6 +370,7 @@ export class ChatbotController {
   private async messageHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
     const { chatId, text } = getMessageData(ctx);
+    if (await this.handlePendingMemoryEdit(ctx, chatId, text)) return;
     await this.runWithLoader(ctx, '🤔', () => this.replyWithAgent(chatId, withReplyContext(text, getReplyContextText(ctx.message))));
   }
 

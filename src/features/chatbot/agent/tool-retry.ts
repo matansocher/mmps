@@ -41,6 +41,7 @@ const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>>
   game_releases: ['list', 'search'],
   game_scores: true,
   hotel_watcher: ['list'],
+  memory: ['recall'],
 };
 
 const TRANSIENT_ERROR_CODES = new Set([

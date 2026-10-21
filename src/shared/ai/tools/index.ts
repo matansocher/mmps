@@ -51,3 +51,5 @@ export { gameReleasesTool } from './game-releases';
 
 export { gamePriceWatcherTool } from './game-price-watcher';
 export { gameScoresTool } from './game-scores';
+
+export { memoryTool } from './memory';
