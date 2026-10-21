@@ -413,7 +413,7 @@ export class ChatbotController {
 
     await this.runWithLoader(ctx, '👀', async () => {
       const prepared = await this.withDownloadedFile(file.file_id, (localPath) => this.fileSummaryService.prepareSummary({ ...metadata, localPath, caption: text }));
-      await this.replyWithAgent(chatId, prepared.prompt, { images: prepared.images });
+      await this.replyWithAgent(chatId, withReplyContext(prepared.prompt, getReplyContextText(ctx.message)), { images: prepared.images });
     });
   }
 

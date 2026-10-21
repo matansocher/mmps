@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getDateString } from '@core/utils';
-import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
+import { sendImageWithCaption, sendShortenedMessage } from '@services/telegram';
 import { detectLanguage } from '@shared/image-card';
 import { generateMatchCardsImage } from '@shared/sports';
 import type { ChatbotService } from '../chatbot.service';
@@ -22,15 +22,16 @@ export async function footballUpdate(bot: Bot, chatbotService: ChatbotService): 
         If no matches are found, set hasMatches to false.
         Format the message as:
         - Start with "⚽ Current status of today's matches:"
-        - All matches are sent as an image above your message, so do not list every match
-        - Briefly cover notable results and live matches, then point out the most exciting matches of the day`;
+        - All matches are sent as an image and your message is its caption, so do not list every match
+        - Briefly cover notable results and live matches, then point out the most exciting matches of the day
+        - Keep the whole message under 900 characters so it fits in the image caption`;
 
     const { response, structured } = await chatbotService.processMessage(prompt, MY_USER_ID, footballUpdateResponseSchema);
 
     if (structured.hasMatches && response?.message) {
       const footer = '\n\n👉 [Coach Bot](https://t.me/mmps_football_coach_bot)';
       const groups = collectMatchCardGroups(response.toolResults, [MATCH_SUMMARY_TOOL_NAME]);
-      await sendImageThenText(bot, MY_USER_ID, {
+      await sendImageWithCaption(bot, MY_USER_ID, {
         image: () => (groups.length ? generateMatchCardsImage(groups, detectLanguage(response.message)) : null),
         fileName: 'football-matches.png',
         text: `${response.message}${footer}`,
