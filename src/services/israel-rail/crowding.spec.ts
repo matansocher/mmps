@@ -2,7 +2,7 @@ import { getCrowdingLevel, getTravelCrowding, getTravelLoadPercent } from './cro
 import type { TrainLeg, TrainTravel } from './types';
 
 function buildTravel(loads: readonly (number | undefined)[]): TrainTravel {
-  return { legs: loads.map((predictedLoadPercent) => ({ predictedLoadPercent }) as TrainLeg) } as TrainTravel;
+  return { legs: loads.map((predictedLoadPercent) => ({ predictedLoadPercent }) as TrainLeg) } as unknown as TrainTravel;
 }
 
 describe('getCrowdingLevel()', () => {
