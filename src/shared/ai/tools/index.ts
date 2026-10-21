@@ -7,6 +7,7 @@ export { earthquakeTool } from './earthquake';
 
 export { israelRailTool } from './israel-rail';
 export { lightRailTool } from './light-rail';
+export { railTripTool } from './rail-trip';
 
 export { competitionMatchesTool, competitionTableTool, competitionsListTool, matchSummaryTool, matchPredictionTool, topMatchesForPredictionTool } from './sports';
 export type { CompetitionTableToolResult, CompetitionTableToolRow } from './sports';
