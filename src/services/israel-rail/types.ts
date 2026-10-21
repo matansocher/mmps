@@ -55,11 +55,14 @@ export type RailApiSearchResponse = {
   };
 };
 
+export type TrainScheduleType = 'departure' | 'arrival';
+
 export type SearchTrainsParams = {
   readonly fromStationId: number;
   readonly toStationId: number;
   readonly date: string; // Format: "YYYY-MM-DD"
-  readonly hour: string; // Format: "HH:mm"
+  readonly hour: string; // Format: "HH:mm" - earliest departure, or latest arrival when scheduleType is "arrival"
+  readonly scheduleType?: TrainScheduleType;
   readonly limit?: number;
 };
 

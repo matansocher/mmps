@@ -2,7 +2,7 @@ import axios from 'axios';
 import { trainSearchCache } from './cache';
 import { DEFAULT_TRAINS_LIMIT, RAIL_API_HEADERS, RAIL_API_SEARCH_URL } from './constants';
 import { getStationById } from './station-search';
-import type { RailApiSearchResponse, RailApiTrain, RailApiTravel, RailStation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainTransfer, TrainTravel } from './types';
+import type { RailApiSearchResponse, RailApiTrain, RailApiTravel, RailStation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainScheduleType, TrainTransfer, TrainTravel } from './types';
 
 // API times are Israel local time without offset. Format: "YYYY-MM-DDTHH:mm:ss"
 function toTime(apiDateTime: string): string {
@@ -61,8 +61,8 @@ function toTravel(travel: RailApiTravel): TrainTravel {
 
 const inFlightSearches = new Map<string, Promise<SearchTrainsResult>>();
 
-export function buildSearchCacheKey({ fromStationId, toStationId, date, hour, limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): string {
-  return [fromStationId, toStationId, date, hour.padStart(5, '0'), limit].join(':');
+export function buildSearchCacheKey({ fromStationId, toStationId, date, hour, scheduleType = 'departure', limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): string {
+  return [fromStationId, toStationId, date, hour.padStart(5, '0'), limit, ...(scheduleType === 'arrival' ? ['arrival'] : [])].join(':');
 }
 
 // Serves identical searches from Redis for a few minutes and collapses concurrent identical
@@ -86,13 +86,24 @@ export async function searchTrains(params: SearchTrainsParams): Promise<SearchTr
   }
 }
 
-async function fetchTrains({ fromStationId, toStationId, date, hour, limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): Promise<SearchTrainsResult> {
+// The API returns the whole day either way. For arrival searches keep the latest trains that arrive by the requested time.
+function selectTravels(travels: readonly RailApiTravel[], startFromIndex: number, requestedDateTime: string, scheduleType: TrainScheduleType, limit: number): RailApiTravel[] {
+  if (scheduleType === 'arrival') {
+    return travels.filter((travel) => travel.arrivalTime.slice(0, 16) <= requestedDateTime).slice(-limit);
+  }
+  return travels
+    .slice(startFromIndex)
+    .filter((travel) => travel.departureTime.slice(0, 16) >= requestedDateTime)
+    .slice(0, limit);
+}
+
+async function fetchTrains({ fromStationId, toStationId, date, hour, scheduleType = 'departure', limit = DEFAULT_TRAINS_LIMIT }: SearchTrainsParams): Promise<SearchTrainsResult> {
   const body = {
     fromStation: String(fromStationId),
     toStation: String(toStationId),
     date,
     hour,
-    scheduleType: 'ByDeparture',
+    scheduleType: scheduleType === 'arrival' ? 'ByArrival' : 'ByDeparture',
     systemType: '2',
     languageId: 'English',
   };
@@ -100,10 +111,7 @@ async function fetchTrains({ fromStationId, toStationId, date, hour, limit = DEF
   const { data } = await axios.post<RailApiSearchResponse>(RAIL_API_SEARCH_URL, body, { headers: RAIL_API_HEADERS, timeout: 15000 });
   const { travels = [], startFromIndex = 0 } = data?.result ?? {};
   const requestedDateTime = `${date}T${hour.padStart(5, '0')}`;
-  const upcoming = travels
-    .slice(startFromIndex)
-    .filter((travel) => travel.departureTime.slice(0, 16) >= requestedDateTime)
-    .slice(0, limit);
+  const upcoming = selectTravels(travels, startFromIndex, requestedDateTime, scheduleType, limit);
 
   const messages = [
     ...new Set(

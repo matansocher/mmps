@@ -1,7 +1,20 @@
 export * from './api';
+export { STATION_BUFFER_MINUTES } from './constants';
+export * from './leave-by';
 export * from './nearby';
 export * from './route-image';
 export * from './search-url';
 export * from './station-search';
 export { RAIL_STATIONS } from './stations';
-export type { NearbyRailStation, NearbyRailStationsResult, RailStation, RailStationWithLocation, SearchTrainsParams, SearchTrainsResult, TrainLeg, TrainTransfer, TrainTravel } from './types';
+export type {
+  NearbyRailStation,
+  NearbyRailStationsResult,
+  RailStation,
+  RailStationWithLocation,
+  SearchTrainsParams,
+  SearchTrainsResult,
+  TrainLeg,
+  TrainScheduleType,
+  TrainTransfer,
+  TrainTravel,
+} from './types';
