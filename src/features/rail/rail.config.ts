@@ -33,14 +33,6 @@ export const RAIL_LIMITS = {
   webSearchCallLimitPerRun: 1,
 };
 
-export const WAKE_ALERT_CONFIG = {
-  minutesBeforeArrival: 5,
-  // Live delays are re-checked only for alerts due within this window, at most once per interval.
-  recheckWindowMinutes: 15,
-  recheckIntervalMinutes: 2,
-  maxTrainChoices: 5,
-};
-
 // Shown by Telegram before the first /start (description, max 512 chars) and on the bot profile (short description, max 120 chars).
 export const BOT_PROFILE = {
   en: {
@@ -48,26 +40,26 @@ export const BOT_PROFILE = {
 
 Ask by text or voice: where from, where to and when. Use a station, an address or a place, search by arrival time, or share your location for the nearest stations.
 
-You get platforms, transfers, delays, crowding and the last train home. Each result has buttons for the stops, a live train map and a wake-up before your stop.
+You get platforms, transfers, delays, crowding and the last train home. Each result has buttons for the stops, later trains, the way back and a live train map.
 
 Try:
 • Savidor to Haifa Hof HaCarmel
 • Be in Jerusalem by 9 tomorrow
 • Allenby to Ben Gurion Airport`,
-    shortDescription: '🚆 Israel Rail + light rail: next trains, platforms, crowding, a live train map and a wake-up before your stop.',
+    shortDescription: '🚆 Israel Rail + light rail: next trains, platforms, crowding and a live train map. Just ask, by text or voice.',
   },
   he: {
     description: `🚆 רכבת ישראל והקו האדום של הרכבת הקלה, בצ'אט אחד.
 
 כתבו או הקליטו מאיפה, לאן ומתי. אפשר תחנה, כתובת או מקום, לחפש לפי שעת הגעה, או לשלוח מיקום ולקבל את התחנות הקרובות.
 
-תקבלו רציפים, החלפות, עיכובים, עומס ואת הרכבת האחרונה הביתה. מכל תוצאה אפשר לראות עצירות ומפה חיה של הרכבת, ולקבל התראה לפני התחנה.
+תקבלו רציפים, החלפות, עיכובים, עומס ואת הרכבת האחרונה הביתה. מכל תוצאה אפשר לראות עצירות, רכבות מאוחרות יותר, את הדרך חזרה ומפה חיה של הרכבת.
 
 נסו:
 • סבידור לחיפה חוף הכרמל
 • להגיע לירושלים עד 9 מחר
 • מאלנבי לנתב״ג`,
-    shortDescription: '🚆 רכבת ישראל והרכבת הקלה: הרכבות הבאות, רציפים, עומס, מפה חיה של הרכבת והתראה לפני התחנה.',
+    shortDescription: '🚆 רכבת ישראל והרכבת הקלה: הרכבות הבאות, רציפים, עומס ומפה חיה של הרכבת. פשוט שואלים, בכתב או בקול.',
   },
 };
 
@@ -115,9 +107,9 @@ Hi! 🚆 I'm the Israel Rail bot. Which language do you prefer?`,
   },
   tryIt: {
     he: `(3/3) בואו ננסה! לחצו על הכפתור לרכבות הקרובות מסבידור לחיפה חוף הכרמל.
-בתשובה יש כפתורים לעצירות, מיקום הרכבת והתראה לפני התחנה 🚀`,
+בתשובה יש כפתורים לעצירות, רכבות מאוחרות יותר ומיקום הרכבת 🚀`,
     en: `(3/3) Let's try it! Tap the button for the next trains from Tel Aviv Savidor to Haifa Hof HaCarmel.
-The result has buttons for stops, where your train is and a wake-up before your stop 🚀`,
+The result has buttons for stops, later trains and where your train is 🚀`,
   },
   buttons: {
     he: { next: 'המשך ➡️', skip: 'דילוג ⏭', tryIt: '🚆 סבידור ← חיפה חוף הכרמל' },
@@ -132,14 +124,12 @@ export const MESSAGES = {
 • אני שומר את השם והמשתמש שלכם בטלגרם, את השפה שבחרתם ואת שלב ההיכרות, כדי לזכור את ההגדרות שלכם.
 • ההודעות, ההקלטות והמיקומים מעובדים ב-OpenAI (כדי להבין אותם) וב-Google Maps (כדי למצוא מקומות ומסלולי הליכה). זמני הרכבות מגיעים מרכבת ישראל וממשרד התחבורה.
 • השיחה נשמרת עד 30 דקות בלי פעילות ואז נמחקת. מיקומים לא נשמרים.
-• התראות לפני התחנה נמחקות שבוע אחרי שהרכבת מגיעה.
 • המפתח רואה שאלות ותשובות, כדי לתקן באגים ולשפר את הבוט.
 • רוצים שהמידע שלכם יימחק? כתבו דרך /actions ← יצירת קשר.`,
     en: `🔒 Privacy
 • I save your Telegram name, username, chosen language and onboarding progress, so I remember your settings.
 • Your messages, voice notes and locations are processed by OpenAI (to understand them) and Google Maps (to find places and walking routes). Train times come from Israel Railways and the Ministry of Transport.
 • The conversation is kept for 30 minutes of inactivity and then deleted. Locations aren't saved.
-• Wake-up alerts are deleted a week after the train arrives.
 • The developer can see questions and answers, to fix bugs and improve the bot.
 • Want your data deleted? Write via /actions → Contact.`,
   },
@@ -178,26 +168,6 @@ export const MESSAGES = {
   error: {
     he: 'משהו השתבש, נסו שוב בעוד רגע 🙏',
     en: 'Something went wrong, please try again 🙏',
-  },
-  wakePickTrain: {
-    he: '⏰ על איזו רכבת אתם? אעיר אתכם 5 דקות לפני ההגעה.',
-    en: "⏰ Which train are you on? I'll wake you 5 minutes before you arrive.",
-  },
-  wakeTooLate: {
-    he: 'הרכבת הזו מגיעה בעוד פחות מ-5 דקות - כבר הזמן לקום 🙂',
-    en: 'This train arrives in less than 5 minutes - time to get up already 🙂',
-  },
-  wakeTrainNotFound: {
-    he: 'לא מצאתי את הרכבת הזו יותר, נסו לחפש שוב 🤷',
-    en: "I couldn't find this train anymore, please search again 🤷",
-  },
-  wakeCancelled: {
-    he: '🔕 ההתראה בוטלה.',
-    en: '🔕 Alert cancelled.',
-  },
-  wakeAlreadyHandled: {
-    he: 'ההתראה הזו כבר לא פעילה.',
-    en: 'This alert is no longer active.',
   },
   actionsTitle: {
     he: '⚙️ מה תרצו לעשות?',

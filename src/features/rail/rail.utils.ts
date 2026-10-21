@@ -5,7 +5,6 @@ import type { CrowdingLevel, NearbyRailStation, RailStation, TrainLeg, TrainLine
 import type { GeoPoint, LightRailDirectionDepartures, NearbyLightRailStation } from '@services/light-rail';
 import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
-import { buildWakeButton } from './rail-wake.utils';
 import { ACTIONS_CALLBACK_PREFIX, MESSAGES } from './rail.config';
 
 export type RailMenuAction = 'language' | 'contact' | 'cancel_contact';
@@ -111,8 +110,6 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
     });
     keyboard.row().text(language === 'he' ? '🗺 איפה הרכבת שלי?' : '🗺 Where is my train?', where);
   }
-  const wakeButton = buildWakeButton(context.from.id, context.to.id, context.searchedFrom, language);
-  keyboard.row().text(wakeButton.text, wakeButton.data);
   return keyboard;
 }
 

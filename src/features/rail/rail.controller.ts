@@ -25,8 +25,6 @@ import {
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
 import { getAvatarHash, getOnboardingStatus, getUserLanguagePreference, saveAvatarHash, saveUserDetails, setOnboardingStatus, setUserLanguagePreference } from './mongo';
 import { buildFeaturesKeyboard, buildLanguageKeyboard, buildTryItKeyboard, type OnboardingCallback, parseOnboardingCallbackData } from './rail-onboarding.utils';
-import type { RailWakeService } from './rail-wake.service';
-import { buildWakeCancelKeyboard, buildWakeTrainPickerKeyboard, formatWakeConfirmation, parseWakeCallbackData, type WakeCallbackRequest } from './rail-wake.utils';
 import { BOT_CONFIG, BOT_PROFILE, COMMAND_DESCRIPTIONS, CONTACT_MESSAGE_TTL_MS, MESSAGES, ONBOARDING_MESSAGES, ONBOARDING_SAMPLE_ROUTE, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import {
@@ -78,7 +76,6 @@ export class RailController {
 
   constructor(
     private readonly railService: RailService,
-    private readonly railWakeService: RailWakeService,
     private readonly bot: Bot,
   ) {}
 
@@ -343,12 +340,6 @@ export class RailController {
       return;
     }
 
-    const wakeRequest = data ? parseWakeCallbackData(data) : null;
-    if (chatId && wakeRequest) {
-      await this.wakeCallbackHandler(ctx, chatId, wakeRequest, userDetails);
-      return;
-    }
-
     const request = data ? parseCallbackData(data) : null;
     if (!chatId || !request) return;
     const language = (await getUserLanguagePreference(chatId)) ?? request.language;
@@ -430,48 +421,6 @@ export class RailController {
     } catch (err) {
       // Refreshing twice within the same minute yields identical content, which Telegram rejects.
       if (!isNotModifiedError(err)) throw err;
-    }
-  }
-
-  private async wakeCallbackHandler(ctx: Context, chatId: number, request: WakeCallbackRequest, userDetails: UserDetails): Promise<void> {
-    const language = (await getUserLanguagePreference(chatId)) ?? request.language;
-    if (request.action === 'wakecancel') {
-      const cancelled = await this.railWakeService.cancelAlert(request.alertId, chatId);
-      await ctx.editMessageReplyMarkup().catch(() => {});
-      await ctx.reply(cancelled ? MESSAGES.wakeCancelled[language] : MESSAGES.wakeAlreadyHandled[language]);
-      if (cancelled) notify(BOT_CONFIG, { action: 'WAKE_ALERT_CANCELLED' }, userDetails);
-      return;
-    }
-    if (await this.isRateLimited(ctx, language)) return;
-
-    const { fromStationId, toStationId, date, time } = request;
-    try {
-      if (request.action === 'wake') {
-        const result = await this.railService.searchRoute(fromStationId, toStationId, date, time, language);
-        if (!result || !result.context.trains.length) {
-          await ctx.reply(MESSAGES.noTrains[language]);
-          return;
-        }
-        await ctx.reply(MESSAGES.wakePickTrain[language], { reply_markup: buildWakeTrainPickerKeyboard(result.context.trains, fromStationId, toStationId, language) });
-        return;
-      }
-
-      const result = await this.railWakeService.setAlert({ chatId, fromStationId, toStationId, date, departureTime: time, language });
-      await ctx.editMessageReplyMarkup().catch(() => {});
-      if (result.status === 'not_found') {
-        await ctx.reply(MESSAGES.wakeTrainNotFound[language]);
-        return;
-      }
-      if (result.status === 'too_late') {
-        await ctx.reply(MESSAGES.wakeTooLate[language]);
-        return;
-      }
-      const answer = formatWakeConfirmation(result.station, result.notifyAt, result.predictedArrivalAt, language);
-      await ctx.reply(answer, { reply_markup: buildWakeCancelKeyboard(result.alertId, language) });
-      notifyConversation('WAKE_ALERT_SET', `[button] ${fromStationId} → ${toStationId} at ${date} ${time}`, answer, userDetails);
-    } catch (err) {
-      this.logger.error(`wakeCallbackHandler failed: ${getErrorMessage(err)}`);
-      await ctx.reply(MESSAGES.error[language]);
     }
   }
 

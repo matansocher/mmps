@@ -169,7 +169,7 @@ describe('getRouteContext()', () => {
 });
 
 describe('buildRouteKeyboard()', () => {
-  test('should build a stops button per train, then later-trains, reverse-direction, refresh, where-is-my-train and wake buttons', () => {
+  test('should build a stops button per train, then later-trains, reverse-direction, refresh and where-is-my-train buttons', () => {
     const rows = buildRouteKeyboard(CONTEXT, 'he').inline_keyboard.filter((row) => row.length);
     expect(rows.map((row) => row.map((b) => [b.text, 'callback_data' in b ? b.callback_data : null]))).toEqual([
       [
@@ -182,7 +182,6 @@ describe('buildRouteKeyboard()', () => {
         ['🔄 רענון', 'refresh|3700|2300|2026-10-19|07:50|he'],
       ],
       [['🗺 איפה הרכבת שלי?', 'where|3700|2300|2026-10-19|08:00|he|123']],
-      [['⏰ תעירו אותי לפני התחנה', 'wake|3700|2300|2026-10-19|07:50|he']],
     ]);
   });
 });
