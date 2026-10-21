@@ -17,6 +17,7 @@ export { buildRichButtonRows, sendRichMessageWithButtons } from './utils/rich-me
 export type { RichButtonData } from './utils/rich-message';
 export { sendImageThenText } from './utils/send-image-then-text';
 export type { ImageSource, SendImageThenTextOptions } from './utils/send-image-then-text';
+export { sendImageWithCaption } from './utils/send-image-with-caption';
 export { sendRichMessage, sendShortenedMessage, sendStyledMessage } from './utils/send-message';
 export { buildRichMessageWithPhotos, sendRichMessageWithPhotos } from './utils/send-rich-message-with-photos';
 export type { RichPhoto } from './utils/send-rich-message-with-photos';
