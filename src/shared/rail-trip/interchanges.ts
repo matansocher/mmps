@@ -8,7 +8,9 @@ export const INTERCHANGE_MAX_METERS = 400;
 export function findRailTripInterchanges(railStations: readonly RailStationWithLocation[], lightRailStations: readonly LightRailStation[], maxMeters = INTERCHANGE_MAX_METERS): RailTripInterchange[] {
   return railStations
     .map((railStation) => {
-      const [nearest] = lightRailStations.map((lightRailStation) => ({ lightRailStation, straightLineMeters: getDistanceMeters(railStation, lightRailStation) })).sort((a, b) => a.straightLineMeters - b.straightLineMeters);
+      const [nearest] = lightRailStations
+        .map((lightRailStation) => ({ lightRailStation, straightLineMeters: getDistanceMeters(railStation, lightRailStation) }))
+        .sort((a, b) => a.straightLineMeters - b.straightLineMeters);
       return nearest ? { railStation, ...nearest } : undefined;
     })
     .filter((candidate) => candidate && candidate.straightLineMeters <= maxMeters)

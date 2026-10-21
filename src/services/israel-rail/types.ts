@@ -97,7 +97,6 @@ export type TrainLeg = {
   readonly originPlatform: number;
   readonly destinationPlatform: number;
   readonly delayMinutes: number;
-  readonly arrivalDelayMinutes?: number;
   readonly predictedLoadPercent?: number;
   readonly crowding?: CrowdingLevel;
   readonly intermediateStops: number;

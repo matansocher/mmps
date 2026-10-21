@@ -2,7 +2,18 @@ import { buildRailSearchUrl } from '@services/israel-rail';
 import type { RailStation, TrainTravel } from '@services/israel-rail';
 import { findLightRailDepartures } from '@services/light-rail';
 import type { LightRailStation } from '@services/light-rail';
-import type { PlanRailTripDeps, PlanRailTripParams, PlanRailTripResult, RailTripDirection, RailTripInterchange, RailTripLeg, RailTripPlan, RailTripStationRef, RailTripTrainLeg, RailTripWalkLeg } from './types';
+import type {
+  PlanRailTripDeps,
+  PlanRailTripParams,
+  PlanRailTripResult,
+  RailTripDirection,
+  RailTripInterchange,
+  RailTripLeg,
+  RailTripPlan,
+  RailTripStationRef,
+  RailTripTrainLeg,
+  RailTripWalkLeg,
+} from './types';
 
 // Extra minutes on top of the walk to get down to / up from the platforms when catching the next leg.
 export const TRANSFER_BUFFER_MINUTES = 3;
@@ -121,7 +132,14 @@ function earliestArrival(legs: readonly TimedLeg[], readyAt: number): TimedLeg |
   return legs.filter(({ start }) => start >= readyAt).sort((a, b) => a.end - b.end)[0];
 }
 
-async function planLightRailThenTrain(deps: PlanRailTripDeps, origin: LightRailStation, destination: RailStation, interchange: RailTripInterchange, requested: number, state: SearchState): Promise<TimedPlan[]> {
+async function planLightRailThenTrain(
+  deps: PlanRailTripDeps,
+  origin: LightRailStation,
+  destination: RailStation,
+  interchange: RailTripInterchange,
+  requested: number,
+  state: SearchState,
+): Promise<TimedPlan[]> {
   const direction: RailTripDirection = 'light_rail_then_train';
   const { lightRailStation, railStation, walkingMinutes } = interchange;
   const startsAtInterchange = origin.id === lightRailStation.id;
@@ -129,7 +147,9 @@ async function planLightRailThenTrain(deps: PlanRailTripDeps, origin: LightRailS
   if (startsAtInterchange && endsAtInterchange) return [];
 
   if (endsAtInterchange) {
-    return findLightRailLegs(deps, origin, lightRailStation, requested, LIGHT_RAIL_OPTIONS).map((lightRail) => buildPlan(direction, interchange, [lightRail, buildWalkLeg(interchange, direction, lightRail.end)]));
+    return findLightRailLegs(deps, origin, lightRailStation, requested, LIGHT_RAIL_OPTIONS).map((lightRail) =>
+      buildPlan(direction, interchange, [lightRail, buildWalkLeg(interchange, direction, lightRail.end)]),
+    );
   }
 
   if (startsAtInterchange) {
@@ -148,7 +168,14 @@ async function planLightRailThenTrain(deps: PlanRailTripDeps, origin: LightRailS
     .filter(Boolean);
 }
 
-async function planTrainThenLightRail(deps: PlanRailTripDeps, origin: RailStation, destination: LightRailStation, interchange: RailTripInterchange, requested: number, state: SearchState): Promise<TimedPlan[]> {
+async function planTrainThenLightRail(
+  deps: PlanRailTripDeps,
+  origin: RailStation,
+  destination: LightRailStation,
+  interchange: RailTripInterchange,
+  requested: number,
+  state: SearchState,
+): Promise<TimedPlan[]> {
   const direction: RailTripDirection = 'train_then_light_rail';
   const { lightRailStation, railStation, walkingMinutes } = interchange;
   const startsAtInterchange = origin.id === railStation.id;

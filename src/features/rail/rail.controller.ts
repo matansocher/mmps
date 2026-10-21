@@ -25,8 +25,6 @@ import {
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
 import { getAvatarHash, getOnboardingStatus, getUserLanguagePreference, saveAvatarHash, saveUserDetails, setOnboardingStatus, setUserLanguagePreference } from './mongo';
 import { buildFeaturesKeyboard, buildLanguageKeyboard, buildTryItKeyboard, type OnboardingCallback, parseOnboardingCallbackData } from './rail-onboarding.utils';
-import type { RailWakeService } from './rail-wake.service';
-import { buildWakeCancelKeyboard, buildWakeTrainPickerKeyboard, formatWakeConfirmation, parseWakeCallbackData, type WakeCallbackRequest } from './rail-wake.utils';
 import { BOT_CONFIG, BOT_PROFILE, COMMAND_DESCRIPTIONS, CONTACT_MESSAGE_TTL_MS, MESSAGES, ONBOARDING_MESSAGES, ONBOARDING_SAMPLE_ROUTE, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import {
@@ -78,14 +76,14 @@ export class RailController {
 
   constructor(
     private readonly railService: RailService,
-    private readonly railWakeService: RailWakeService,
     private readonly bot: Bot,
   ) {}
 
   init(): void {
-    const { START, ACTIONS } = BOT_CONFIG.commands;
+    const { START, ACTIONS, PRIVACY } = BOT_CONFIG.commands;
     this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
+    this.bot.command(PRIVACY.command.replace('/', ''), (ctx) => this.privacyHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on(['message:voice', 'message:audio'], (ctx) => this.audioHandler(ctx));
     this.bot.on('message:location', (ctx) => this.locationHandler(ctx));
@@ -136,6 +134,13 @@ export class RailController {
     const language = (await getUserLanguagePreference(chatId)) ?? getUserLanguage(ctx.from?.language_code);
     await ctx.reply(MESSAGES.actionsTitle[language], { reply_markup: buildActionsKeyboard(language, getContactUrl(MY_USER_NAME)) });
     notify(BOT_CONFIG, { action: 'ACTIONS' }, userDetails);
+  }
+
+  private async privacyHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
+    const language = (await getUserLanguagePreference(chatId)) ?? getUserLanguage(ctx.from?.language_code);
+    await ctx.reply(MESSAGES.privacy[language]);
+    notify(BOT_CONFIG, { action: 'PRIVACY' }, userDetails);
   }
 
   private async menuActionHandler(ctx: Context, action: RailMenuAction): Promise<void> {
@@ -189,6 +194,7 @@ export class RailController {
       case 'lang':
         await setUserLanguagePreference(chatId, language);
         await ctx.editMessageText(ONBOARDING_MESSAGES.features[language], { reply_markup: buildFeaturesKeyboard(language) });
+        await this.setChatCommands(chatId, language);
         return;
       case 'next':
         await ctx.editMessageText(ONBOARDING_MESSAGES.tryIt[language], { reply_markup: buildTryItKeyboard(language) });
@@ -334,12 +340,6 @@ export class RailController {
       return;
     }
 
-    const wakeRequest = data ? parseWakeCallbackData(data) : null;
-    if (chatId && wakeRequest) {
-      await this.wakeCallbackHandler(ctx, chatId, wakeRequest, userDetails);
-      return;
-    }
-
     const request = data ? parseCallbackData(data) : null;
     if (!chatId || !request) return;
     const language = (await getUserLanguagePreference(chatId)) ?? request.language;
@@ -424,48 +424,6 @@ export class RailController {
     }
   }
 
-  private async wakeCallbackHandler(ctx: Context, chatId: number, request: WakeCallbackRequest, userDetails: UserDetails): Promise<void> {
-    const { language } = request;
-    if (request.action === 'wakecancel') {
-      const cancelled = await this.railWakeService.cancelAlert(request.alertId, chatId);
-      await ctx.editMessageReplyMarkup().catch(() => {});
-      await ctx.reply(cancelled ? MESSAGES.wakeCancelled[language] : MESSAGES.wakeAlreadyHandled[language]);
-      if (cancelled) notify(BOT_CONFIG, { action: 'WAKE_ALERT_CANCELLED' }, userDetails);
-      return;
-    }
-    if (await this.isRateLimited(ctx, language)) return;
-
-    const { fromStationId, toStationId, date, time } = request;
-    try {
-      if (request.action === 'wake') {
-        const result = await this.railService.searchRoute(fromStationId, toStationId, date, time, language);
-        if (!result || !result.context.trains.length) {
-          await ctx.reply(MESSAGES.noTrains[language]);
-          return;
-        }
-        await ctx.reply(MESSAGES.wakePickTrain[language], { reply_markup: buildWakeTrainPickerKeyboard(result.context.trains, fromStationId, toStationId, language) });
-        return;
-      }
-
-      const result = await this.railWakeService.setAlert({ chatId, fromStationId, toStationId, date, departureTime: time, language });
-      await ctx.editMessageReplyMarkup().catch(() => {});
-      if (result.status === 'not_found') {
-        await ctx.reply(MESSAGES.wakeTrainNotFound[language]);
-        return;
-      }
-      if (result.status === 'too_late') {
-        await ctx.reply(MESSAGES.wakeTooLate[language]);
-        return;
-      }
-      const answer = formatWakeConfirmation(result.station, result.notifyAt, result.predictedArrivalAt, language);
-      await ctx.reply(answer, { reply_markup: buildWakeCancelKeyboard(result.alertId, language) });
-      notifyConversation('WAKE_ALERT_SET', `[button] ${fromStationId} → ${toStationId} at ${date} ${time}`, answer, userDetails);
-    } catch (err) {
-      this.logger.error(`wakeCallbackHandler failed: ${getErrorMessage(err)}`);
-      await ctx.reply(MESSAGES.error[language]);
-    }
-  }
-
   private async trainMapHandler(ctx: Context, request: RailSearchRequest, callbackData: string, userDetails: UserDetails): Promise<void> {
     const { language, trainNumber } = request;
     const question = `[button] where is train ${trainNumber} (${request.fromStationId} → ${request.toStationId} at ${request.date} ${request.time})`;
@@ -477,7 +435,15 @@ export class RailController {
         return;
       }
       const replyMarkup = buildInlineKeyboard([{ text: MESSAGES.refreshTrainMap[language], data: callbackData }]);
-      await ctx.replyWithPhoto(new InputFile(result.image, 'rail-train-map.png'), { caption: result.caption, reply_markup: replyMarkup });
+      const photo = new InputFile(result.image, 'rail-train-map.png');
+      // The refresh button lives on the map photo itself, so update it in place instead of sending another photo.
+      if (ctx.callbackQuery?.message?.photo) {
+        await ctx.editMessageMedia({ type: 'photo', media: photo, caption: result.caption }, { reply_markup: replyMarkup }).catch((err) => {
+          if (!isNotModifiedError(err)) throw err;
+        });
+      } else {
+        await ctx.replyWithPhoto(photo, { caption: result.caption, reply_markup: replyMarkup });
+      }
       notifyConversation('TRAIN_MAP', question, result.caption, userDetails);
     } catch (err) {
       this.logger.error(`trainMapHandler failed: ${getErrorMessage(err)}`);
