@@ -18,6 +18,7 @@ export type {
   SearchTrainsResult,
   TrainLeg,
   TrainScheduleType,
+  TrainStop,
   TrainTransfer,
   TrainTravel,
 } from './types';

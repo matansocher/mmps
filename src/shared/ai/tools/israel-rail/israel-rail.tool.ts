@@ -15,7 +15,7 @@ import {
   searchTrains,
   STATION_BUFFER_MINUTES,
 } from '@services/israel-rail';
-import type { NearbyRailStation, NearbyRailStationsResult, RailStation } from '@services/israel-rail';
+import type { NearbyRailStation, NearbyRailStationsResult, RailStation, TrainTravel } from '@services/israel-rail';
 
 const logger = new Logger('IsraelRailTool');
 
@@ -158,6 +158,11 @@ async function nearestStation(place: string | undefined) {
   };
 }
 
+// The per-stop list is only used by the rail bot's "show stops" button, so keep it out of the model's context.
+function withoutStops<T extends TrainTravel>(travel: T): T {
+  return { ...travel, legs: travel.legs.map((leg) => ({ ...leg, stops: [] })) };
+}
+
 type ResolvedTrip = { readonly origin?: StationResolution; readonly destination?: StationResolution; readonly error?: Record<string, unknown> };
 
 async function resolveTrip({ from, to, fromPlace, toPlace }: z.infer<typeof schema>): Promise<ResolvedTrip> {
@@ -200,8 +205,8 @@ async function lastTrain({ origin, destination }: ResolvedTrip, date: string | u
     ...(destination.access && { toAccess: destination.access }),
     serviceDate,
     searchedFrom: `${searchDate} ${searchTime}`,
-    trains,
-    ...(lastDirectTrain && { lastDirectTrain }),
+    trains: trains.map(withoutStops),
+    ...(lastDirectTrain && { lastDirectTrain: withoutStops(lastDirectTrain) }),
     hasNightTrains,
     lastTrainAlreadyLeft: trains.length > 0 && departed(trains[trains.length - 1]),
     alerts: messages,
@@ -258,7 +263,7 @@ async function runner(input: z.infer<typeof schema>) {
     ...(destination.access && { toAccess: destination.access }),
     ...(arriveBy && { arriveBy: `${searchDate} ${searchTime}` }),
     searchedFrom: `${departureDate} ${departureTime}`,
-    trains,
+    trains: trains.map(withoutStops),
     alerts: messages,
     railWebsiteUrl: buildRailSearchUrl({ fromStationId: origin.station.id, toStationId: destination.station.id, date: departureDate, time: departureTime }),
   };

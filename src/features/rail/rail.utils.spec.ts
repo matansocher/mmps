@@ -1,5 +1,5 @@
 import type { TrainTravel } from '@services/israel-rail';
-import { buildCallbackData, buildRouteKeyboard, formatRouteMessage, formatTrainLine, getNextSearchTime, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
+import { buildCallbackData, buildRouteKeyboard, formatRouteMessage, formatStopsMessage, formatTrainLine, getNextSearchTime, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
 import type { RailRouteContext } from './rail.utils';
 
 const FROM = { id: 3700, nameEn: 'Tel Aviv - Savidor Center', nameHe: 'תל אביב - סבידור מרכז' };
@@ -12,7 +12,7 @@ function buildTravel(overrides: Partial<TrainTravel> = {}): TrainTravel {
     arrivalTime: '08:55',
     durationMinutes: 55,
     transfers: 0,
-    legs: [{ trainNumber: 123, from: FROM, to: TO, departureTime: '08:00', arrivalTime: '08:55', originPlatform: 3, destinationPlatform: 1, delayMinutes: 0, intermediateStops: 4 }],
+    legs: [{ trainNumber: 123, from: FROM, to: TO, departureTime: '08:00', arrivalTime: '08:55', originPlatform: 3, destinationPlatform: 1, delayMinutes: 0, intermediateStops: 0, stops: [] }],
     ...overrides,
   } as TrainTravel;
 }
@@ -25,6 +25,11 @@ describe('buildCallbackData() / parseCallbackData()', () => {
     const data = buildCallbackData(request);
     expect(Buffer.byteLength(data)).toBeLessThanOrEqual(64);
     expect(parseCallbackData(data)).toEqual(request);
+  });
+
+  test('should round-trip a stops request', () => {
+    const request = { action: 'stops' as const, fromStationId: 3700, toStationId: 2300, date: '2026-10-19', time: '08:00', language: 'en' as const };
+    expect(parseCallbackData(buildCallbackData(request))).toEqual(request);
   });
 
   test.each([
@@ -65,9 +70,18 @@ describe('getRouteContext()', () => {
 });
 
 describe('buildRouteKeyboard()', () => {
-  test('should build later-trains and reverse-direction buttons', () => {
-    const buttons = buildRouteKeyboard(CONTEXT, 'he').inline_keyboard.flat();
-    expect(buttons.map((b) => ('callback_data' in b ? b.callback_data : null))).toEqual(['later|3700|2300|2026-10-19|08:31|he', 'reverse|2300|3700|2026-10-19|07:50|he']);
+  test('should build a stops button per train, then later-trains and reverse-direction buttons', () => {
+    const rows = buildRouteKeyboard(CONTEXT, 'he').inline_keyboard.filter((row) => row.length);
+    expect(rows.map((row) => row.map((b) => [b.text, 'callback_data' in b ? b.callback_data : null]))).toEqual([
+      [
+        ['🛤 08:00', 'stops|3700|2300|2026-10-19|08:00|he'],
+        ['🛤 08:30', 'stops|3700|2300|2026-10-19|08:30|he'],
+      ],
+      [
+        ['⏭ רכבות מאוחרות יותר', 'later|3700|2300|2026-10-19|08:31|he'],
+        ['🔁 כיוון הפוך', 'reverse|2300|3700|2026-10-19|07:50|he'],
+      ],
+    ]);
   });
 });
 
@@ -116,6 +130,38 @@ describe('formatRouteMessage()', () => {
       '• 08:30 → 09:25 · 55 min · platform 3 · direct',
       '',
       '[Check on the Israel Railways website](https://www.rail.co.il/?x=1)',
+    ]);
+  });
+});
+
+describe('formatStopsMessage()', () => {
+  const MIDDLE = { id: 3500, nameEn: 'Herzliya', nameHe: 'הרצליה' };
+  const leg = { ...buildTravel().legs[0], intermediateStops: 1, stops: [{ station: MIDDLE, arrivalTime: '08:08', departureTime: '08:09', platform: 6 }] };
+
+  test.each([
+    {
+      language: 'en' as const,
+      expected: [
+        '🛤 *Train 123 · Tel Aviv - Savidor Center → Haifa - Hof HaCarmel*',
+        '08:00 · *Tel Aviv - Savidor Center* (platform 3)',
+        '08:09 · Herzliya',
+        '08:55 · *Haifa - Hof HaCarmel* (platform 1)',
+      ],
+    },
+    {
+      language: 'he' as const,
+      expected: ['🛤 *רכבת 123 · תל אביב - סבידור מרכז ← חיפה - חוף הכרמל*', '08:00 · *תל אביב - סבידור מרכז* (רציף 3)', '08:09 · הרצליה', '08:55 · *חיפה - חוף הכרמל* (רציף 1)'],
+    },
+  ])('should list every stop of the train in $language', ({ language, expected }) => {
+    expect(formatStopsMessage(buildTravel({ legs: [leg] }), language).split('\n')).toEqual(expected);
+  });
+
+  test('should list each leg separately when the trip has a transfer', () => {
+    const second = { ...leg, trainNumber: 456, from: MIDDLE, departureTime: '08:20', stops: [] };
+    const message = formatStopsMessage(buildTravel({ transfers: 1, legs: [{ ...leg, to: MIDDLE, stops: [] }, second] }), 'en');
+    expect(message.split('\n\n')).toEqual([
+      '🛤 *Train 123 · Tel Aviv - Savidor Center → Herzliya*\n08:00 · *Tel Aviv - Savidor Center* (platform 3)\n08:55 · *Herzliya* (platform 1)',
+      '🛤 *Train 456 · Herzliya → Haifa - Hof HaCarmel*\n08:20 · *Herzliya* (platform 3)\n08:55 · *Haifa - Hof HaCarmel* (platform 1)',
     ]);
   });
 });

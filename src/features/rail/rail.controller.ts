@@ -8,12 +8,12 @@ import { deleteFile, getErrorMessage, Logger } from '@core/utils';
 import { buildToolImages, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/tool-images';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
-import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessageWithPhotos, type UserDetails } from '@services/telegram';
+import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage, sendRichMessageWithPhotos, type UserDetails } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
 import { getAvatarHash, saveAvatarHash, saveUserDetails } from './mongo';
 import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
-import { buildRouteKeyboard, formatRouteMessage, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
+import { buildRouteKeyboard, formatRouteMessage, formatStopsMessage, getRouteContext, getUserLanguage, parseCallbackData, type RailSearchRequest } from './rail.utils';
 
 const GLOBAL_KEY = 'all';
 const AVATAR_PATH = resolve(process.cwd(), 'assets/images/rail/avatar.png');
@@ -147,6 +147,10 @@ export class RailController {
     const request = data ? parseCallbackData(data) : null;
     if (!chatId || !request) return;
     if (await this.isRateLimited(ctx, request.language)) return;
+    if (request.action === 'stops') {
+      await this.showStops(ctx, chatId, request, userDetails);
+      return;
+    }
 
     const action = request.action === 'later' ? 'LATER_TRAINS' : 'REVERSE_DIRECTION';
     const { fromStationId, toStationId, date, time, language } = request;
@@ -166,6 +170,21 @@ export class RailController {
       this.logger.error(`callbackQueryHandler failed: ${getErrorMessage(err)}`);
       await ctx.reply(MESSAGES.error[language]);
       notifyConversation(action, question, `${MESSAGES.error[language]} (${getErrorMessage(err)})`, userDetails);
+    }
+  }
+
+  private async showStops(ctx: Context, chatId: number, request: RailSearchRequest, userDetails: UserDetails): Promise<void> {
+    const { fromStationId, toStationId, date, time, language } = request;
+    const question = `[button] stops of ${fromStationId} → ${toStationId} at ${date} ${time}`;
+    try {
+      const travel = await this.railService.findTrain(fromStationId, toStationId, date, time);
+      const answer = travel ? formatStopsMessage(travel, language) : MESSAGES.trainNotFound[language];
+      await sendRichMessage(this.bot, chatId, answer);
+      notifyConversation('SHOW_STOPS', question, answer, userDetails);
+    } catch (err) {
+      this.logger.error(`showStops failed: ${getErrorMessage(err)}`);
+      await ctx.reply(MESSAGES.error[language]);
+      notifyConversation('SHOW_STOPS', question, `${MESSAGES.error[language]} (${getErrorMessage(err)})`, userDetails);
     }
   }
 }
