@@ -169,19 +169,17 @@ describe('getRouteContext()', () => {
 });
 
 describe('buildRouteKeyboard()', () => {
-  test('should build a stops button per train, then later-trains, reverse-direction, refresh and where-is-my-train buttons', () => {
+  test('should build later-trains, reverse-direction, refresh and where-is-my-train buttons, 2 per row', () => {
     const rows = buildRouteKeyboard(CONTEXT, 'he').inline_keyboard.filter((row) => row.length);
     expect(rows.map((row) => row.map((b) => [b.text, 'callback_data' in b ? b.callback_data : null]))).toEqual([
       [
-        ['🛤 08:00', 'stops|3700|2300|2026-10-19|08:00|he'],
-        ['🛤 08:30', 'stops|3700|2300|2026-10-19|08:30|he'],
-      ],
-      [
         ['⏭ רכבות מאוחרות יותר', 'later|3700|2300|2026-10-19|08:31|he'],
         ['🔁 כיוון הפוך', 'reverse|2300|3700|2026-10-19|07:50|he'],
-        ['🔄 רענון', 'refresh|3700|2300|2026-10-19|07:50|he'],
       ],
-      [['🗺 איפה הרכבת שלי?', 'where|3700|2300|2026-10-19|08:00|he|123']],
+      [
+        ['🔄 רענון', 'refresh|3700|2300|2026-10-19|07:50|he'],
+        ['🗺 איפה הרכבת שלי?', 'where|3700|2300|2026-10-19|08:00|he|123'],
+      ],
     ]);
   });
 });

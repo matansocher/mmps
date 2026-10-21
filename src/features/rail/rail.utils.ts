@@ -38,7 +38,6 @@ export type NearestStationsResult = {
 };
 
 const CALLBACK_SEPARATOR = '|';
-const STOPS_BUTTONS_PER_ROW = 5;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
 const ACTIONS: readonly RailSearchAction[] = ['later', 'reverse', 'stops', 'refresh', 'where'];
@@ -85,18 +84,14 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
   const [date, time] = context.searchedFrom.split(' ');
   const next = getNextSearchTime(context.trains);
   const labels =
-    language === 'he' ? { later: '⏭ רכבות מאוחרות יותר', reverse: '🔁 כיוון הפוך', refresh: '🔄 רענון' } : { later: '⏭ Later trains', reverse: '🔁 Reverse direction', refresh: '🔄 Refresh' };
-  const stopsButtons = context.trains.map((train) => ({
-    text: `🛤 ${train.departureTime}`,
-    data: buildCallbackData({ action: 'stops', fromStationId: context.from.id, toStationId: context.to.id, date: train.date, time: train.departureTime, language }),
-  }));
+    language === 'he'
+      ? { later: '⏭ רכבות מאוחרות יותר', reverse: '🔁 כיוון הפוך', refresh: '🔄 רענון', where: '🗺 איפה הרכבת שלי?' }
+      : { later: '⏭ Later trains', reverse: '🔁 Reverse direction', refresh: '🔄 Refresh', where: '🗺 Where is my train?' };
   const buttons = [
     ...(next ? [{ text: labels.later, data: buildCallbackData({ action: 'later', fromStationId: context.from.id, toStationId: context.to.id, ...next, language }) }] : []),
     { text: labels.reverse, data: buildCallbackData({ action: 'reverse', fromStationId: context.to.id, toStationId: context.from.id, date, time, language }) },
     { text: labels.refresh, data: buildCallbackData({ action: 'refresh', fromStationId: context.from.id, toStationId: context.to.id, date, time, language }) },
   ];
-  const keyboard = buildInlineKeyboard(stopsButtons, STOPS_BUTTONS_PER_ROW);
-  buttons.forEach((button) => keyboard.text(button.text, button.data));
   const firstLeg = context.trains[0]?.legs[0];
   if (firstLeg) {
     const where = buildCallbackData({
@@ -108,9 +103,9 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
       language,
       trainNumber: firstLeg.trainNumber,
     });
-    keyboard.row().text(language === 'he' ? '🗺 איפה הרכבת שלי?' : '🗺 Where is my train?', where);
+    buttons.push({ text: labels.where, data: where });
   }
-  return keyboard;
+  return buildInlineKeyboard(buttons, 2);
 }
 
 function formatStopLine(time: string, station: RailStation, language: ImageLanguage, platform?: number): string {
