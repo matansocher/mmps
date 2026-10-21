@@ -1,3 +1,4 @@
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
@@ -9,12 +10,19 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
 import type { ToolResult } from '@features/chatbot/types';
 import { formatAgentResponse } from '@features/chatbot/utils';
-import { buildRailSearchUrl, generateRouteImage, RAIL_STATIONS, searchTrains, type TrainTravel } from '@services/israel-rail';
+import { buildRailSearchUrl, findRailStationsNearPoint, generateRouteImage, RAIL_STATIONS, searchTrains, type TrainTravel } from '@services/israel-rail';
+import { findLightRailDeparturesByDirection, findLightRailStationsNearPoint, findNearestLightRailStations, getLightRailTimetable } from '@services/light-rail';
+import type { GeoPoint, LightRailDirectionDepartures, LightRailTimetable } from '@services/light-rail';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { israelRailTool, lightRailTool, recordModelUsage, UsageCallbackHandler, webSearchTool } from '@shared/ai';
 import type { ImageLanguage } from '@shared/image-card';
 import { MESSAGES, RAIL_AGENT_PROMPT, RAIL_LIMITS } from './rail.config';
-import type { RailRouteContext } from './rail.utils';
+import { buildLocationMemoryNote } from './rail.utils';
+import type { NearestStationsResult, RailRouteContext } from './rail.utils';
+
+// Beyond this straight-line distance the Red Line is irrelevant, so it's left out (and no walking route is requested).
+const MAX_LIGHT_RAIL_DISTANCE_METERS = 3000;
+const LIGHT_RAIL_DEPARTURES_PER_DIRECTION = 3;
 
 export type RailAgentReply = {
   readonly message: string;
@@ -53,13 +61,67 @@ export class RailService {
     }
   }
 
+  private async touchThread(chatId: number): Promise<string> {
+    const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+    await this.pruneIdleConversations();
+    this.lastActiveAt.set(threadId, Date.now());
+    return threadId;
+  }
+
+  async findNearestStations(origin: GeoPoint): Promise<NearestStationsResult> {
+    const [rail, lightRail] = await Promise.all([
+      this.findNearestRailStation(origin).catch((err) => {
+        this.logger.error(`Nearest rail station lookup failed: ${getErrorMessage(err)}`);
+        return null;
+      }),
+      this.findNearestLightRailStop(origin).catch((err) => {
+        this.logger.error(`Nearest light rail stop lookup failed: ${getErrorMessage(err)}`);
+        return null;
+      }),
+    ]);
+    return { origin, rail, lightRail };
+  }
+
+  private async findNearestRailStation(origin: GeoPoint): Promise<NearestStationsResult['rail']> {
+    const { stations } = await findRailStationsNearPoint(origin);
+    return stations[0] ?? null;
+  }
+
+  private async findNearestLightRailStop(origin: GeoPoint): Promise<NearestStationsResult['lightRail']> {
+    const timetable = await getLightRailTimetable();
+    const [closest] = findNearestLightRailStations(timetable.stations, origin, 1);
+    if (!closest || closest.distanceMeters > MAX_LIGHT_RAIL_DISTANCE_METERS) return null;
+    const { stations } = await findLightRailStationsNearPoint(timetable.stations, origin);
+    const stop = stations[0];
+    if (!stop) return null;
+    return { stop, directions: this.getNextLightRailDepartures(timetable, stop.station.id) };
+  }
+
+  private getNextLightRailDepartures(timetable: LightRailTimetable, fromStationId: string): LightRailDirectionDepartures[] {
+    try {
+      const now = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+      return findLightRailDeparturesByDirection(timetable, { fromStationId, date: format(now, 'yyyy-MM-dd'), time: format(now, 'HH:mm'), limit: LIGHT_RAIL_DEPARTURES_PER_DIRECTION });
+    } catch (err) {
+      this.logger.error(`Light rail departures lookup failed: ${getErrorMessage(err)}`);
+      return [];
+    }
+  }
+
+  // Lets follow-up questions ("to Haifa") use the shared location as the origin without running the agent now.
+  async rememberLocation(chatId: number, origin: GeoPoint, reply: string): Promise<void> {
+    try {
+      const threadId = await this.touchThread(chatId);
+      await this.aiService.agent.graph.updateState({ configurable: { thread_id: threadId } }, { messages: [new HumanMessage(buildLocationMemoryNote(origin)), new AIMessage(reply)] });
+    } catch (err) {
+      this.logger.error(`rememberLocation failed: ${getErrorMessage(err)}`);
+    }
+  }
+
   async processMessage(message: string, chatId: number, language: ImageLanguage): Promise<RailAgentReply> {
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const system = `Current time: ${formattedTime} (${DEFAULT_TIMEZONE})`;
-      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
-      await this.pruneIdleConversations();
-      this.lastActiveAt.set(threadId, Date.now());
+      const threadId = await this.touchThread(chatId);
       const usageHandler = new UsageCallbackHandler();
       const startedAt = Date.now();
       const result = await this.aiService.invoke(message, { threadId, system, callbacks: [usageHandler] });

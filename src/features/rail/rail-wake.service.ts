@@ -6,8 +6,8 @@ import type { RailStation } from '@services/israel-rail';
 import { BLOCKED_ERROR } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
 import { finishWakeAlert, getPendingWakeAlertsDueBy, updateWakeAlertTiming, upsertWakeAlert, type WakeAlert } from './mongo';
-import { WAKE_ALERT_CONFIG } from './rail.config';
 import { findTravel, formatWakeMessage, getArrivalDelayMinutes, getNotifyAt, getScheduledArrivalAt } from './rail-wake.utils';
+import { WAKE_ALERT_CONFIG } from './rail.config';
 
 export type SetWakeAlertParams = {
   readonly chatId: number;

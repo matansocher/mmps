@@ -23,11 +23,15 @@ import {
 } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
 import { getAvatarHash, saveAvatarHash, saveUserDetails } from './mongo';
+import type { RailWakeService } from './rail-wake.service';
+import { buildWakeCancelKeyboard, buildWakeTrainPickerKeyboard, formatWakeConfirmation, parseWakeCallbackData, type WakeCallbackRequest } from './rail-wake.utils';
 import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import {
   appendSourceFooter,
+  buildNearestStationsKeyboard,
   buildRouteKeyboard,
+  formatNearestStationsMessage,
   formatRouteMessage,
   formatStopsMessage,
   getAnswerSources,
@@ -38,8 +42,6 @@ import {
   type RailSearchAction,
   type RailSearchRequest,
 } from './rail.utils';
-import type { RailWakeService } from './rail-wake.service';
-import { buildWakeCancelKeyboard, buildWakeTrainPickerKeyboard, formatWakeConfirmation, parseWakeCallbackData, type WakeCallbackRequest } from './rail-wake.utils';
 
 const GLOBAL_KEY = 'all';
 const AVATAR_PATH = resolve(process.cwd(), 'assets/images/rail/avatar.png');
@@ -74,6 +76,7 @@ export class RailController {
     this.bot.command(BOT_CONFIG.commands.START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on(['message:voice', 'message:audio'], (ctx) => this.audioHandler(ctx));
+    this.bot.on('message:location', (ctx) => this.locationHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
     this.syncBotProfile().catch((err) => this.logger.error(`Failed to set bot profile: ${getErrorMessage(err)}`));
     this.syncBotAvatar().catch((err) => this.logger.error(`Failed to set bot avatar: ${getErrorMessage(err)}`));
@@ -168,6 +171,31 @@ export class RailController {
     });
   }
 
+  // Deterministic, no-LLM answer; the reply is still saved to the agent memory so follow-ups can use the location.
+  private async locationHandler(ctx: Context): Promise<void> {
+    const { chatId, messageId, location, userDetails } = getMessageData(ctx);
+    const language = getUserLanguage(ctx.from?.language_code);
+    if (location?.lat == null || location?.lon == null) return;
+    if (await this.isRateLimited(ctx, language)) return;
+
+    const question = `📍 ${location.lat},${location.lon}`;
+    const messageLoader = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '⚡' });
+    await messageLoader.handleMessageWithLoader(async () => {
+      try {
+        const result = await this.railService.findNearestStations(location);
+        const answer = formatNearestStationsMessage(result, language);
+        const keyboard = buildNearestStationsKeyboard(result, language);
+        await sendRichMessage(this.bot, chatId, answer, keyboard ? { reply_markup: keyboard } : {});
+        await this.railService.rememberLocation(chatId, location, answer);
+        notifyConversation('LOCATION', question, answer, userDetails);
+      } catch (err) {
+        this.logger.error(`locationHandler failed: ${getErrorMessage(err)}`);
+        await ctx.reply(MESSAGES.locationFailed[language]);
+        notifyConversation('LOCATION', question, `${MESSAGES.locationFailed[language]} (${getErrorMessage(err)})`, userDetails);
+      }
+    });
+  }
+
   private async answerQuery(chatId: number, text: string, language: ImageLanguage): Promise<string> {
     const { message: reply, toolResults } = await this.railService.processMessage(text, chatId, language);
     const message = appendSourceFooter(reply, getAnswerSources(toolResults), format(getLocalNow(), 'HH:mm'), detectLanguage(reply));
@@ -252,7 +280,7 @@ export class RailController {
     } catch (err) {
       // Refreshing twice within the same minute yields identical content, which Telegram rejects.
       if (!isNotModifiedError(err)) throw err;
-  }
+    }
   }
 
   private async wakeCallbackHandler(ctx: Context, chatId: number, request: WakeCallbackRequest, userDetails: UserDetails): Promise<void> {

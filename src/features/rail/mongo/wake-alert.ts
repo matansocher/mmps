@@ -48,7 +48,9 @@ export async function upsertWakeAlert(data: CreateWakeAlertData): Promise<Object
 }
 
 export async function getPendingWakeAlertsDueBy(dueBy: Date): Promise<WakeAlert[]> {
-  return getCollection().find({ status: 'pending', notifyAt: { $lte: dueBy } }).toArray();
+  return getCollection()
+    .find({ status: 'pending', notifyAt: { $lte: dueBy } })
+    .toArray();
 }
 
 export async function updateWakeAlertTiming(id: ObjectId, delayMinutes: number, notifyAt: Date): Promise<void> {

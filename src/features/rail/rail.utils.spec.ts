@@ -2,7 +2,10 @@ import type { TrainTravel } from '@services/israel-rail';
 import {
   appendSourceFooter,
   buildCallbackData,
+  buildNearestStationsKeyboard,
   buildRouteKeyboard,
+  buildWalkingDirectionsUrl,
+  formatNearestStationsMessage,
   formatRouteMessage,
   formatSourceFooter,
   formatStopsMessage,
@@ -14,7 +17,7 @@ import {
   getUserLanguage,
   parseCallbackData,
 } from './rail.utils';
-import type { RailRouteContext } from './rail.utils';
+import type { NearestStationsResult, RailRouteContext } from './rail.utils';
 
 const FROM = { id: 3700, nameEn: 'Tel Aviv - Savidor Center', nameHe: 'תל אביב - סבידור מרכז' };
 const TO = { id: 2300, nameEn: 'Haifa - Hof HaCarmel', nameHe: 'חיפה - חוף הכרמל' };
@@ -258,5 +261,64 @@ describe('getUserLanguage()', () => {
     { code: 'ru', expected: 'en' },
   ])('should return $expected for $code', ({ code, expected }) => {
     expect(getUserLanguage(code)).toEqual(expected);
+  });
+});
+
+const NEAREST: NearestStationsResult = {
+  origin: { lat: 32.08, lon: 34.79 },
+  rail: { station: { ...FROM, lat: 32.0838, lon: 34.7983 }, straightLineMeters: 900, walkingMeters: 1200, walkingMinutes: 15, walkingIsEstimate: false },
+  lightRail: {
+    stop: { station: { id: 'S1', nameHe: 'ארלוזורוב', nameEn: 'Arlozorov', lat: 32.082, lon: 34.795 }, straightLineMeters: 300, walkingMeters: 400, walkingMinutes: 5, walkingIsEstimate: true },
+    directions: [
+      {
+        towards: { id: 'N', nameHe: 'פתח תקווה', nameEn: 'Petah Tikva', lat: 0, lon: 0 },
+        departures: [
+          { date: '2026-10-19', departureTime: '08:04', terminus: { id: 'N', nameHe: 'פתח תקווה', nameEn: 'Petah Tikva', lat: 0, lon: 0 } },
+          { date: '2026-10-19', departureTime: '08:10', terminus: { id: 'N', nameHe: 'פתח תקווה', nameEn: 'Petah Tikva', lat: 0, lon: 0 } },
+        ],
+      },
+    ],
+  },
+};
+
+describe('formatNearestStationsMessage()', () => {
+  test('should show both stations with walk times and light rail departures', () => {
+    expect(formatNearestStationsMessage(NEAREST, 'en')).toEqual(
+      [
+        '🚆 *Nearest train station:* Tel Aviv - Savidor Center\n🚶 15 min walk (1.2 km)',
+        '🚊 *Nearest Red Line stop:* Arlozorov\n🚶 ~5 min walk (400 m)\n• Towards Petah Tikva: 08:04, 08:10',
+        'Going somewhere? Tell me where to, e.g. "to Haifa" 🙂',
+      ].join('\n\n'),
+    );
+  });
+
+  test('should use Hebrew names and warn about long walks', () => {
+    const message = formatNearestStationsMessage({ ...NEAREST, rail: { ...NEAREST.rail, walkingMinutes: 40, walkingMeters: 3200 }, lightRail: null }, 'he');
+    expect(message).toContain('תל אביב - סבידור מרכז');
+    expect(message).toContain('40 דק׳ הליכה (3.2 ק״מ)');
+    expect(message).toContain('אוטובוס או מונית');
+    expect(message).not.toContain('הקו האדום');
+  });
+
+  test('should say nothing was found when there are no stations', () => {
+    expect(formatNearestStationsMessage({ ...NEAREST, rail: null, lightRail: null }, 'en')).toEqual("I couldn't find any train or light rail stations near this location 🤷");
+  });
+});
+
+describe('buildNearestStationsKeyboard()', () => {
+  test('should link walking directions to each station', () => {
+    const keyboard = buildNearestStationsKeyboard(NEAREST, 'en');
+    expect(keyboard.inline_keyboard.flat().map(({ text, url }: { text: string; url?: string }) => ({ text, url }))).toEqual([
+      { text: '🚶 Walk to the train', url: buildWalkingDirectionsUrl(NEAREST.origin, NEAREST.rail.station) },
+      { text: '🚶 Walk to the light rail', url: buildWalkingDirectionsUrl(NEAREST.origin, NEAREST.lightRail.stop.station) },
+    ]);
+  });
+
+  test('should return null when there are no stations', () => {
+    expect(buildNearestStationsKeyboard({ ...NEAREST, rail: null, lightRail: null }, 'en')).toEqual(null);
+  });
+
+  test('should build a Google Maps walking url', () => {
+    expect(buildWalkingDirectionsUrl({ lat: 1, lon: 2 }, { lat: 3, lon: 4 })).toEqual('https://www.google.com/maps/dir/?api=1&origin=1,2&destination=3,4&travelmode=walking');
   });
 });
