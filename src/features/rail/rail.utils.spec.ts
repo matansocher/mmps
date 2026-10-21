@@ -1,7 +1,9 @@
 import type { TrainTravel } from '@services/israel-rail';
 import {
   appendSourceFooter,
+  buildActionsKeyboard,
   buildCallbackData,
+  buildMenuCallbackData,
   buildNearestStationsKeyboard,
   buildRouteKeyboard,
   buildWalkingDirectionsUrl,
@@ -11,11 +13,14 @@ import {
   formatStopsMessage,
   formatTrainLine,
   getAnswerSources,
+  getContactUrl,
   getNextSearchTime,
+  getOppositeLanguage,
   getRefreshSearchTime,
   getRouteContext,
   getUserLanguage,
   parseCallbackData,
+  parseMenuCallbackData,
 } from './rail.utils';
 import type { NearestStationsResult, RailRouteContext } from './rail.utils';
 
@@ -320,5 +325,57 @@ describe('buildNearestStationsKeyboard()', () => {
 
   test('should build a Google Maps walking url', () => {
     expect(buildWalkingDirectionsUrl({ lat: 1, lon: 2 }, { lat: 3, lon: 4 })).toEqual('https://www.google.com/maps/dir/?api=1&origin=1,2&destination=3,4&travelmode=walking');
+  });
+});
+
+describe('parseMenuCallbackData()', () => {
+  test.each([
+    { data: 'actions|language', expected: 'language' },
+    { data: 'actions|contact', expected: 'contact' },
+    { data: 'actions|cancel_contact', expected: 'cancel_contact' },
+    { data: 'actions|unknown', expected: null },
+    { data: 'actions|language|extra', expected: null },
+    { data: 'later|3700|2300|2026-10-19|08:00|he', expected: null },
+  ])('should return $expected for $data', ({ data, expected }) => {
+    expect(parseMenuCallbackData(data)).toEqual(expected);
+  });
+
+  test('should round-trip with buildMenuCallbackData()', () => {
+    expect(parseMenuCallbackData(buildMenuCallbackData('contact'))).toEqual('contact');
+  });
+});
+
+describe('getContactUrl()', () => {
+  test.each([
+    { username: '@user', expected: 'https://t.me/user' },
+    { username: 'user', expected: 'https://t.me/user' },
+    { username: '', expected: null },
+    { username: undefined, expected: null },
+  ])('should return $expected when username is $username', ({ username, expected }) => {
+    expect(getContactUrl(username)).toEqual(expected);
+  });
+});
+
+describe('getOppositeLanguage()', () => {
+  test.each([
+    { language: 'he' as const, expected: 'en' },
+    { language: 'en' as const, expected: 'he' },
+  ])('should return $expected for $language', ({ language, expected }) => {
+    expect(getOppositeLanguage(language)).toEqual(expected);
+  });
+});
+
+describe('buildActionsKeyboard()', () => {
+  test('should include the url row when a contact url exists', () => {
+    const rows = buildActionsKeyboard('en', 'https://t.me/user').inline_keyboard.filter((row) => row.length);
+    expect(rows.length).toEqual(3);
+    expect(rows[0][0]).toEqual({ text: expect.any(String), callback_data: 'actions|language' });
+    expect(rows[1][0]).toEqual({ text: expect.any(String), callback_data: 'actions|contact' });
+    expect(rows[2][0]).toEqual({ text: expect.any(String), url: 'https://t.me/user' });
+  });
+
+  test('should omit the url row without a contact url', () => {
+    const rows = buildActionsKeyboard('he', null).inline_keyboard.filter((row) => row.length);
+    expect(rows.length).toEqual(2);
   });
 });

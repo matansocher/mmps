@@ -4,7 +4,7 @@ import { type Bot, type Context, type InlineKeyboard, InputFile } from 'grammy';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { DEFAULT_TIMEZONE, LOCAL_FILES_PATH } from '@core/config';
+import { DEFAULT_TIMEZONE, LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { createRateLimitCounter } from '@core/express';
 import { deleteFile, getErrorMessage, Logger } from '@core/utils';
 import { buildToolImages, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/tool-images';
@@ -22,23 +22,29 @@ import {
   type UserDetails,
 } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
-import { getAvatarHash, saveAvatarHash, saveUserDetails } from './mongo';
+import { getAvatarHash, getUserLanguagePreference, saveAvatarHash, saveUserDetails, setUserLanguagePreference } from './mongo';
 import type { RailWakeService } from './rail-wake.service';
 import { buildWakeCancelKeyboard, buildWakeTrainPickerKeyboard, formatWakeConfirmation, parseWakeCallbackData, type WakeCallbackRequest } from './rail-wake.utils';
-import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
+import { BOT_CONFIG, BOT_PROFILE, COMMAND_DESCRIPTIONS, CONTACT_MESSAGE_TTL_MS, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import {
   appendSourceFooter,
+  buildActionsKeyboard,
+  buildContactCancelKeyboard,
   buildNearestStationsKeyboard,
   buildRouteKeyboard,
   formatNearestStationsMessage,
   formatRouteMessage,
   formatStopsMessage,
   getAnswerSources,
+  getContactUrl,
+  getOppositeLanguage,
   getRefreshSearchTime,
   getRouteContext,
   getUserLanguage,
   parseCallbackData,
+  parseMenuCallbackData,
+  type RailMenuAction,
   type RailSearchAction,
   type RailSearchRequest,
 } from './rail.utils';
@@ -65,6 +71,8 @@ export class RailController {
   private readonly logger = new Logger(RailController.name);
   private readonly hitUserLimit = createRateLimitCounter({ windowMs: RAIL_LIMITS.userWindowMs, prefix: 'rail-bot:user' });
   private readonly hitGlobalLimit = createRateLimitCounter({ windowMs: RAIL_LIMITS.globalWindowMs, prefix: 'rail-bot:global' });
+  // chatId -> expiry of a pending "send a message to the developer" request from /actions.
+  private readonly pendingContact = new Map<number, number>();
 
   constructor(
     private readonly railService: RailService,
@@ -73,7 +81,9 @@ export class RailController {
   ) {}
 
   init(): void {
-    this.bot.command(BOT_CONFIG.commands.START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
+    const { START, ACTIONS } = BOT_CONFIG.commands;
+    this.bot.command(START.command.replace('/', ''), (ctx) => this.startHandler(ctx));
+    this.bot.command(ACTIONS.command.replace('/', ''), (ctx) => this.actionsHandler(ctx));
     this.bot.on('message:text', (ctx) => this.textHandler(ctx));
     this.bot.on(['message:voice', 'message:audio'], (ctx) => this.audioHandler(ctx));
     this.bot.on('message:location', (ctx) => this.locationHandler(ctx));
@@ -110,6 +120,59 @@ export class RailController {
     notify(BOT_CONFIG, { action: 'START', isNewUser: saveResult === 'created' }, userDetails);
   }
 
+  private async actionsHandler(ctx: Context): Promise<void> {
+    const { chatId, userDetails } = getMessageData(ctx);
+    const language = (await getUserLanguagePreference(chatId)) ?? getUserLanguage(ctx.from?.language_code);
+    await ctx.reply(MESSAGES.actionsTitle[language], { reply_markup: buildActionsKeyboard(language, getContactUrl(MY_USER_NAME)) });
+    notify(BOT_CONFIG, { action: 'ACTIONS' }, userDetails);
+  }
+
+  private async menuActionHandler(ctx: Context, action: RailMenuAction): Promise<void> {
+    const { chatId, userDetails } = getCallbackQueryData(ctx);
+    const savedLanguage = await getUserLanguagePreference(chatId);
+    const language = savedLanguage ?? getUserLanguage(ctx.from?.language_code);
+
+    switch (action) {
+      case 'language': {
+        const newLanguage = getOppositeLanguage(language);
+        await saveUserDetails(userDetails);
+        await setUserLanguagePreference(chatId, newLanguage);
+        await ctx.answerCallbackQuery({ text: MESSAGES.languageSaved[newLanguage] }).catch(() => {});
+        await ctx.editMessageText(MESSAGES.actionsTitle[newLanguage], { reply_markup: buildActionsKeyboard(newLanguage, getContactUrl(MY_USER_NAME)) }).catch(() => {});
+        await this.setChatCommands(chatId, newLanguage);
+        notify(BOT_CONFIG, { action: 'LANGUAGE_CHANGED', language: newLanguage }, userDetails);
+        return;
+      }
+      case 'contact':
+        await ctx.answerCallbackQuery().catch(() => {});
+        this.pendingContact.set(chatId, Date.now() + CONTACT_MESSAGE_TTL_MS);
+        await ctx.reply(MESSAGES.contactPrompt[language], { reply_markup: buildContactCancelKeyboard(language) });
+        notify(BOT_CONFIG, { action: 'CONTACT' }, userDetails);
+        return;
+      case 'cancel_contact':
+        await ctx.answerCallbackQuery({ text: MESSAGES.contactCancelled[language] }).catch(() => {});
+        this.pendingContact.delete(chatId);
+        await ctx.deleteMessage().catch(() => {});
+        return;
+    }
+  }
+
+  private async setChatCommands(chatId: number, language: ImageLanguage): Promise<void> {
+    const commands = Object.entries(BOT_CONFIG.commands).map(([key, { command }]) => ({
+      command: command.replace('/', ''),
+      description: COMMAND_DESCRIPTIONS[language][key as keyof (typeof COMMAND_DESCRIPTIONS)['he']],
+    }));
+    await this.bot.api.setMyCommands(commands, { scope: { type: 'chat', chat_id: chatId } }).catch((err) => this.logger.error(`Failed to set chat commands: ${getErrorMessage(err)}`));
+  }
+
+  // Consumes the pending contact request, if any, so the next text message goes to the developer instead of the agent.
+  private takePendingContact(chatId: number): boolean {
+    const expiresAt = this.pendingContact.get(chatId);
+    if (expiresAt === undefined) return false;
+    this.pendingContact.delete(chatId);
+    return expiresAt > Date.now();
+  }
+
   // Counts every expensive request (text, voice, buttons) against a per-user and a bot-wide window.
   private async isRateLimited(ctx: Context, language: ImageLanguage): Promise<boolean> {
     const userId = ctx.from?.id ?? ctx.chat?.id;
@@ -129,19 +192,27 @@ export class RailController {
 
   private async textHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, text, userDetails } = getMessageData(ctx);
-    const language = detectLanguage(text);
+    const savedLanguage = await getUserLanguagePreference(chatId);
+    const language = savedLanguage ?? detectLanguage(text);
     if (await this.isRateLimited(ctx, language)) return;
+
+    if (this.takePendingContact(chatId)) {
+      notify(BOT_CONFIG, { action: 'CONTACT_MESSAGE', chatId, plainText: `✉️ ${text}` }, userDetails);
+      await ctx.reply(MESSAGES.contactSent[language]);
+      return;
+    }
 
     const messageLoader = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '⚡' });
     await messageLoader.handleMessageWithLoader(async () => {
-      const answer = await this.answerQuery(chatId, text, language);
+      const answer = await this.answerQuery(chatId, text, language, !!savedLanguage);
       notifyConversation('MESSAGE', text, answer, userDetails);
     });
   }
 
   private async audioHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, audio, userDetails } = getMessageData(ctx);
-    const fallbackLanguage = getUserLanguage(ctx.from?.language_code);
+    const savedLanguage = await getUserLanguagePreference(chatId);
+    const fallbackLanguage = savedLanguage ?? getUserLanguage(ctx.from?.language_code);
     if (await this.isRateLimited(ctx, fallbackLanguage)) return;
     if (audio?.duration > RAIL_LIMITS.maxVoiceSeconds) {
       await ctx.reply(MESSAGES.voiceTooLong[fallbackLanguage]);
@@ -166,7 +237,7 @@ export class RailController {
         notifyConversation('VOICE_MESSAGE', '(voice not understood)', MESSAGES.voiceNotUnderstood[fallbackLanguage], userDetails);
         return;
       }
-      const answer = await this.answerQuery(chatId, transcript, detectLanguage(transcript));
+      const answer = await this.answerQuery(chatId, transcript, savedLanguage ?? detectLanguage(transcript), !!savedLanguage);
       notifyConversation('VOICE_MESSAGE', transcript, answer, userDetails);
     });
   }
@@ -174,7 +245,7 @@ export class RailController {
   // Deterministic, no-LLM answer; the reply is still saved to the agent memory so follow-ups can use the location.
   private async locationHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, location, userDetails } = getMessageData(ctx);
-    const language = getUserLanguage(ctx.from?.language_code);
+    const language = (await getUserLanguagePreference(chatId)) ?? getUserLanguage(ctx.from?.language_code);
     if (location?.lat == null || location?.lon == null) return;
     if (await this.isRateLimited(ctx, language)) return;
 
@@ -196,19 +267,28 @@ export class RailController {
     });
   }
 
-  private async answerQuery(chatId: number, text: string, language: ImageLanguage): Promise<string> {
-    const { message: reply, toolResults } = await this.railService.processMessage(text, chatId, language);
-    const message = appendSourceFooter(reply, getAnswerSources(toolResults), format(getLocalNow(), 'HH:mm'), detectLanguage(reply));
+  private async answerQuery(chatId: number, text: string, language: ImageLanguage, isLanguageSaved: boolean): Promise<string> {
+    const { message: reply, toolResults } = await this.railService.processMessage(text, chatId, language, isLanguageSaved);
+    const replyLanguage = isLanguageSaved ? language : detectLanguage(reply);
+    const message = appendSourceFooter(reply, getAnswerSources(toolResults), format(getLocalNow(), 'HH:mm'), replyLanguage);
 
     const images = await buildToolImages(toolResults, message, [RAIL_ROUTE_IMAGE_BUILDER]);
     const context = getRouteContext(toolResults);
-    const replyMarkup = context ? buildRouteKeyboard(context, detectLanguage(message)) : undefined;
+    const replyMarkup = context ? buildRouteKeyboard(context, replyLanguage) : undefined;
     await sendRichMessageWithPhotos(this.bot, chatId, message, images, replyMarkup ? { reply_markup: replyMarkup } : {});
     return message;
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
     const { chatId, messageId, data, userDetails } = getCallbackQueryData(ctx);
+    const menuAction = data ? parseMenuCallbackData(data) : null;
+    if (chatId && menuAction) {
+      await this.menuActionHandler(ctx, menuAction).catch(async (err) => {
+        this.logger.error(`menuActionHandler failed: ${getErrorMessage(err)}`);
+        await ctx.answerCallbackQuery().catch(() => {});
+      });
+      return;
+    }
     await ctx.answerCallbackQuery().catch(() => {});
 
     const wakeRequest = data ? parseWakeCallbackData(data) : null;
@@ -219,15 +299,16 @@ export class RailController {
 
     const request = data ? parseCallbackData(data) : null;
     if (!chatId || !request) return;
-    if (await this.isRateLimited(ctx, request.language)) return;
+    const language = (await getUserLanguagePreference(chatId)) ?? request.language;
+    if (await this.isRateLimited(ctx, language)) return;
     if (request.action === 'stops') {
-      await this.showStops(ctx, chatId, request, userDetails);
+      await this.showStops(ctx, chatId, { ...request, language }, userDetails);
       return;
     }
 
     const action = CALLBACK_ACTIONS[request.action];
     const isRefresh = request.action === 'refresh';
-    const { fromStationId, toStationId, language } = request;
+    const { fromStationId, toStationId } = request;
     const nowLocal = getLocalNow();
     const { date, time } = isRefresh ? getRefreshSearchTime(request.date, request.time, nowLocal) : request;
     const question = `[button] ${fromStationId} → ${toStationId} at ${date} ${time}`;

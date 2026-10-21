@@ -6,8 +6,19 @@ export const BOT_CONFIG: TelegramBotConfig = {
   token: 'RAIL_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: '🚆 איך משתמשים' },
+    ACTIONS: { command: '/actions', description: '⚙️ שפה ויצירת קשר' },
   },
 };
+
+// Per-chat command menu, set when the user picks a language in /actions.
+export const COMMAND_DESCRIPTIONS = {
+  he: { START: '🚆 איך משתמשים', ACTIONS: '⚙️ שפה ויצירת קשר' },
+  en: { START: '🚆 How to use', ACTIONS: '⚙️ Language & contact' },
+} as const;
+
+export const ACTIONS_CALLBACK_PREFIX = 'actions';
+
+export const CONTACT_MESSAGE_TTL_MS = 10 * 60 * 1000;
 
 export const RAIL_LIMITS = {
   userWindowMs: 5 * 60 * 1000,
@@ -90,7 +101,9 @@ Examples:
 • Light rail from Allenby to Petah Tikva 🚊
 • Nearest light rail station to Azrieli
 • I'm at Dizengoff Center, how do I get to the Grand Canyon mall in Haifa? 📍
-• Nearest train station to the Technion`;
+• Nearest train station to the Technion
+
+⚙️ /actions - שפה ויצירת קשר · Language & contact`;
 
 export const MESSAGES = {
   userRateLimited: {
@@ -144,5 +157,41 @@ export const MESSAGES = {
   wakeAlreadyHandled: {
     he: 'ההתראה הזו כבר לא פעילה.',
     en: 'This alert is no longer active.',
+  },
+  actionsTitle: {
+    he: '⚙️ מה תרצו לעשות?',
+    en: '⚙️ What would you like to do?',
+  },
+  switchLanguage: {
+    he: '🇬🇧 Switch to English',
+    en: '🇮🇱 החלפה לעברית',
+  },
+  languageSaved: {
+    he: 'מעכשיו אענה בעברית 🇮🇱',
+    en: "I'll reply in English from now on 🇬🇧",
+  },
+  contactMessageButton: {
+    he: '✉️ שליחת הודעה למפתח',
+    en: '✉️ Send a message to the developer',
+  },
+  contactChatButton: {
+    he: '💬 צ׳אט ישיר עם המפתח',
+    en: '💬 Chat with the developer',
+  },
+  contactPrompt: {
+    he: 'כתבו לי את ההודעה שלכם - הצעה, באג או כל דבר אחר - והיא תועבר למפתח ✍️',
+    en: 'Write your message - a suggestion, a bug or anything else - and I will pass it on to the developer ✍️',
+  },
+  contactCancelButton: {
+    he: '✖️ ביטול',
+    en: '✖️ Cancel',
+  },
+  contactCancelled: {
+    he: 'בוטל 👍',
+    en: 'Cancelled 👍',
+  },
+  contactSent: {
+    he: 'תודה! ההודעה הועברה למפתח 🙏',
+    en: 'Thanks! Your message was sent to the developer 🙏',
   },
 } as const;

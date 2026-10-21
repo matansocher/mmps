@@ -6,6 +6,9 @@ import type { GeoPoint, LightRailDirectionDepartures, NearbyLightRailStation } f
 import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
 import { buildWakeButton } from './rail-wake.utils';
+import { ACTIONS_CALLBACK_PREFIX, MESSAGES } from './rail.config';
+
+export type RailMenuAction = 'language' | 'contact' | 'cancel_contact';
 
 // 'stops' carries the chosen train's own date and departure time instead of a search time.
 export type RailSearchAction = 'later' | 'reverse' | 'stops' | 'refresh';
@@ -233,4 +236,40 @@ export function buildNearestStationsKeyboard({ origin, rail, lightRail }: Neares
 
 export function buildLocationMemoryNote({ lat, lon }: GeoPoint): string {
   return `I shared my current location (${lat}, ${lon}). Use it as my origin for follow-up questions unless I say otherwise.`;
+}
+
+const MENU_ACTIONS: readonly RailMenuAction[] = ['language', 'contact', 'cancel_contact'];
+
+// Format: "actions|language"
+export function buildMenuCallbackData(action: RailMenuAction): string {
+  return [ACTIONS_CALLBACK_PREFIX, action].join(CALLBACK_SEPARATOR);
+}
+
+export function parseMenuCallbackData(data: string): RailMenuAction | null {
+  const [prefix, action, ...rest] = data.split(CALLBACK_SEPARATOR);
+  if (prefix !== ACTIONS_CALLBACK_PREFIX || rest.length) return null;
+  return MENU_ACTIONS.includes(action as RailMenuAction) ? (action as RailMenuAction) : null;
+}
+
+export function getContactUrl(username?: string): string | null {
+  const handle = username?.trim().replace(/^@/, '');
+  return handle ? `https://t.me/${handle}` : null;
+}
+
+export function getOppositeLanguage(language: ImageLanguage): ImageLanguage {
+  return language === 'he' ? 'en' : 'he';
+}
+
+export function buildActionsKeyboard(language: ImageLanguage, contactUrl: string | null): InlineKeyboard {
+  const keyboard = new InlineKeyboard()
+    .text(MESSAGES.switchLanguage[language], buildMenuCallbackData('language'))
+    .row()
+    .text(MESSAGES.contactMessageButton[language], buildMenuCallbackData('contact'))
+    .row();
+  if (contactUrl) keyboard.url(MESSAGES.contactChatButton[language], contactUrl).row();
+  return keyboard;
+}
+
+export function buildContactCancelKeyboard(language: ImageLanguage): InlineKeyboard {
+  return new InlineKeyboard().text(MESSAGES.contactCancelButton[language], buildMenuCallbackData('cancel_contact'));
 }
