@@ -16,3 +16,4 @@ export type {
   NearbyLightRailResult,
   NearbyLightRailStation,
 } from './types';
+export * from './station-map';
