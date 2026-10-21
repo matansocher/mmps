@@ -189,6 +189,7 @@ export class RailController {
       case 'lang':
         await setUserLanguagePreference(chatId, language);
         await ctx.editMessageText(ONBOARDING_MESSAGES.features[language], { reply_markup: buildFeaturesKeyboard(language) });
+        await this.setChatCommands(chatId, language);
         return;
       case 'next':
         await ctx.editMessageText(ONBOARDING_MESSAGES.tryIt[language], { reply_markup: buildTryItKeyboard(language) });
@@ -425,7 +426,7 @@ export class RailController {
   }
 
   private async wakeCallbackHandler(ctx: Context, chatId: number, request: WakeCallbackRequest, userDetails: UserDetails): Promise<void> {
-    const { language } = request;
+    const language = (await getUserLanguagePreference(chatId)) ?? request.language;
     if (request.action === 'wakecancel') {
       const cancelled = await this.railWakeService.cancelAlert(request.alertId, chatId);
       await ctx.editMessageReplyMarkup().catch(() => {});
@@ -477,7 +478,15 @@ export class RailController {
         return;
       }
       const replyMarkup = buildInlineKeyboard([{ text: MESSAGES.refreshTrainMap[language], data: callbackData }]);
-      await ctx.replyWithPhoto(new InputFile(result.image, 'rail-train-map.png'), { caption: result.caption, reply_markup: replyMarkup });
+      const photo = new InputFile(result.image, 'rail-train-map.png');
+      // The refresh button lives on the map photo itself, so update it in place instead of sending another photo.
+      if (ctx.callbackQuery?.message?.photo) {
+        await ctx.editMessageMedia({ type: 'photo', media: photo, caption: result.caption }, { reply_markup: replyMarkup }).catch((err) => {
+          if (!isNotModifiedError(err)) throw err;
+        });
+      } else {
+        await ctx.replyWithPhoto(photo, { caption: result.caption, reply_markup: replyMarkup });
+      }
       notifyConversation('TRAIN_MAP', question, result.caption, userDetails);
     } catch (err) {
       this.logger.error(`trainMapHandler failed: ${getErrorMessage(err)}`);

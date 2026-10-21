@@ -65,7 +65,10 @@ export class RailService {
       toolCallLimitMiddleware({ runLimit: RAIL_LIMITS.toolCallLimitPerRun, exitBehavior: 'continue' }),
       toolCallLimitMiddleware({ toolName: webSearchTool.name, runLimit: RAIL_LIMITS.webSearchCallLimitPerRun, exitBehavior: 'continue' }),
     ];
-    this.aiService = createAgentService({ name: 'RAIL', prompt: RAIL_AGENT_PROMPT, tools: [israelRailTool, lightRailTool, railTripTool, webSearchTool] }, { model, checkpointer: this.checkpointer, middleware });
+    this.aiService = createAgentService(
+      { name: 'RAIL', prompt: RAIL_AGENT_PROMPT, tools: [israelRailTool, lightRailTool, railTripTool, webSearchTool] },
+      { model, checkpointer: this.checkpointer, middleware },
+    );
   }
 
   // The bot is public, so in-memory conversations are dropped after a period of inactivity to keep memory bounded.
