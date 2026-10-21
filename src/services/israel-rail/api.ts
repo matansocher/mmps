@@ -19,6 +19,7 @@ function toStation(id: number): RailStation {
 }
 
 function toLeg(train: RailApiTrain): TrainLeg {
+  const delayMinutes = train.etaDiffTimes?.find((eta) => eta.stationId === train.orignStation)?.difMin ?? 0;
   return {
     trainNumber: train.trainNumber,
     from: toStation(train.orignStation),
@@ -27,7 +28,9 @@ function toLeg(train: RailApiTrain): TrainLeg {
     arrivalTime: toTime(train.arrivalTime),
     originPlatform: train.originPlatform,
     destinationPlatform: train.destPlatform,
-    delayMinutes: train.etaDiffTimes?.find((eta) => eta.stationId === train.orignStation)?.difMin ?? 0,
+    delayMinutes,
+    // A delay at the origin usually carries on to the destination when the API has no prediction for it.
+    arrivalDelayMinutes: train.etaDiffTimes?.find((eta) => eta.stationId === train.destinationStation)?.difMin ?? delayMinutes,
     predictedLoadPercent: train.predictedPctLoad ?? undefined,
     crowding: getCrowdingLevel(train.predictedPctLoad ?? undefined),
     intermediateStops: train.stopStations?.length ?? 0,

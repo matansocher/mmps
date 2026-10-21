@@ -21,6 +21,14 @@ export const RAIL_LIMITS = {
   webSearchCallLimitPerRun: 1,
 };
 
+export const WAKE_ALERT_CONFIG = {
+  minutesBeforeArrival: 5,
+  // Live delays are re-checked only for alerts due within this window, at most once per interval.
+  recheckWindowMinutes: 15,
+  recheckIntervalMinutes: 2,
+  maxTrainChoices: 5,
+};
+
 // Shown by Telegram before the first /start (description, max 512 chars) and on the bot profile (short description, max 120 chars).
 export const BOT_PROFILE = {
   en: {
@@ -112,5 +120,25 @@ export const MESSAGES = {
   error: {
     he: 'משהו השתבש, נסו שוב בעוד רגע 🙏',
     en: 'Something went wrong, please try again 🙏',
+  },
+  wakePickTrain: {
+    he: '⏰ על איזו רכבת אתם? אעיר אתכם 5 דקות לפני ההגעה.',
+    en: "⏰ Which train are you on? I'll wake you 5 minutes before you arrive.",
+  },
+  wakeTooLate: {
+    he: 'הרכבת הזו מגיעה בעוד פחות מ-5 דקות - כבר הזמן לקום 🙂',
+    en: 'This train arrives in less than 5 minutes - time to get up already 🙂',
+  },
+  wakeTrainNotFound: {
+    he: 'לא מצאתי את הרכבת הזו יותר, נסו לחפש שוב 🤷',
+    en: "I couldn't find this train anymore, please search again 🤷",
+  },
+  wakeCancelled: {
+    he: '🔕 ההתראה בוטלה.',
+    en: '🔕 Alert cancelled.',
+  },
+  wakeAlreadyHandled: {
+    he: 'ההתראה הזו כבר לא פעילה.',
+    en: 'This alert is no longer active.',
   },
 } as const;
