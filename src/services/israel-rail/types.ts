@@ -21,6 +21,19 @@ export type RailApiStopStation = {
   readonly platform: number;
 };
 
+// Only present while the train is running. nextStation is 0 when the train is standing at currentLastStation.
+export type RailApiTrainPosition = {
+  readonly currentLastStation: number;
+  readonly nextStation: number;
+  readonly calcDiffMinutes: number;
+};
+
+export type RailApiRouteStation = {
+  readonly stationId: number;
+  readonly arrivalTime: string; // Format: "HH:mm"
+  readonly platform: number;
+};
+
 export type RailApiTrain = {
   readonly trainNumber: number;
   readonly orignStation: number;
@@ -33,6 +46,8 @@ export type RailApiTrain = {
   readonly handicap?: number;
   readonly stopStations?: readonly RailApiStopStation[];
   readonly etaDiffTimes?: readonly RailApiEtaDiff[];
+  readonly trainPosition?: RailApiTrainPosition | null;
+  readonly routeStations?: readonly RailApiRouteStation[];
 };
 
 export type RailApiTravelMessage = {
@@ -114,6 +129,45 @@ export type TrainTravel = {
 export type SearchTrainsResult = {
   readonly travels: readonly TrainTravel[];
   readonly messages: readonly string[];
+};
+
+export type GetTrainLineParams = {
+  readonly fromStationId: number;
+  readonly toStationId: number;
+  readonly date: string; // Format: "YYYY-MM-DD"
+  readonly hour: string; // Format: "HH:mm"
+  readonly trainNumber: number;
+};
+
+export type TrainLineStop = {
+  readonly station: RailStation;
+  readonly time: string; // Format: "HH:mm"
+  readonly platform: number;
+};
+
+export type TrainLivePosition = {
+  readonly lastStationId: number;
+  readonly nextStationId: number | null; // null when the train is standing at lastStationId
+  readonly delayMinutes: number;
+};
+
+// The full line of a single train (every stop, not only the user's segment) with its live position.
+export type TrainLine = {
+  readonly trainNumber: number;
+  readonly date: string; // Format: "YYYY-MM-DD"
+  readonly stops: readonly TrainLineStop[];
+  readonly boardingStationId: number;
+  readonly alightingStationId: number;
+  readonly position: TrainLivePosition | null;
+};
+
+export type TrainProgressStatus = 'not_started' | 'running' | 'finished';
+
+export type TrainProgress = {
+  readonly status: TrainProgressStatus;
+  readonly position: number; // Fractional stop index along TrainLine.stops, e.g. 2.4 = 40% of the way from stop 2 to stop 3
+  readonly delayMinutes: number;
+  readonly isLive: boolean; // false when estimated from the timetable only
 };
 
 export type NearbyRailStation = {

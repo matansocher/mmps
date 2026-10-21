@@ -7,6 +7,8 @@ export * from './nearby';
 export * from './route-image';
 export * from './search-url';
 export * from './station-search';
+export * from './train-map-image';
+export * from './train-progress';
 export { RAIL_STATIONS } from './stations';
 export type {
   CrowdingLevel,
@@ -17,6 +19,8 @@ export type {
   SearchTrainsParams,
   SearchTrainsResult,
   TrainLeg,
+  TrainLine,
+  TrainProgress,
   TrainScheduleType,
   TrainStop,
   TrainTransfer,

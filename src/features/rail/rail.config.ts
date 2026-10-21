@@ -134,6 +134,10 @@ export const MESSAGES = {
     he: 'לא הצלחתי למצוא תחנות ליד המיקום הזה, נסו שוב בעוד רגע 🙏',
     en: "I couldn't look up stations near this location, please try again 🙏",
   },
+  refreshTrainMap: {
+    he: '🔄 רענון',
+    en: '🔄 Refresh',
+  },
   error: {
     he: 'משהו השתבש, נסו שוב בעוד רגע 🙏',
     en: 'Something went wrong, please try again 🙏',

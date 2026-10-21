@@ -1,7 +1,7 @@
 import { addMinutes, format, max, parse } from 'date-fns';
 import { InlineKeyboard } from 'grammy';
 import { CROWDING_EMOJI, getTravelCrowding } from '@services/israel-rail';
-import type { CrowdingLevel, NearbyRailStation, RailStation, TrainLeg, TrainTravel } from '@services/israel-rail';
+import type { CrowdingLevel, NearbyRailStation, RailStation, TrainLeg, TrainLine, TrainProgress, TrainTravel } from '@services/israel-rail';
 import type { GeoPoint, LightRailDirectionDepartures, NearbyLightRailStation } from '@services/light-rail';
 import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
@@ -11,7 +11,7 @@ import { ACTIONS_CALLBACK_PREFIX, MESSAGES } from './rail.config';
 export type RailMenuAction = 'language' | 'contact' | 'cancel_contact';
 
 // 'stops' carries the chosen train's own date and departure time instead of a search time.
-export type RailSearchAction = 'later' | 'reverse' | 'stops' | 'refresh';
+export type RailSearchAction = 'later' | 'reverse' | 'stops' | 'refresh' | 'where';
 
 export type RailDataSource = 'israel-rail' | 'light-rail';
 
@@ -22,6 +22,7 @@ export type RailSearchRequest = {
   readonly date: string; // Format: "YYYY-MM-DD"
   readonly time: string; // Format: "HH:mm"
   readonly language: ImageLanguage;
+  readonly trainNumber?: number; // Only for 'where'
 };
 
 export type RailRouteContext = {
@@ -41,22 +42,26 @@ const CALLBACK_SEPARATOR = '|';
 const STOPS_BUTTONS_PER_ROW = 5;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
-const ACTIONS: readonly RailSearchAction[] = ['later', 'reverse', 'stops', 'refresh'];
+const ACTIONS: readonly RailSearchAction[] = ['later', 'reverse', 'stops', 'refresh', 'where'];
 
-// Format: "later|3700|2300|2026-10-19|08:31|he" (well under Telegram's 64-byte limit)
+// Format: "later|3700|2300|2026-10-19|08:31|he", plus "|<trainNumber>" for 'where' (well under Telegram's 64-byte limit)
 export function buildCallbackData(request: RailSearchRequest): string {
-  return [request.action, request.fromStationId, request.toStationId, request.date, request.time, request.language].join(CALLBACK_SEPARATOR);
+  const fields = [request.action, request.fromStationId, request.toStationId, request.date, request.time, request.language];
+  return (request.action === 'where' ? [...fields, request.trainNumber] : fields).join(CALLBACK_SEPARATOR);
 }
 
 export function parseCallbackData(data: string): RailSearchRequest | null {
-  const [action, from, to, date, time, language] = data.split(CALLBACK_SEPARATOR);
+  const [action, from, to, date, time, language, train] = data.split(CALLBACK_SEPARATOR);
   if (!ACTIONS.includes(action as RailSearchAction)) return null;
   const fromStationId = Number(from);
   const toStationId = Number(to);
   if (!Number.isInteger(fromStationId) || !Number.isInteger(toStationId)) return null;
   if (!DATE_PATTERN.test(date ?? '') || !TIME_PATTERN.test(time ?? '')) return null;
   if (language !== 'he' && language !== 'en') return null;
-  return { action: action as RailSearchAction, fromStationId, toStationId, date, time, language };
+  if (action !== 'where') return { action: action as RailSearchAction, fromStationId, toStationId, date, time, language };
+  const trainNumber = Number(train);
+  if (!train || !Number.isInteger(trainNumber)) return null;
+  return { action, fromStationId, toStationId, date, time, language, trainNumber };
 }
 
 export function getNextSearchTime(trains: readonly TrainTravel[]): { readonly date: string; readonly time: string } | null {
@@ -93,6 +98,19 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
   ];
   const keyboard = buildInlineKeyboard(stopsButtons, STOPS_BUTTONS_PER_ROW);
   buttons.forEach((button) => keyboard.text(button.text, button.data));
+  const firstLeg = context.trains[0]?.legs[0];
+  if (firstLeg) {
+    const where = buildCallbackData({
+      action: 'where',
+      fromStationId: firstLeg.from.id,
+      toStationId: firstLeg.to.id,
+      date: context.trains[0].date,
+      time: firstLeg.departureTime,
+      language,
+      trainNumber: firstLeg.trainNumber,
+    });
+    keyboard.row().text(language === 'he' ? '🗺 איפה הרכבת שלי?' : '🗺 Where is my train?', where);
+  }
   const wakeButton = buildWakeButton(context.from.id, context.to.id, context.searchedFrom, language);
   keyboard.row().text(wakeButton.text, wakeButton.data);
   return keyboard;
@@ -181,6 +199,37 @@ export function formatSourceFooter(source: RailDataSource, updatedAt: string, la
 export function appendSourceFooter(message: string, sources: readonly RailDataSource[], updatedAt: string, language: ImageLanguage, refreshed = false): string {
   if (!sources.length) return message;
   return [message, '', ...sources.map((source) => formatSourceFooter(source, updatedAt, language, refreshed))].join('\n');
+}
+
+export function formatTrainMapCaption(line: TrainLine, progress: TrainProgress, language: ImageLanguage): string {
+  const he = language === 'he';
+  const name = (station: RailStation) => (he ? station.nameHe : station.nameEn);
+  const first = line.stops[0];
+  const last = line.stops[line.stops.length - 1];
+  const header = he ? `🚆 רכבת ${line.trainNumber} · ${name(first.station)} ← ${name(last.station)}` : `🚆 Train ${line.trainNumber} · ${name(first.station)} → ${name(last.station)}`;
+
+  if (progress.status === 'not_started') {
+    return [header, he ? `טרם יצאה · יוצאת מ${name(first.station)} ב-${first.time}` : `Not departed yet · leaves ${name(first.station)} at ${first.time}`].join('\n');
+  }
+  if (progress.status === 'finished') {
+    return [header, he ? `הגיעה ל${name(last.station)}` : `Arrived at ${name(last.station)}`].join('\n');
+  }
+
+  const fromIndex = Math.floor(progress.position);
+  const atStation = progress.position === fromIndex;
+  const current = name(line.stops[fromIndex].station);
+  const parts = [
+    atStation
+      ? he
+        ? `📍 בתחנת ${current}`
+        : `📍 At ${current}`
+      : he
+        ? `📍 בין ${current} ל${name(line.stops[fromIndex + 1].station)}`
+        : `📍 Between ${current} and ${name(line.stops[fromIndex + 1].station)}`,
+    progress.delayMinutes > 0 ? (he ? `⚠️ עיכוב ${progress.delayMinutes} דק׳` : `⚠️ ${progress.delayMinutes} min late`) : he ? '✅ בזמן' : '✅ On time',
+  ];
+  const note = progress.isLive ? [] : [he ? 'מיקום משוער לפי לוח הזמנים' : 'Position estimated from the timetable'];
+  return [header, parts.join(' · '), ...note].join('\n');
 }
 
 // Used before we have any text to detect from (e.g. a voice message). Hebrew unless Telegram says otherwise.
