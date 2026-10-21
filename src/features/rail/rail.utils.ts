@@ -1,4 +1,4 @@
-import { addMinutes, format, parse } from 'date-fns';
+import { addMinutes, format, max, parse } from 'date-fns';
 import type { InlineKeyboard } from 'grammy';
 import { CROWDING_EMOJI, getTravelCrowding } from '@services/israel-rail';
 import type { CrowdingLevel, RailStation, TrainLeg, TrainTravel } from '@services/israel-rail';
@@ -6,7 +6,9 @@ import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
 
 // 'stops' carries the chosen train's own date and departure time instead of a search time.
-export type RailSearchAction = 'later' | 'reverse' | 'stops';
+export type RailSearchAction = 'later' | 'reverse' | 'stops' | 'refresh';
+
+export type RailDataSource = 'israel-rail' | 'light-rail';
 
 export type RailSearchRequest = {
   readonly action: RailSearchAction;
@@ -28,7 +30,7 @@ const CALLBACK_SEPARATOR = '|';
 const STOPS_BUTTONS_PER_ROW = 5;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
-const ACTIONS: readonly RailSearchAction[] = ['later', 'reverse', 'stops'];
+const ACTIONS: readonly RailSearchAction[] = ['later', 'reverse', 'stops', 'refresh'];
 
 // Format: "later|3700|2300|2026-10-19|08:31|he" (well under Telegram's 64-byte limit)
 export function buildCallbackData(request: RailSearchRequest): string {
@@ -53,6 +55,12 @@ export function getNextSearchTime(trains: readonly TrainTravel[]): { readonly da
   return { date: format(next, 'yyyy-MM-dd'), time: format(next, 'HH:mm') };
 }
 
+// A refresh searches from the original time, or from now if that already passed, so departed trains drop off.
+export function getRefreshSearchTime(date: string, time: string, nowLocal: Date): { readonly date: string; readonly time: string } {
+  const refreshed = max([parse(`${date} ${time}`, 'yyyy-MM-dd HH:mm', new Date()), nowLocal]);
+  return { date: format(refreshed, 'yyyy-MM-dd'), time: format(refreshed, 'HH:mm') };
+}
+
 export function getRouteContext(toolResults: readonly { readonly toolName: string; readonly data: unknown }[]): RailRouteContext | null {
   const result = [...toolResults].reverse().find((r) => r.toolName === 'israel_rail' && (r.data as RailRouteContext)?.trains?.length);
   return (result?.data as RailRouteContext) ?? null;
@@ -61,7 +69,8 @@ export function getRouteContext(toolResults: readonly { readonly toolName: strin
 export function buildRouteKeyboard(context: RailRouteContext, language: ImageLanguage): InlineKeyboard {
   const [date, time] = context.searchedFrom.split(' ');
   const next = getNextSearchTime(context.trains);
-  const labels = language === 'he' ? { later: '⏭ רכבות מאוחרות יותר', reverse: '🔁 כיוון הפוך' } : { later: '⏭ Later trains', reverse: '🔁 Reverse direction' };
+  const labels =
+    language === 'he' ? { later: '⏭ רכבות מאוחרות יותר', reverse: '🔁 כיוון הפוך', refresh: '🔄 רענון' } : { later: '⏭ Later trains', reverse: '🔁 Reverse direction', refresh: '🔄 Refresh' };
   const stopsButtons = context.trains.map((train) => ({
     text: `🛤 ${train.departureTime}`,
     data: buildCallbackData({ action: 'stops', fromStationId: context.from.id, toStationId: context.to.id, date: train.date, time: train.departureTime, language }),
@@ -69,6 +78,7 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
   const buttons = [
     ...(next ? [{ text: labels.later, data: buildCallbackData({ action: 'later', fromStationId: context.from.id, toStationId: context.to.id, ...next, language }) }] : []),
     { text: labels.reverse, data: buildCallbackData({ action: 'reverse', fromStationId: context.to.id, toStationId: context.from.id, date, time, language }) },
+    { text: labels.refresh, data: buildCallbackData({ action: 'refresh', fromStationId: context.from.id, toStationId: context.to.id, date, time, language }) },
   ];
   const keyboard = buildInlineKeyboard(stopsButtons, STOPS_BUTTONS_PER_ROW);
   buttons.forEach((button) => keyboard.text(button.text, button.data));
@@ -137,6 +147,27 @@ export function formatRouteMessage(context: RailRouteContext, railWebsiteUrl: st
   const lines = context.trains.map((travel) => formatTrainLine(travel, language));
   const link = language === 'he' ? `[לבדיקה באתר רכבת ישראל](${railWebsiteUrl})` : `[Check on the Israel Railways website](${railWebsiteUrl})`;
   return [header, '', ...lines, '', link].join('\n');
+}
+
+export function getAnswerSources(toolResults: readonly { readonly toolName: string; readonly data: unknown }[]): RailDataSource[] {
+  const hasData = (toolName: string, key: string) => toolResults.some((r) => r.toolName === toolName && (r.data as Record<string, unknown[]>)?.[key]?.length);
+  return [...(hasData('israel_rail', 'trains') ? ['israel-rail' as const] : []), ...(hasData('light_rail', 'departures') ? ['light-rail' as const] : [])];
+}
+
+// Format: updatedAt is "HH:mm" in Israel time
+export function formatSourceFooter(source: RailDataSource, updatedAt: string, language: ImageLanguage, refreshed = false): string {
+  if (source === 'light-rail') {
+    return language === 'he' ? '_🗓 לוח זמנים מתוכנן (GTFS משרד התחבורה) · ללא נתוני זמן אמת_' : '_🗓 Scheduled timetable (MOT GTFS) · no live data_';
+  }
+  if (language === 'he') {
+    return refreshed ? `_🔄 עודכן ${updatedAt} · rail.co.il (רוענן)_` : `_🕒 עודכן ${updatedAt} · rail.co.il_`;
+  }
+  return refreshed ? `_🔄 Updated ${updatedAt} · rail.co.il (refreshed)_` : `_🕒 Updated ${updatedAt} · rail.co.il_`;
+}
+
+export function appendSourceFooter(message: string, sources: readonly RailDataSource[], updatedAt: string, language: ImageLanguage, refreshed = false): string {
+  if (!sources.length) return message;
+  return [message, '', ...sources.map((source) => formatSourceFooter(source, updatedAt, language, refreshed))].join('\n');
 }
 
 // Used before we have any text to detect from (e.g. a voice message). Hebrew unless Telegram says otherwise.

@@ -1,22 +1,57 @@
-import { type Bot, type Context, InputFile } from 'grammy';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { type Bot, type Context, type InlineKeyboard, InputFile } from 'grammy';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { LOCAL_FILES_PATH } from '@core/config';
+import { DEFAULT_TIMEZONE, LOCAL_FILES_PATH } from '@core/config';
 import { createRateLimitCounter } from '@core/express';
 import { deleteFile, getErrorMessage, Logger } from '@core/utils';
 import { buildToolImages, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/tool-images';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
-import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage, sendRichMessageWithPhotos, type UserDetails } from '@services/telegram';
+import {
+  buildRichMessageWithPhotos,
+  downloadFile,
+  getCallbackQueryData,
+  getMessageData,
+  MessageLoader,
+  type RichPhoto,
+  sendRichMessage,
+  sendRichMessageWithPhotos,
+  type UserDetails,
+} from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
 import { getAvatarHash, saveAvatarHash, saveUserDetails } from './mongo';
 import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
-import { buildRouteKeyboard, formatRouteMessage, formatStopsMessage, getRouteContext, getUserLanguage, parseCallbackData, type RailSearchRequest } from './rail.utils';
+import {
+  appendSourceFooter,
+  buildRouteKeyboard,
+  formatRouteMessage,
+  formatStopsMessage,
+  getAnswerSources,
+  getRefreshSearchTime,
+  getRouteContext,
+  getUserLanguage,
+  parseCallbackData,
+  type RailSearchAction,
+  type RailSearchRequest,
+} from './rail.utils';
 
 const GLOBAL_KEY = 'all';
 const AVATAR_PATH = resolve(process.cwd(), 'assets/images/rail/avatar.png');
+const ROUTE_IMAGE_FILE_NAME = 'rail-route.png';
+
+const CALLBACK_ACTIONS: Record<Exclude<RailSearchAction, 'stops'>, string> = { later: 'LATER_TRAINS', reverse: 'REVERSE_DIRECTION', refresh: 'REFRESH' };
+
+function getLocalNow(): Date {
+  return toZonedTime(new Date(), DEFAULT_TIMEZONE);
+}
+
+function isNotModifiedError(err: unknown): boolean {
+  return getErrorMessage(err).includes('message is not modified');
+}
 
 function notifyConversation(action: string, question: string, answer: string, userDetails: UserDetails): void {
   notify(BOT_CONFIG, { action, plainText: `❓ ${question}\n\n💬 ${answer}` }, userDetails);
@@ -131,7 +166,8 @@ export class RailController {
   }
 
   private async answerQuery(chatId: number, text: string, language: ImageLanguage): Promise<string> {
-    const { message, toolResults } = await this.railService.processMessage(text, chatId, language);
+    const { message: reply, toolResults } = await this.railService.processMessage(text, chatId, language);
+    const message = appendSourceFooter(reply, getAnswerSources(toolResults), format(getLocalNow(), 'HH:mm'), detectLanguage(reply));
 
     const images = await buildToolImages(toolResults, message, [RAIL_ROUTE_IMAGE_BUILDER]);
     const context = getRouteContext(toolResults);
@@ -141,7 +177,7 @@ export class RailController {
   }
 
   private async callbackQueryHandler(ctx: Context): Promise<void> {
-    const { chatId, data, userDetails } = getCallbackQueryData(ctx);
+    const { chatId, messageId, data, userDetails } = getCallbackQueryData(ctx);
     await ctx.answerCallbackQuery().catch(() => {});
 
     const request = data ? parseCallbackData(data) : null;
@@ -152,8 +188,11 @@ export class RailController {
       return;
     }
 
-    const action = request.action === 'later' ? 'LATER_TRAINS' : 'REVERSE_DIRECTION';
-    const { fromStationId, toStationId, date, time, language } = request;
+    const action = CALLBACK_ACTIONS[request.action];
+    const isRefresh = request.action === 'refresh';
+    const { fromStationId, toStationId, language } = request;
+    const nowLocal = getLocalNow();
+    const { date, time } = isRefresh ? getRefreshSearchTime(request.date, request.time, nowLocal) : request;
     const question = `[button] ${fromStationId} → ${toStationId} at ${date} ${time}`;
     try {
       const result = await this.railService.searchRoute(fromStationId, toStationId, date, time, language);
@@ -162,9 +201,14 @@ export class RailController {
         notifyConversation(action, question, MESSAGES.noTrains[language], userDetails);
         return;
       }
-      const answer = formatRouteMessage(result.context, result.railWebsiteUrl, language);
-      const photos = result.image ? [{ image: result.image, fileName: 'rail-route.png' }] : [];
-      await sendRichMessageWithPhotos(this.bot, chatId, answer, photos, { reply_markup: buildRouteKeyboard(result.context, language) });
+      const answer = appendSourceFooter(formatRouteMessage(result.context, result.railWebsiteUrl, language), ['israel-rail'], format(nowLocal, 'HH:mm'), language, isRefresh);
+      const photos = result.image ? [{ image: result.image, fileName: ROUTE_IMAGE_FILE_NAME }] : [];
+      const keyboard = buildRouteKeyboard(result.context, language);
+      if (isRefresh && messageId) {
+        await this.editRouteMessage(chatId, messageId, answer, photos, keyboard);
+      } else {
+        await sendRichMessageWithPhotos(this.bot, chatId, answer, photos, { reply_markup: keyboard });
+      }
       notifyConversation(action, `[button] ${result.context.from.nameEn} → ${result.context.to.nameEn} at ${date} ${time}`, answer, userDetails);
     } catch (err) {
       this.logger.error(`callbackQueryHandler failed: ${getErrorMessage(err)}`);
@@ -185,6 +229,20 @@ export class RailController {
       this.logger.error(`showStops failed: ${getErrorMessage(err)}`);
       await ctx.reply(MESSAGES.error[language]);
       notifyConversation('SHOW_STOPS', question, `${MESSAGES.error[language]} (${getErrorMessage(err)})`, userDetails);
+    }
+  }
+
+  // Rebuilds the rich message (route image + text) the button lives on; falls back to a plain Markdown edit if the rich edit is rejected.
+  private async editRouteMessage(chatId: number, messageId: number, text: string, photos: readonly RichPhoto[], keyboard: InlineKeyboard): Promise<void> {
+    try {
+      await this.bot.api.editMessageText(chatId, messageId, buildRichMessageWithPhotos(text, photos), { reply_markup: keyboard }).catch(async (err) => {
+        if (isNotModifiedError(err)) throw err;
+        this.logger.error(`Rich edit failed, falling back to Markdown: ${getErrorMessage(err)}`);
+        await this.bot.api.editMessageText(chatId, messageId, text, { parse_mode: 'Markdown', reply_markup: keyboard });
+      });
+    } catch (err) {
+      // Refreshing twice within the same minute yields identical content, which Telegram rejects.
+      if (!isNotModifiedError(err)) throw err;
     }
   }
 }

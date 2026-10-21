@@ -1,5 +1,19 @@
 import type { TrainTravel } from '@services/israel-rail';
-import { buildCallbackData, buildRouteKeyboard, formatRouteMessage, formatStopsMessage, formatTrainLine, getNextSearchTime, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
+import {
+  appendSourceFooter,
+  buildCallbackData,
+  buildRouteKeyboard,
+  formatRouteMessage,
+  formatSourceFooter,
+  formatStopsMessage,
+  formatTrainLine,
+  getAnswerSources,
+  getNextSearchTime,
+  getRefreshSearchTime,
+  getRouteContext,
+  getUserLanguage,
+  parseCallbackData,
+} from './rail.utils';
 import type { RailRouteContext } from './rail.utils';
 
 const FROM = { id: 3700, nameEn: 'Tel Aviv - Savidor Center', nameHe: 'תל אביב - סבידור מרכז' };
@@ -32,6 +46,11 @@ describe('buildCallbackData() / parseCallbackData()', () => {
     expect(parseCallbackData(buildCallbackData(request))).toEqual(request);
   });
 
+  test('should round-trip a refresh request', () => {
+    const request = { action: 'refresh' as const, fromStationId: 3700, toStationId: 2300, date: '2026-10-19', time: '07:50', language: 'en' as const };
+    expect(parseCallbackData(buildCallbackData(request))).toEqual(request);
+  });
+
   test.each([
     { data: 'foo|1|2|2026-10-19|08:00|he' },
     { data: 'later|x|2|2026-10-19|08:00|he' },
@@ -54,6 +73,68 @@ describe('getNextSearchTime()', () => {
   });
 });
 
+describe('getRefreshSearchTime()', () => {
+  test.each([
+    { now: '2026-10-19 08:30', expected: { date: '2026-10-19', time: '08:30' } },
+    { now: '2026-10-19 07:00', expected: { date: '2026-10-19', time: '07:50' } },
+    { now: '2026-10-20 00:05', expected: { date: '2026-10-20', time: '00:05' } },
+  ])('should return $expected when now is $now', ({ now, expected }) => {
+    expect(getRefreshSearchTime('2026-10-19', '07:50', new Date(now.replace(' ', 'T')))).toEqual(expected);
+  });
+});
+
+describe('getAnswerSources()', () => {
+  test.each([
+    { toolResults: [{ toolName: 'israel_rail', data: CONTEXT }], expected: ['israel-rail'] },
+    { toolResults: [{ toolName: 'light_rail', data: { departures: [{}] } }], expected: ['light-rail'] },
+    {
+      toolResults: [
+        { toolName: 'light_rail', data: { departures: [{}] } },
+        { toolName: 'israel_rail', data: CONTEXT },
+      ],
+      expected: ['israel-rail', 'light-rail'],
+    },
+    {
+      toolResults: [
+        { toolName: 'israel_rail', data: { error: 'Unknown' } },
+        { toolName: 'light_rail', data: { stations: [{}] } },
+      ],
+      expected: [],
+    },
+    { toolResults: [], expected: [] },
+  ])('should return $expected', ({ toolResults, expected }) => {
+    expect(getAnswerSources(toolResults)).toEqual(expected);
+  });
+});
+
+describe('formatSourceFooter()', () => {
+  test.each([
+    { source: 'israel-rail' as const, language: 'en' as const, refreshed: false, expected: '_🕒 Updated 08:01 · rail.co.il_' },
+    { source: 'israel-rail' as const, language: 'he' as const, refreshed: false, expected: '_🕒 עודכן 08:01 · rail.co.il_' },
+    { source: 'israel-rail' as const, language: 'en' as const, refreshed: true, expected: '_🔄 Updated 08:01 · rail.co.il (refreshed)_' },
+    { source: 'israel-rail' as const, language: 'he' as const, refreshed: true, expected: '_🔄 עודכן 08:01 · rail.co.il (רוענן)_' },
+    { source: 'light-rail' as const, language: 'en' as const, refreshed: false, expected: '_🗓 Scheduled timetable (MOT GTFS) · no live data_' },
+    { source: 'light-rail' as const, language: 'he' as const, refreshed: false, expected: '_🗓 לוח זמנים מתוכנן (GTFS משרד התחבורה) · ללא נתוני זמן אמת_' },
+  ])('should format $source footer in $language (refreshed: $refreshed)', ({ source, language, refreshed, expected }) => {
+    expect(formatSourceFooter(source, '08:01', language, refreshed)).toEqual(expected);
+  });
+});
+
+describe('appendSourceFooter()', () => {
+  test('should append one footer line per source', () => {
+    expect(appendSourceFooter('answer', ['israel-rail', 'light-rail'], '08:01', 'en').split('\n')).toEqual([
+      'answer',
+      '',
+      '_🕒 Updated 08:01 · rail.co.il_',
+      '_🗓 Scheduled timetable (MOT GTFS) · no live data_',
+    ]);
+  });
+
+  test('should keep the message as is when there are no sources', () => {
+    expect(appendSourceFooter('answer', [], '08:01', 'en')).toEqual('answer');
+  });
+});
+
 describe('getRouteContext()', () => {
   test('should return the last israel_rail result with trains', () => {
     const toolResults = [
@@ -70,7 +151,7 @@ describe('getRouteContext()', () => {
 });
 
 describe('buildRouteKeyboard()', () => {
-  test('should build a stops button per train, then later-trains and reverse-direction buttons', () => {
+  test('should build a stops button per train, then later-trains, reverse-direction and refresh buttons', () => {
     const rows = buildRouteKeyboard(CONTEXT, 'he').inline_keyboard.filter((row) => row.length);
     expect(rows.map((row) => row.map((b) => [b.text, 'callback_data' in b ? b.callback_data : null]))).toEqual([
       [
@@ -80,6 +161,7 @@ describe('buildRouteKeyboard()', () => {
       [
         ['⏭ רכבות מאוחרות יותר', 'later|3700|2300|2026-10-19|08:31|he'],
         ['🔁 כיוון הפוך', 'reverse|2300|3700|2026-10-19|07:50|he'],
+        ['🔄 רענון', 'refresh|3700|2300|2026-10-19|07:50|he'],
       ],
     ]);
   });
