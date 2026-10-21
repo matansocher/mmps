@@ -3,6 +3,7 @@ import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { CalendarEvent, listEvents } from '@services/google-calendar';
 import { getEventOutcomes } from '@services/polymarket';
+import type { ChatbotService } from '../chatbot.service';
 import { SPORTS_CALENDAR_SOURCE } from './sports-calendar.config';
 import { findMatchEventSlug, formatMatchOdds } from './utils';
 
@@ -62,7 +63,7 @@ async function getMatchOddsSection(event: CalendarEvent): Promise<string> {
   }
 }
 
-export async function upcomingEventAlert(bot: Bot): Promise<void> {
+export async function upcomingEventAlert(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const now = new Date();
     const windowStart = new Date(now.getTime() + LEAD_MINUTES * 60 * 1000);
@@ -88,6 +89,7 @@ export async function upcomingEventAlert(bot: Bot): Promise<void> {
         const oddsSection = await getMatchOddsSection(event);
         const message = oddsSection ? `${buildMessage(event)}\n\n${oddsSection}` : buildMessage(event);
         await bot.api.sendMessage(MY_USER_ID, message, { parse_mode: 'Markdown' });
+        await chatbotService.recordProactiveMessage(MY_USER_ID, message, 'upcoming-event-alert');
       } catch (err) {
         logger.error(`Failed to send alert for event ${event.id}: ${getErrorMessage(err)}`);
       }

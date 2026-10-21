@@ -26,9 +26,15 @@ export function formatEvent(event: CalendarEvent) {
     id: event.id,
     title: event.summary || 'Untitled Event',
     date: dateStr,
+    // Raw Google values: ISO dateTime for timed events, YYYY-MM-DD (end exclusive) for all-day events
+    start,
+    end,
     location: event.location,
     description: event.description,
     status: event.status,
     attendees: event.attendees?.map(({ email, responseStatus }) => ({ email, responseStatus })),
+    allDay: !event.start?.dateTime && !!event.start?.date,
+    recurrence: event.recurrence,
+    recurringEventId: event.recurringEventId,
   };
 }

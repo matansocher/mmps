@@ -6,7 +6,7 @@ import { env } from 'node:process';
 import { DEFAULT_TIMEZONE, isProd, MY_USER_ID } from '@core/config/main.config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import { CHILLI_PROMPT } from './chilli.config';
 
@@ -22,7 +22,7 @@ export class ChilliService {
   private readonly aiService: AiService;
 
   constructor() {
-    const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.8, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+    const model = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, temperature: 0.8, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 
     this.aiService = createAgentService({ name: 'CHILLI', prompt: 'את צ׳ילי החתולה.', tools: [] }, { model });
   }

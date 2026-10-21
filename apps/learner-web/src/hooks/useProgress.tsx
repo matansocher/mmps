@@ -10,6 +10,7 @@ type ProgressContextValue = {
   readonly rateBite: (biteId: string, rating: Rating) => void;
   readonly markRead: (biteId: string) => void;
   readonly setQuizPassed: (biteId: string, passed: boolean) => void;
+  readonly mergeRemote: (remoteProgress: LearnerProgress, authoritativeBiteId?: string) => void;
 };
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -117,9 +118,19 @@ export function ProgressProvider({ children }: { readonly children: ReactNode })
     });
   }, []);
 
+  // Server-side changes (e.g. practice marking a lesson fuzzy) arrive as canonical progress snapshots.
+  const mergeRemote = useCallback((remoteProgress: LearnerProgress, authoritativeBiteId?: string) => {
+    setProgress((local) => {
+      const merged = mergeProgress(local, remoteProgress);
+      const serverState = authoritativeBiteId ? remoteProgress.states[authoritativeBiteId] : undefined;
+      if (!authoritativeBiteId || !serverState) return merged;
+      return { ...merged, states: { ...merged.states, [authoritativeBiteId]: serverState } };
+    });
+  }, []);
+
   const value = useMemo<ProgressContextValue>(
-    () => ({ progress, remote, rateBite, markRead, setQuizPassed }),
-    [progress, remote, rateBite, markRead, setQuizPassed],
+    () => ({ progress, remote, rateBite, markRead, setQuizPassed, mergeRemote }),
+    [progress, remote, rateBite, markRead, setQuizPassed, mergeRemote],
   );
 
   return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>;

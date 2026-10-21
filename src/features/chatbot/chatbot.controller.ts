@@ -1,3 +1,4 @@
+import { InputFile } from 'grammy';
 import type { Bot, Context } from 'grammy';
 import type { ReactionTypeEmoji } from 'grammy/types';
 import { LOCAL_FILES_PATH, MY_USER_ID, WIFE_USER_ID } from '@core/config';
@@ -6,19 +7,14 @@ import { deleteFile } from '@core/utils';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
+import { deleteAllMemories, deleteMemory, getMemories, getMemoryById, updateMemory } from '@shared/memories';
 import { getReminderById, updateReminderStatus } from '@shared/reminders';
 import { addExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
 import { FileSummaryService, getFileSummaryRejection } from './file-summary';
-import {
-  describeSnoozeOption,
-  parseBirthdayCallbackData,
-  parseExerciseCallbackData,
-  parseReminderCallbackData,
-  resolveSnoozeUntil,
-  sendExerciseReminder,
-} from './schedulers';
+import { buildCancelEditKeyboard, buildClearConfirmKeyboard, buildMemoryView, MEMORY_CALLBACK_PREFIX, parseMemoryCallbackData } from './memory';
+import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
 import {
   ACTION_CALLBACK_PREFIX,
   buildActionsKeyboard,
@@ -32,14 +28,20 @@ import {
   TRANSCRIPTION_HEADER,
   updateActionStatus,
 } from './secretary';
-import { fileToDataUrl } from './utils';
+import { buildToolImages } from './tool-images';
+import { ToolStatusReporter } from './tool-status';
+import type { ChatbotResponse, ProcessMessageOptions } from './types';
+import { fileToDataUrl, getReplyContextText, withReplyContext } from './utils';
 
 const EXERCISE_REMIND_DELAY_MS = 60 * 60 * 1000;
+const AGENT_ERROR_REPLY = 'Something went wrong. Please try again.';
 
 const isOwner = (ctx: Context): boolean => ctx.from?.id === MY_USER_ID;
 
 export class ChatbotController {
   private readonly logger = new Logger('chatbot:controller');
+  // chatId -> memory id awaiting its replacement text from the /memory ✏️ button.
+  private readonly pendingMemoryEdits = new Map<number, string>();
 
   constructor(
     private readonly chatbotService: ChatbotService,
@@ -51,10 +53,12 @@ export class ChatbotController {
 
   init(): void {
     this.bot.command('start', (ctx) => this.startHandler(ctx));
+    this.bot.command('memory', (ctx) => this.memoryHandler(ctx));
     this.bot.on('business_connection', (ctx) => this.businessConnectionHandler(ctx));
     this.bot.on('business_message', (ctx) => this.businessMessageHandler(ctx));
     this.bot.callbackQuery(CHECK_IN_SEND_CALLBACK, (ctx) => this.checkInSendHandler(ctx));
     this.bot.callbackQuery(new RegExp(`^${ACTION_CALLBACK_PREFIX}`), (ctx) => this.secretaryActionHandler(ctx));
+    this.bot.callbackQuery(new RegExp(`^${MEMORY_CALLBACK_PREFIX}`), (ctx) => this.memoryCallbackHandler(ctx));
     this.bot.on('message:text', (ctx) => this.messageHandler(ctx));
     this.bot.on('message:photo', (ctx) => this.photoHandler(ctx));
     this.bot.on('message:document', (ctx) => this.documentHandler(ctx));
@@ -65,6 +69,89 @@ export class ChatbotController {
   private async startHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
     await ctx.reply('Hi, I am your chatbot! How can I assist you today?');
+  }
+
+  private async memoryHandler(ctx: Context): Promise<void> {
+    if (this.denyIfNotOwner(ctx)) return;
+    const { chatId } = getMessageData(ctx);
+    this.pendingMemoryEdits.delete(chatId);
+    const { text, keyboard } = buildMemoryView(await getMemories(chatId), 0);
+    await ctx.reply(text, { reply_markup: keyboard });
+  }
+
+  private async memoryCallbackHandler(ctx: Context): Promise<void> {
+    if (!isOwner(ctx)) {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    const { chatId, data } = getCallbackQueryData(ctx);
+    const callback = parseMemoryCallbackData(data);
+    if (!callback) {
+      await ctx.answerCallbackQuery().catch(() => {});
+      return;
+    }
+
+    try {
+      switch (callback.action) {
+        case 'page':
+          await this.renderMemoryView(ctx, chatId, callback.page);
+          await ctx.answerCallbackQuery().catch(() => {});
+          return;
+        case 'delete': {
+          const deleted = await deleteMemory(callback.memoryId, chatId);
+          await this.renderMemoryView(ctx, chatId, callback.page);
+          await ctx.answerCallbackQuery({ text: deleted ? '🗑 Forgotten' : 'Already gone' }).catch(() => {});
+          return;
+        }
+        case 'edit': {
+          const memory = await getMemoryById(callback.memoryId, chatId);
+          if (!memory) {
+            await ctx.answerCallbackQuery({ text: 'Memory not found.', show_alert: true }).catch(() => {});
+            return;
+          }
+          this.pendingMemoryEdits.set(chatId, callback.memoryId);
+          await ctx.answerCallbackQuery().catch(() => {});
+          await ctx.reply(`✏️ Send the corrected text for:\n\n${memory.content}`, { reply_markup: buildCancelEditKeyboard() });
+          return;
+        }
+        case 'cancel_edit':
+          this.pendingMemoryEdits.delete(chatId);
+          await ctx.editMessageText('Edit cancelled.').catch(() => {});
+          await ctx.answerCallbackQuery().catch(() => {});
+          return;
+        case 'clear':
+          await ctx.editMessageText('⚠️ Forget everything I remember about you? This cannot be undone.', { reply_markup: buildClearConfirmKeyboard() }).catch(() => {});
+          await ctx.answerCallbackQuery().catch(() => {});
+          return;
+        case 'clear_confirm': {
+          const count = await deleteAllMemories(chatId);
+          this.pendingMemoryEdits.delete(chatId);
+          await ctx.editMessageText(`🧹 Forgot ${count} fact${count === 1 ? '' : 's'}.`).catch(() => {});
+          await ctx.answerCallbackQuery({ text: 'Memory cleared' }).catch(() => {});
+          return;
+        }
+      }
+    } catch (err) {
+      this.logger.error(`Error handling memory callback: ${getErrorMessage(err)}`);
+      await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
+    }
+  }
+
+  private async renderMemoryView(ctx: Context, chatId: number, page: number): Promise<void> {
+    const { text, keyboard } = buildMemoryView(await getMemories(chatId), page);
+    // Telegram rejects edits that change nothing (e.g. a double tap); that's harmless.
+    await ctx.editMessageText(text, { reply_markup: keyboard }).catch(() => {});
+  }
+
+  // Returns true when the text was consumed as the replacement for a pending /memory edit.
+  private async handlePendingMemoryEdit(ctx: Context, chatId: number, text: string): Promise<boolean> {
+    const memoryId = this.pendingMemoryEdits.get(chatId);
+    if (!memoryId || !text?.trim() || text.startsWith('/')) return false;
+    this.pendingMemoryEdits.delete(chatId);
+    const updated = await updateMemory(memoryId, chatId, text);
+    await ctx.reply(updated ? `🧠 Updated: ${text.trim()}` : 'That memory no longer exists.');
+    return true;
   }
 
   // Silently ignore anyone who is not the owner and ping the notifier bot.
@@ -113,8 +200,7 @@ export class ChatbotController {
 
   private async transcribeBusinessVoice(fileId: string): Promise<string> {
     try {
-      const audioFilePath = await downloadFile(this.bot, fileId, LOCAL_FILES_PATH);
-      return await getTranscriptFromAudio(audioFilePath);
+      return await this.withDownloadedFile(fileId, getTranscriptFromAudio);
     } catch (err) {
       this.logger.error(`Failed to transcribe business voice: ${getErrorMessage(err)}`);
       return '';
@@ -283,63 +369,35 @@ export class ChatbotController {
 
   private async messageHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
-    const { text } = getMessageData(ctx);
-    await this.runAgentReply(ctx, text, '🤔');
-  }
-
-  private async runAgentReply(ctx: Context, prompt: string, reactionEmoji: ReactionTypeEmoji['emoji']): Promise<void> {
-    const { chatId, messageId } = getMessageData(ctx);
-
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      const { message: replyText } = await this.chatbotService.processMessage(prompt, chatId);
-      await this.handleBotResponse(chatId, replyText);
-    });
-  }
-
-  private async handleBotResponse(chatId: number, replyText: string): Promise<void> {
-    this.logger.log(`bot response for chatId ${chatId}: ${replyText}`);
-    await sendRichMessage(this.bot, chatId, replyText);
+    const { chatId, text } = getMessageData(ctx);
+    if (await this.handlePendingMemoryEdit(ctx, chatId, text)) return;
+    await this.runWithLoader(ctx, '🤔', () => this.replyWithAgent(chatId, withReplyContext(text, getReplyContextText(ctx.message))));
   }
 
   private async photoHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
-    const { chatId, messageId, photo, text } = getMessageData(ctx);
+    const { chatId, photo, text } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      const imageLocalPath = await downloadFile(this.bot, photo[photo.length - 1].file_id, LOCAL_FILES_PATH);
-      const imageDataUrl = await fileToDataUrl(imageLocalPath);
-
-      await deleteFile(imageLocalPath);
-
+    await this.runWithLoader(ctx, '👀', async () => {
+      const imageDataUrl = await this.withDownloadedFile(photo[photo.length - 1].file_id, fileToDataUrl);
       const prompt = text?.trim() ? text : 'Please take a look at this image and respond helpfully.';
-      const { message } = await this.chatbotService.processMessage(prompt, chatId, { images: [imageDataUrl] });
-
-      await sendRichMessage(this.bot, chatId, message);
+      await this.replyWithAgent(chatId, withReplyContext(prompt, getReplyContextText(ctx.message)), { images: [imageDataUrl] });
     });
   }
 
   private async audioHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
-    const { chatId, messageId, audio } = getMessageData(ctx);
+    const { chatId, audio } = getMessageData(ctx);
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '🤔' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      const audioFileLocalPath = await downloadFile(this.bot, audio.file_id, LOCAL_FILES_PATH);
-
-      const transcribedText = await getTranscriptFromAudio(audioFileLocalPath);
-      const { message: replyText } = await this.chatbotService.processMessage(transcribedText, chatId);
-
-      await this.handleBotResponse(chatId, replyText);
-
-      deleteFile(audioFileLocalPath);
+    await this.runWithLoader(ctx, '🤔', async () => {
+      const transcribedText = await this.withDownloadedFile(audio.file_id, getTranscriptFromAudio);
+      await this.replyWithAgent(chatId, withReplyContext(transcribedText, getReplyContextText(ctx.message)));
     });
   }
 
   private async documentHandler(ctx: Context): Promise<void> {
     if (this.denyIfNotOwner(ctx)) return;
-    const { chatId, messageId, file, text } = getMessageData(ctx);
+    const { chatId, file, text } = getMessageData(ctx);
     if (!file?.file_id) return;
 
     const metadata = {
@@ -353,19 +411,59 @@ export class ChatbotController {
       return;
     }
 
-    const messageLoaderService = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji: '👀' });
-    await messageLoaderService.handleMessageWithLoader(async () => {
-      let documentLocalPath = '';
-      try {
-        documentLocalPath = await downloadFile(this.bot, file.file_id, LOCAL_FILES_PATH);
-        const prepared = await this.fileSummaryService.prepareSummary({ ...metadata, localPath: documentLocalPath, caption: text });
-        const { message } = await this.chatbotService.processMessage(prepared.prompt, chatId, { images: prepared.images });
-        await sendRichMessage(this.bot, chatId, message);
-      } finally {
-        if (documentLocalPath) {
-          await deleteFile(documentLocalPath);
-        }
-      }
+    await this.runWithLoader(ctx, '👀', async () => {
+      const prepared = await this.withDownloadedFile(file.file_id, (localPath) => this.fileSummaryService.prepareSummary({ ...metadata, localPath, caption: text }));
+      await this.replyWithAgent(chatId, withReplyContext(prepared.prompt, getReplyContextText(ctx.message)), { images: prepared.images });
     });
+  }
+
+  // Tells the user the request failed, then rethrows so bot.catch logs it.
+  private async runWithLoader(ctx: Context, reactionEmoji: ReactionTypeEmoji['emoji'], action: () => Promise<void>): Promise<void> {
+    const { chatId, messageId } = getMessageData(ctx);
+    const messageLoader = new MessageLoader(this.bot, chatId, messageId, { reactionEmoji });
+    try {
+      await messageLoader.handleMessageWithLoader(action);
+    } catch (err) {
+      await ctx.reply(AGENT_ERROR_REPLY).catch(() => {});
+      throw err;
+    }
+  }
+
+  private async withDownloadedFile<T>(fileId: string, use: (localPath: string) => Promise<T>): Promise<T> {
+    const localPath = await downloadFile(this.bot, fileId, LOCAL_FILES_PATH);
+    try {
+      return await use(localPath);
+    } finally {
+      await deleteFile(localPath);
+    }
+  }
+
+  private async replyWithAgent(chatId: number, prompt: string, options?: ProcessMessageOptions): Promise<void> {
+    const toolStatus = new ToolStatusReporter(this.bot.api, chatId);
+    let response: ChatbotResponse;
+    try {
+      response = await this.chatbotService.processMessage(prompt, chatId, { ...options, callbacks: [toolStatus] });
+    } finally {
+      // Removed before the reply is sent, and also when the turn fails
+      await toolStatus.dispose();
+    }
+    await this.handleBotResponse(chatId, response);
+  }
+
+  private async handleBotResponse(chatId: number, { message: replyText, toolResults }: ChatbotResponse): Promise<void> {
+    this.logger.log(`bot response for chatId ${chatId}: ${replyText}`);
+    await this.sendToolImages(chatId, toolResults, replyText);
+    await sendRichMessage(this.bot, chatId, replyText);
+  }
+
+  private async sendToolImages(chatId: number, toolResults: ChatbotResponse['toolResults'], replyText: string): Promise<void> {
+    const images = await buildToolImages(toolResults, replyText);
+    for (const { fileName, image } of images) {
+      try {
+        await this.bot.api.sendPhoto(chatId, new InputFile(image, fileName));
+      } catch (err) {
+        this.logger.error(`Failed to send tool image ${fileName}: ${getErrorMessage(err)}`);
+      }
+    }
   }
 }

@@ -7,6 +7,7 @@ export const BOT_CONFIG: TelegramBotConfig = {
   token: 'CHATBOT_TELEGRAM_BOT_TOKEN',
   commands: {
     START: { command: '/start', description: 'Start over', hide: true },
+    MEMORY: { command: '/memory', description: 'See and edit what I remember about you' },
   },
 };
 
@@ -17,6 +18,11 @@ export const CHATBOT_CONFIG = {
   usageTracking: env.CHATBOT_USAGE_TRACKING !== 'false',
   // Location used by the nightly summary's weather section.
   summaryLocation: env.CHATBOT_SUMMARY_LOCATION || 'Kfar Saba',
+  // Scheduled messages are appended to the chat's agent thread so follow-up replies have context.
+  // Long digests are cut to this many characters; summarization compresses the thread over time.
+  proactiveMemory: {
+    maxChars: 6000,
+  },
   summarization: {
     // Summarize once the retained history grows past this many tokens. Token-based bounding is
     // the primary guard: message counts don't bound context or checkpoint size, since a single
@@ -65,6 +71,17 @@ export const CHATBOT_CONFIG = {
   imageDigest: {
     enabled: env.CHATBOT_IMAGE_DIGEST !== 'false',
     maxPostsPerChat: parseInt(env.CHATBOT_IMAGE_DIGEST_MAX_POSTS || '5', 10),
+  },
+  // Long-term memory facts appended to the system prompt on every model call (newest first).
+  memory: {
+    maxInjectedFacts: parseInt(env.CHATBOT_MEMORY_MAX_FACTS || '100', 10),
+    // ~2k tokens; older facts beyond this are dropped from the prompt (still reachable via recall).
+    maxInjectedChars: parseInt(env.CHATBOT_MEMORY_MAX_CHARS || '8000', 10),
+  },
+  emailCleanup: {
+    threshold: 0.75,
+    maxEmails: 50,
+    batchSize: 20,
   },
 };
 

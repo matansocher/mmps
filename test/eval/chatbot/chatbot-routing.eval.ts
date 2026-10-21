@@ -1,6 +1,6 @@
 import { env } from 'node:process';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL } from '@services/openai/constants';
 import { dataset } from './dataset';
 import { aggregateCase } from './evaluate';
 import { runOnce, runPool } from './harness';
@@ -43,7 +43,7 @@ describe.skipIf(!HAS_KEY)('chatbot system-prompt routing eval', () => {
       caseResults.set(evalCase.id, aggregateCase(evalCase, runs));
     }
 
-    report = buildReport([...caseResults.values()], RUNS_PER_CASE, CHAT_COMPLETIONS_MINI_MODEL);
+    report = buildReport([...caseResults.values()], RUNS_PER_CASE, CHAT_MODEL);
     printReport(report);
     const { jsonPath, markdownPath, htmlPath } = writeReports(report);
     // eslint-disable-next-line no-console

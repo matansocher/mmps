@@ -1,3 +1,4 @@
+import { AIMessage } from '@langchain/core/messages';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
 import { format } from 'date-fns';
@@ -5,15 +6,23 @@ import { toZonedTime } from 'date-fns-tz';
 import { modelCallLimitMiddleware, toolCallLimitMiddleware } from 'langchain';
 import { env } from 'node:process';
 import { z } from 'zod';
-import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
+import { DEFAULT_TIMEZONE } from '@core/config/main.config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL, GPT_SMALL_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { recordModelUsage, ToolCallbackOptions, UsageCallbackHandler } from '@shared/ai';
 import { agent } from './agent';
-import { AiService, createAgentService, createSafeSummarizationMiddleware, createStructuredResponseMiddleware, createToolRetryMiddleware } from './agent';
+import {
+  AiService,
+  createAgentService,
+  createDanglingToolCallsMiddleware,
+  createMemoryContextMiddleware,
+  createSafeSummarizationMiddleware,
+  createStructuredResponseMiddleware,
+  createToolRetryMiddleware,
+} from './agent';
 import { CHATBOT_CONFIG, CHATBOT_SUMMARIZATION_TRIGGER, CHATBOT_SUMMARY_PROMPT } from './chatbot.config';
 import { ChatbotResponse, ProcessMessageOptions, StructuredChatbotResponse } from './types';
-import { formatAgentResponse } from './utils';
+import { buildProactiveMessageContent, formatAgentResponse, getThreadId } from './utils';
 
 function isProcessMessageOptions(value: unknown): value is ProcessMessageOptions {
   return typeof value === 'object' && value !== null && !('_def' in value);
@@ -26,10 +35,9 @@ export class ChatbotService {
   private readonly aiService: AiService;
 
   constructor(checkpointer?: BaseCheckpointSaver) {
-    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
-    // Summarization is plain compression, so it runs on the small model. gpt-5-nano is a reasoning
-    // model: it rejects a custom temperature, and low effort keeps it fast.
-    this.summaryModel = new ChatOpenAI({ model: GPT_SMALL_MODEL, reasoning: { effort: 'low' }, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+    this.model = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, temperature: 0.2, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+    // Summarization is plain compression, so it runs without a custom temperature.
+    this.summaryModel = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
 
     const toolCallbackOptions: ToolCallbackOptions = {
       enableLogging: false,
@@ -75,10 +83,16 @@ export class ChatbotService {
     // and returns clear errors the model can act on. Calls with side effects are never retried.
     const toolRetry = createToolRetryMiddleware();
 
+    // Patches tool calls left without a result (e.g. a turn cut off by a restart) so the thread keeps working.
+    const danglingToolCalls = createDanglingToolCallsMiddleware();
+
+    // Injects stored long-term memory facts into the system prompt so they survive summarization and the checkpoint TTL.
+    const memoryContext = createMemoryContextMiddleware({ maxFacts: CHATBOT_CONFIG.memory.maxInjectedFacts, maxChars: CHATBOT_CONFIG.memory.maxInjectedChars });
+
     this.aiService = createAgentService(agent(), {
       model: this.model,
       checkpointer,
-      middleware: [summarization, modelCallLimit, toolCallLimit, toolRetry, createStructuredResponseMiddleware()],
+      middleware: [summarization, memoryContext, modelCallLimit, toolCallLimit, toolRetry, danglingToolCalls, createStructuredResponseMiddleware()],
       toolCallbackOptions,
     });
   }
@@ -96,7 +110,7 @@ export class ChatbotService {
     try {
       const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const contextualMessage = `[Context: User ID: ${chatId}, Time: ${formattedTime} (${DEFAULT_TIMEZONE})]\n\n${message}`;
-      const threadId = isProd ? chatId.toString() : `dev-${chatId.toString()}`;
+      const threadId = getThreadId(chatId);
 
       const usageHandler = CHATBOT_CONFIG.usageTracking ? new UsageCallbackHandler() : undefined;
       const startedAt = Date.now();
@@ -109,7 +123,7 @@ export class ChatbotService {
           images: options?.images,
           signal,
           invocationSource: 'chatbot',
-          callbacks: usageHandler ? [usageHandler] : undefined,
+          callbacks: [...(usageHandler ? [usageHandler] : []), ...(options?.callbacks ?? [])],
           responseSchema,
         });
 
@@ -141,6 +155,19 @@ export class ChatbotService {
         toolResults: [],
         timestamp: new Date().toISOString(),
       };
+    }
+  }
+
+  // Best effort: a scheduler's send must never fail because recording it in memory did.
+  async recordProactiveMessage(chatId: number, text: string, source: string): Promise<void> {
+    if (!text?.trim()) {
+      return;
+    }
+    try {
+      const content = buildProactiveMessageContent(text, source, CHATBOT_CONFIG.proactiveMemory.maxChars);
+      await this.aiService.appendMessages([new AIMessage(content)], { threadId: getThreadId(chatId), invocationSource: `chatbot-proactive-${source}` });
+    } catch (err) {
+      this.logger.warn(`Failed to record ${source} message in memory for chat ${chatId}: ${getErrorMessage(err)}`);
     }
   }
 }

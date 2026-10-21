@@ -13,6 +13,9 @@ export {
   getPRReviews,
   triggerWorkflow,
   mergePullRequest,
+  listWorkflowRuns,
+  getWorkflowRun,
+  getJobLog,
 } from './utils';
 export * from './types';
 export { GITHUB_REPO_OWNER, GITHUB_REPO_NAME, GITHUB_REPO, HEROKU_DEPLOY_WORKFLOW_FILE, HEROKU_DEPLOY_DEFAULT_REF } from './constants';

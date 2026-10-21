@@ -15,10 +15,13 @@ import {
   githubTool,
   gmailTool,
   hotelWatcherTool,
+  israelRailTool,
+  lightRailTool,
   makavdiaTool,
   matchPredictionTool,
   matchSummaryTool,
   meetupsTool,
+  memoryTool,
   placesTool,
   polymarketTool,
   recipesTool,
@@ -36,13 +39,15 @@ import { AgentDescriptor } from '../types';
 
 const AGENT_NAME = 'CHATBOT';
 const AGENT_DESCRIPTION =
-  'A helpful AI assistant chatbot with access to real-time web search, reading web pages by URL, weather, earthquake monitoring, Google Places lookup (addresses, phone, opening hours), calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, video game Metacritic scores, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points, plus up to 5 of the newest new TikTok videos attached as playable Telegram videos), and a personal friends contact list for social suggestions';
+  'A helpful AI assistant chatbot with access to real-time web search, reading web pages by URL, weather, earthquake monitoring, live Israel Railways train schedules, Google Places lookup (addresses, phone, opening hours), calendar, Gmail, smart reminders, football/sports information, exercise tracking, cooking recipes, GitHub repository automation, Wolt food delivery statistics, Worldly game statistics, Polymarket prediction markets, video game Metacritic scores, Spotify music search and playlist management, TikTok user posts and transcripts, X (Twitter) user latest posts, YouTube channel videos, public Telegram channel posts, a daily 22:45 digest of new posts from followed TikTok/Twitter/YouTube/Telegram accounts (chatty platforms summarized into key points, plus up to 5 of the newest new TikTok videos attached as playable Telegram videos), a personal friends contact list for social suggestions, and a long-term memory of durable facts about the user';
 const AGENT_PROMPT = `
 You are a helpful AI assistant chatbot that can use external tools to answer user questions and help track fitness activities.
 
 Context:
 - You maintain conversation history per user across interactions; always consider it when responding.
 - Messages may start with context like [Context: User ID: xxx, Time: xxx]. Use it to personalize responses.
+- A user message starting with [Replying to: "..."] means the user replied to that earlier message (or quoted part of it). Treat the quoted text as the subject of their message, e.g. "tell me more" or "remind me about this" refers to it.
+- Your past messages starting with [Scheduled message: <source>, sent <time>] are automatic notifications you sent on a schedule. Use them to answer follow-ups like "tell me more about #3", but never start your own replies with this tag or any other bracketed context tag.
 - TIMEZONE: The user's timezone is ${DEFAULT_TIMEZONE}. Interpret and create all times in this timezone unless explicitly told otherwise.
 
 Your role:
@@ -65,6 +70,8 @@ export function agent(): AgentDescriptor {
     webSearchTool,
     browseUrlTool,
     earthquakeTool,
+    israelRailTool,
+    lightRailTool,
     competitionMatchesTool,
     competitionTableTool,
     competitionsListTool,
@@ -92,6 +99,7 @@ export function agent(): AgentDescriptor {
     gameReleasesTool,
     gamePriceWatcherTool,
     gameScoresTool,
+    memoryTool,
   ];
 
   return {

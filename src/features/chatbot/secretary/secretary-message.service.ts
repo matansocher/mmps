@@ -6,7 +6,7 @@ import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE, WIFE_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { recordModelUsage, UsageCallbackHandler } from '@shared/ai';
 import { deleteMessagesBefore, getMessagesForChatBetween, saveMessage, type SecretaryMessage, type SecretarySummaryAction } from './mongo';
 import { OWNER_NAME, SUMMARY_PROMPT } from './secretary.config';
@@ -43,7 +43,7 @@ export class SecretaryMessageService {
   private readonly model: ChatOpenAI;
 
   constructor() {
-    this.model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.4, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
+    this.model = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, temperature: 0.4, apiKey: env.OPENAI_API_KEY, timeout: 120_000 });
   }
 
   // Persist a single message (either side) for later daily summarization.

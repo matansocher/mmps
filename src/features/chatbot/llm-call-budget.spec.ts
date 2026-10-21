@@ -14,15 +14,13 @@ type TurnUsage = { readonly llmCalls: number; readonly toolCalls: number };
 
 const models = vi.hoisted(() => ({ main: undefined as unknown, summary: undefined as unknown }));
 
-vi.mock('@langchain/openai', async (importOriginal) => {
-  const { GPT_SMALL_MODEL } = await import('@services/openai/constants');
-  return {
-    ...(await importOriginal<typeof import('@langchain/openai')>()),
-    ChatOpenAI: vi.fn(function ({ model }: { model: string }) {
-      return model === GPT_SMALL_MODEL ? models.summary : models.main;
-    }),
-  };
-});
+vi.mock('@langchain/openai', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@langchain/openai')>()),
+  // Main and summary share a model id; only the main model sets a temperature.
+  ChatOpenAI: vi.fn(function ({ temperature }: { temperature?: number }) {
+    return temperature === undefined ? models.summary : models.main;
+  }),
+}));
 
 vi.mock('@shared/ai', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@shared/ai')>()),

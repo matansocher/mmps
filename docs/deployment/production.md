@@ -47,17 +47,11 @@ MONGO_DB_URL=mongodb+srv://user:pass@cluster.mongodb.net/
 
 # AI APIs
 OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
 
 # Bot Tokens
 CHATBOT_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
 # ... all bot tokens
-
-# Google Sheets Logging
-SHEETS_CLIENT_EMAIL=...
-SHEETS_PRIVATE_KEY=...
-SHEETS_LOGS_SPREADSHEET_ID=...
 ```
 
 ## Running in Production
@@ -87,17 +81,6 @@ pm2 logs mmps
 ## Monitoring & Logging
 
 Production telemetry (traces, metrics, logs) is exported to **Grafana Cloud** via OpenTelemetry. Set the `OTEL_*` / `GRAFANA_OTLP_*` config vars on Heroku and view APM, logs, and alerts in Grafana. Full details: [Monitoring & Observability](/deployment/monitoring).
-
-### Google Sheets Logging
-
-Logs are automatically sent to Google Sheets in production:
-
-```typescript
-// Configure service account
-SHEETS_CLIENT_EMAIL=...@iam.gserviceaccount.com
-SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
-```
 
 ### Log Levels
 

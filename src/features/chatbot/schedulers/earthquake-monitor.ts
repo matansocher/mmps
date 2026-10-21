@@ -11,10 +11,12 @@ const logger = new Logger('chatbot:scheduler:earthquake-monitor');
 const seenEarthquakeIds = new Set<string>();
 
 export const LOOKBACK_MINUTES = 15;
+const FEED_OVERLAP_MINUTES = 2;
 
 export async function earthquakeMonitor(bot: Bot): Promise<void> {
   try {
-    const startTime = new Date(Date.now() - LOOKBACK_MINUTES * 60 * 1000);
+    // Summary feeds refresh every minute; overlap polls to catch events published after the last check.
+    const startTime = new Date(Date.now() - (LOOKBACK_MINUTES + FEED_OVERLAP_MINUTES) * 60 * 1000);
 
     const earthquakes = await getRecentEarthquakes({
       startTime,

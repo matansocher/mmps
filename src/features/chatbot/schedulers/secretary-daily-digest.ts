@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { sendShortenedMessage } from '@services/telegram';
+import type { ChatbotService } from '../chatbot.service';
 import { buildActionsKeyboard, createActions, type CreateSecretaryActionData, type SecretaryMessageService, type SecretarySummaryAction, setActionsMessageId } from '../secretary';
 
 const logger = new Logger('chatbot:scheduler:secretary-daily-digest');
@@ -25,12 +26,13 @@ async function sendSummaryWithActions(bot: Bot, summary: string, actions: Secret
   );
 }
 
-export async function secretaryDailyDigest(bot: Bot, messageService: SecretaryMessageService): Promise<void> {
+export async function secretaryDailyDigest(bot: Bot, messageService: SecretaryMessageService, chatbotService: ChatbotService): Promise<void> {
   const cutoff = new Date();
   try {
     const summaries = await messageService.buildDailySummaries();
     for (const { summary, actions } of summaries) {
       await sendSummaryWithActions(bot, summary, actions);
+      await chatbotService.recordProactiveMessage(MY_USER_ID, summary, 'secretary-daily-digest');
     }
     const deleted = await messageService.clearMessagesBefore(cutoff);
     logger.log(`Sent ${summaries.length} daily summaries, cleared ${deleted} messages.`);

@@ -225,20 +225,6 @@ PLAYGROUNDS_TELEGRAM_BOT_TOKEN=<your-token>
 OPENAI_API_KEY=sk-...
 ```
 
-### Anthropic Integration (Chatbot)
-
-```bash
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-### Google Sheets Logging (Production only)
-
-```bash
-SHEETS_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
-SHEETS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
-```
-
 ### Development Configuration
 
 ```bash
@@ -246,9 +232,11 @@ SHEETS_LOGS_SPREADSHEET_ID=your-spreadsheet-id
 LOCAL_ACTIVE_BOT_ID=CHATBOT
 
 # Bot tokens for other bots
+CHILLI_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
+LEARNER_TELEGRAM_BOT_TOKEN=...
 ```
 
 ## Environment Variables by Bot
@@ -261,16 +249,22 @@ The per-bot tokens below are production tokens. A selected local bot uses
 ```bash
 CHATBOT_TELEGRAM_BOT_TOKEN=required
 OPENAI_API_KEY=required for AI features
-ANTHROPIC_API_KEY=optional, alternative to OpenAI
-GITHUB_TOKEN=optional, for GitHub integration
+GITHUB_APP_ID=optional, for GitHub App authentication
+GITHUB_APP_PRIVATE_KEY=optional, GitHub App private key
+GITHUB_APP_INSTALLATION_ID=optional, GitHub App installation ID
 WEATHERAPI_KEY=optional, for weather features
+```
+
+### Chilli
+
+```bash
+CHILLI_TELEGRAM_BOT_TOKEN=required
 ```
 
 ### Coach
 
 ```bash
 COACH_TELEGRAM_BOT_TOKEN=required
-SCORES_365_API_KEY=required for sports data
 ```
 
 ### Wolt
@@ -283,6 +277,12 @@ WOLT_TELEGRAM_BOT_TOKEN=required
 
 ```bash
 WORLDLY_TELEGRAM_BOT_TOKEN=required
+```
+
+### Learner
+
+```bash
+LEARNER_TELEGRAM_BOT_TOKEN=required
 ```
 
 ## Getting Telegram Bot Tokens
@@ -326,12 +326,6 @@ MONGO_DB_URL=mongodb+srv://username:password@cluster.mongodb.net/
 1. Visit [platform.openai.com](https://platform.openai.com)
 2. Create an API key
 3. Privately add `OPENAI_API_KEY` to Doppler `mmps/dev` (or your manual `.env`).
-
-### Anthropic
-
-1. Visit [console.anthropic.com](https://console.anthropic.com)
-2. Create an API key
-3. Privately add `ANTHROPIC_API_KEY` to Doppler `mmps/dev` (or your manual `.env`).
 
 ## .env Example File
 

@@ -1,4 +1,4 @@
-import { ChatAnthropic } from '@langchain/anthropic';
+import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import { DynamicStructuredTool, DynamicTool } from '@langchain/core/tools';
 import { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint';
 import { ChatOpenAI } from '@langchain/openai';
@@ -19,7 +19,7 @@ export type OrchestratorDescriptor = Omit<AgentDescriptor, 'description' | 'tool
 };
 
 export type CreateAgentOptions = {
-  model: ChatAnthropic | ChatOpenAI;
+  model: ChatOpenAI;
   checkpointer?: BaseCheckpointSaver;
   middleware?: AnyAgentMiddleware[];
   toolCallbackOptions?: ToolCallbackOptions;
@@ -62,6 +62,7 @@ export type StructuredChatbotResponse<T extends z.ZodTypeAny> = {
 
 export type ProcessMessageOptions = {
   readonly images?: readonly string[]; // Base64 data URLs or public URLs passed to the model as image blocks
+  readonly callbacks?: readonly BaseCallbackHandler[]; // Per-turn callbacks, e.g. the live tool status reporter
 };
 
 export type ToolResult = {

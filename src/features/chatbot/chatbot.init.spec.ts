@@ -33,6 +33,7 @@ vi.mock('@shared/ai', () => ({ ensureUsageIndexes: vi.fn(), USAGE_DB_NAME: 'Chat
 vi.mock('@shared/calendar-events', () => ({ registerCalendarEventsRoutes: vi.fn() }));
 vi.mock('@shared/coach', () => ({ DB_NAME: 'Coach' }));
 vi.mock('@shared/flight-traffic', () => ({ ensureFlightTrafficIndexes: vi.fn() }));
+vi.mock('@shared/memories', () => ({ ensureMemoryIndexes: vi.fn() }));
 vi.mock('@shared/reminders', () => ({ ensureReminderIndexes: vi.fn() }));
 vi.mock('@shared/social-follower', () => ({ ensureDigestDeliveryIndexes: vi.fn(), ensurePendingPostIndexes: vi.fn() }));
 vi.mock('@shared/transfer-tracker', () => ({ ensureTransferTrackerIndexes: vi.fn() }));

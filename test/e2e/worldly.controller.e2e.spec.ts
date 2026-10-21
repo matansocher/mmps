@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BOT_ACTIONS, BOT_CONFIG, INLINE_KEYBOARD_SEPARATOR } from '@src/features/worldly/worldly.config';
 import { WorldlyController } from '@src/features/worldly/worldly.controller';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildCallbackQueryUpdate, buildTextMessageUpdate, createTestBot, resetUpdateBuilderCounters, simulateUpdate, type TestBot } from './harness';
 
 vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
@@ -18,6 +18,8 @@ const mocks = vi.hoisted(() => ({
   getAllCountries: vi.fn().mockResolvedValue([]),
   getAllStates: vi.fn().mockResolvedValue([]),
   getUserDetails: vi.fn(),
+  getUserLanguage: vi.fn().mockResolvedValue('en'),
+  setUserLanguage: vi.fn(),
 }));
 
 vi.mock('@shared/worldly', () => mocks);
@@ -46,6 +48,7 @@ describe('WorldlyController E2E', () => {
   beforeEach(() => {
     resetUpdateBuilderCounters();
     vi.clearAllMocks();
+    mocks.getUserLanguage.mockResolvedValue('en');
     testBot = createTestBot(BOT_CONFIG);
     service = createWorldlyServiceStub();
     const controller = new WorldlyController(service, testBot.bot);
@@ -66,8 +69,8 @@ describe('WorldlyController E2E', () => {
       expect(mocks.addSubscription).toHaveBeenCalledTimes(1);
       expect(mocks.updateSubscription).not.toHaveBeenCalled();
       const sent = testBot.transport.callsByMethod('sendMessage');
-      expect(sent[0].payload.text).toContain('היי');
-      expect(sent[0].payload.text).toContain('גיאוגרפיה');
+      expect(sent[0].payload.text).toContain('Hi');
+      expect(sent[0].payload.text).toContain('geography');
     });
 
     it('reactivates the subscription for a returning user', async () => {
@@ -78,6 +81,78 @@ describe('WorldlyController E2E', () => {
 
       expect(mocks.updateSubscription).toHaveBeenCalledWith(expect.any(Number), { isActive: true });
       expect(mocks.addSubscription).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('language selection', () => {
+    it('offers both languages and a way back', async () => {
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: BOT_ACTIONS.LANGUAGE }));
+      const buttons = testBot.transport.callsByMethod('sendMessage')[0].payload.reply_markup.inline_keyboard.flat();
+      expect(buttons.map((button: any) => button.text)).toEqual(['English', 'עברית', 'Back']);
+      expect(buttons.map((button: any) => button.callback_data)).toEqual(['set_language|en', 'set_language|he', 'actions']);
+    });
+
+    it.each(['en', 'he'] as const)('persists %s and updates the chat command menu', async (language) => {
+      mocks.getUserLanguage.mockResolvedValue(language);
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: `set_language|${language}` }));
+      expect(mocks.setUserLanguage).toHaveBeenCalledWith(expect.any(Number), language);
+      const menu = testBot.transport.callsByMethod('setMyCommands')[0].payload;
+      expect(menu.scope.type).toEqual('chat');
+      expect(menu.commands.find((command: any) => command.command === 'actions').description).toContain(language === 'he' ? 'פעולות' : 'Actions');
+      const sent = testBot.transport.callsByMethod('sendMessage');
+      expect(sent[0].payload.text).toEqual(language === 'he' ? 'השפה שונתה לעברית.' : 'Language set to English.');
+      expect(sent[1].payload.text).toEqual(language === 'he' ? 'איך אני יכול לעזור? 👨‍🏫' : 'How can I help? 👨‍🏫');
+    });
+
+    it.each(['en', 'he'] as const)('localizes globe, fire mode, contact, and stop replies in %s', async (language) => {
+      mocks.getUserLanguage.mockResolvedValue(language);
+      await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/globe' }));
+      await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/fire_mode' }));
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: BOT_ACTIONS.CONTACT }));
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: BOT_ACTIONS.STOP }));
+      const texts = testBot.transport.callsByMethod('sendMessage').map(({ payload }) => payload.text);
+      expect(texts[0]).toContain(language === 'he' ? 'סובבו' : 'Spin');
+      expect(texts[1]).toContain(language === 'he' ? 'ברצף' : 'continuously');
+      expect(texts[2]).toContain(language === 'he' ? 'אשמח לעזור' : 'Happy to help');
+      expect(texts[3]).toContain(language === 'he' ? 'אפסיק' : 'stop sending');
+    });
+
+    it.each(['en', 'he'] as const)('localizes incorrect map, state, and flag answers in %s', async (language) => {
+      mocks.getUserLanguage.mockResolvedValue(language);
+      mocks.getCountryByName.mockResolvedValue({ name: 'France', hebrewName: 'צרפת', emoji: '🇫🇷' });
+      mocks.getStateByName.mockResolvedValue({ name: 'Texas', hebrewName: 'טקסס' });
+      for (const action of [BOT_ACTIONS.MAP, BOT_ACTIONS.US_MAP, BOT_ACTIONS.FLAG]) {
+        await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: `${action}|wrong|France|game` }));
+      }
+      const captions = testBot.transport.callsByMethod('editMessageCaption');
+      expect(captions[0].payload.caption).toContain(language === 'he' ? 'צרפת' : 'France');
+      expect(captions[1].payload.caption).toContain(language === 'he' ? 'טקסס' : 'Texas');
+      const text = testBot.transport.callsByMethod('editMessageText')[0].payload.text;
+      expect(text).toContain(language === 'he' ? 'התשובה הנכונה' : 'correct answer');
+    });
+
+    it('rejects unsupported language callbacks', async () => {
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: 'set_language|fr' }));
+      expect(mocks.setUserLanguage).not.toHaveBeenCalled();
+    });
+
+    it('uses saved Hebrew on start and explains how to change language', async () => {
+      mocks.getUserLanguage.mockResolvedValue('he');
+      mocks.saveUserDetails.mockResolvedValue('created');
+      await simulateUpdate(testBot, buildTextMessageUpdate({ text: '/start' }));
+      const sent = testBot.transport.callsByMethod('sendMessage')[0].payload;
+      expect(sent.text).toContain('היי');
+      expect(sent.text).toContain('/actions');
+      expect(sent.reply_markup.inline_keyboard[0][0].text).toContain('גלובוס');
+    });
+
+    it.each(['en', 'he'] as const)('answers an old capital button in the current language (%s)', async (language) => {
+      mocks.getUserLanguage.mockResolvedValue(language);
+      mocks.getCountryByCapital.mockResolvedValue({ name: 'France', hebrewName: 'צרפת', capital: 'Paris', hebrewCapital: 'פריז', emoji: '🇫🇷' });
+      await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: 'c|פריז|פריז|old' }));
+      const text = testBot.transport.callsByMethod('editMessageText')[0].payload.text;
+      expect(text).toContain(language === 'he' ? 'נכון!' : 'Correct!');
+      expect(text).toContain(language === 'he' ? 'פריז' : 'Paris');
     });
   });
 
@@ -124,11 +199,11 @@ describe('WorldlyController E2E', () => {
       await simulateUpdate(testBot, buildCallbackQueryUpdate({ data: BOT_ACTIONS.STATISTICS }));
 
       const sent = testBot.transport.callsByMethod('sendMessage');
-      expect(sent[0].payload.text).toContain('עדיין לא שיחנו');
+      expect(sent[0].payload.text).toContain("haven't played");
     });
 
     it('records a correct map answer and reacts with 👍', async () => {
-      mocks.getCountryByName.mockResolvedValue({ emoji: '🇫🇷', hebrewName: 'צרפת' });
+      mocks.getCountryByName.mockResolvedValue({ name: 'France', emoji: '🇫🇷', hebrewName: 'צרפת' });
 
       const data = [BOT_ACTIONS.MAP, 'France', 'France', 'game-1'].join(INLINE_KEYBOARD_SEPARATOR);
       await simulateUpdate(testBot, buildCallbackQueryUpdate({ data }));

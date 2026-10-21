@@ -26,7 +26,7 @@ Fill in `.env` with at least:
 - `MONGO_DB_URL`
 - `LOCAL_ACTIVE_BOT_ID` — UPPERCASE bot id (`CHATBOT`, `CHILLI`, `COACH`, `WOLT`, `WORLDLY`)
 - the matching `*_TELEGRAM_BOT_TOKEN`
-- one of `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
 
 Then run a single bot:
 
@@ -141,6 +141,6 @@ Tests are `*.spec.ts` next to the source, with `describe()` grouping and `test.e
 
 - **A chatbot AI tool** — create `src/shared/ai/tools/{name}/{name}.tool.ts` (Zod schema with `.describe()` on every field), export it from the tools barrel, and register it in `src/features/chatbot/agent/agent.ts`.
 - **An external service** — create `src/services/{name}/` with `api.ts` (or `{name}.service.ts`), `types.ts`, optional `constants.ts`, and `index.ts`; document any new env var in `.env.example`.
-- **A bot** — follow an existing `src/features/{bot}/` layout (`{bot}.init.ts`, `.controller.ts`, `.service.ts`, `.config.ts`, `types.ts`, `index.ts`), wire it into `src/index.ts`, and add it to the README table and the docs site.
+- **A bot** — follow an existing `src/features/{bot}/` layout (`{bot}.init.ts`, `.controller.ts`, `.service.ts`, `.config.ts`, `types.ts`, `index.ts`), and wire it into `src/index.ts`. The README and docs site are synced separately via `/update-docs`.
 
 Any new environment variable must be added to `.env.example`.

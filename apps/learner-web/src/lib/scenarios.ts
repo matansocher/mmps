@@ -7,14 +7,14 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     prompt: 'You have 40 minutes to design a global photo-sharing feed. The interviewer gives a broad prompt. What do you do first?',
     choices: [
       {
-        label: 'List and quantify the top requirements',
-        feedback: 'Best choice. A small, quantified scope gives every later decision a clear target and protects the timebox.',
-        recommended: true,
-      },
-      {
         label: 'Draw a complete microservice architecture',
         feedback: 'This may look productive, but it commits to complexity before you know which user flows and constraints matter.',
         recommended: false,
+      },
+      {
+        label: 'List and quantify the top requirements',
+        feedback: 'Best choice. A small, quantified scope gives every later decision a clear target and protects the timebox.',
+        recommended: true,
       },
       {
         label: 'Calculate every possible storage cost',
@@ -29,12 +29,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     prompt: 'One cache key expires and thousands of requests immediately hit the database for the same post. Which response is strongest?',
     choices: [
       {
-        label: 'Use single-flight regeneration with a jittered TTL',
-        feedback: 'Best choice. One request rebuilds the value while jitter reduces the chance that related keys expire together.',
-        recommended: true,
-      },
-      {
-        label: 'Remove caching for popular posts',
+        label: 'Stop caching posts once they go viral',
         feedback: 'That removes the stampede, but shifts all sustained traffic to the database and loses the main benefit of caching.',
         recommended: false,
       },
@@ -42,6 +37,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         label: 'Set every hot key to never expire',
         feedback: 'This protects the database, but creates stale data and makes invalidation operationally risky.',
         recommended: false,
+      },
+      {
+        label: 'Use single-flight with a jittered TTL',
+        feedback: 'Best choice. One request rebuilds the value while jitter reduces the chance that related keys expire together.',
+        recommended: true,
       },
     ],
   },
@@ -51,12 +51,12 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     prompt: 'Your assistant produces different formats and occasionally ignores an important policy. What should you improve first?',
     choices: [
       {
-        label: 'Add a clear instruction hierarchy and concrete examples',
+        label: 'Add clear priorities and concrete examples',
         feedback: 'Best choice. Explicit constraints and representative examples make the expected behavior testable and repeatable.',
         recommended: true,
       },
       {
-        label: 'Raise the temperature for more variety',
+        label: 'Raise the temperature for more varied output',
         feedback: 'Higher temperature increases variation, which works against the need for consistent formatting and policy adherence.',
         recommended: false,
       },
@@ -73,11 +73,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     prompt: 'A RAG assistant retrieves a relevant but superseded policy alongside the current one. What is the best first improvement?',
     choices: [
       {
-        label: 'Filter by validity metadata before ranking',
-        feedback: 'Best choice. Eligibility filters remove invalid evidence before semantic relevance is considered.',
-        recommended: true,
-      },
-      {
         label: 'Increase the number of retrieved chunks',
         feedback: 'More chunks may include the current policy, but they also add noise and do not prevent the stale source from influencing the answer.',
         recommended: false,
@@ -86,6 +81,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         label: 'Tell the model to guess which policy is current',
         feedback: 'The model should not infer authority from prose when the retrieval system can enforce explicit validity metadata.',
         recommended: false,
+      },
+      {
+        label: 'Filter by validity metadata before ranking',
+        feedback: 'Best choice. Eligibility filters remove invalid evidence before semantic relevance is considered.',
+        recommended: true,
       },
     ],
   },
@@ -96,16 +96,16 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       'Football predictions from the MMPS chatbot are inconsistent. They would benefit from temperature 0 and a stronger model, but the single agent runs gpt-4.1-mini at 0.2 for everything. What do you do?',
     choices: [
       {
-        label: 'Expose a sports sub-agent to the main agent as one tool (supervisor pattern)',
-        feedback:
-          'Best choice. The domain gets its own model, temperature, prompt, and spec, while the main thread, memory, and cross-domain requests keep working. Add a routing eval before moving more domains.',
-        recommended: true,
-      },
-      {
         label: 'Split the whole bot into a router plus one agent per domain',
         feedback:
           'This buys isolation everywhere at once, but it costs 1.5–3× tokens and about 2× latency, adds silent mis-routes and context loss at handoffs, and is a big migration risk for a working system.',
         recommended: false,
+      },
+      {
+        label: 'Wrap a sports sub-agent as one tool of the main agent',
+        feedback:
+          'Best choice. The domain gets its own model, temperature, prompt, and spec, while the main thread, memory, and cross-domain requests keep working. Add a routing eval before moving more domains.',
+        recommended: true,
       },
       {
         label: 'Switch the single agent to a stronger model at temperature 0',

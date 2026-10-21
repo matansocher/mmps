@@ -84,7 +84,7 @@ npm run lint:fix
 npm test
 
 # Watch tests
-npm test:watch
+npm run test:watch
 ```
 
 ## Testing Bots Locally

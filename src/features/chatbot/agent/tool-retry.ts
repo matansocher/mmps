@@ -12,6 +12,8 @@ const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>>
   web_search: true,
   browse_url: true,
   earthquake_monitor: true,
+  israel_rail: true,
+  light_rail: true,
   recipes: true,
   competitions_list: true,
   competition_matches: true,
@@ -24,7 +26,7 @@ const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>>
   worldly_summary: true,
   calendar: ['list', 'upcoming'],
   gmail: ['list'],
-  github: ['get_issue', 'list_issues', 'list_prs', 'get_pr', 'get_pr_checks', 'list_pr_files', 'get_pr_reviews'],
+  github: ['get_issue', 'list_issues', 'list_prs', 'get_pr', 'get_pr_checks', 'list_pr_files', 'get_pr_reviews', 'list_workflow_runs', 'get_workflow_run', 'get_job_log'],
   spotify: ['search_track', 'search_artist', 'get_track_info', 'search_playlist', 'get_artist_top_tracks', 'get_user_playlists'],
   spotify_podcast: ['search', 'list'],
   google_places: true,
@@ -39,6 +41,7 @@ const READ_ONLY_TOOL_ACTIONS: Readonly<Record<string, true | readonly string[]>>
   game_releases: ['list', 'search'],
   game_scores: true,
   hotel_watcher: ['list'],
+  memory: ['recall'],
 };
 
 const TRANSIENT_ERROR_CODES = new Set([

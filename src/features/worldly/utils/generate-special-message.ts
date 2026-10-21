@@ -1,9 +1,11 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getLongestStreak, getStreak, getStreakOfCorrectAnswers } from '@core/utils';
-import { GameLog } from '@shared/worldly';
+import { GameLog, type WorldlyLanguage } from '@shared/worldly';
+import { worldlyText } from '../language';
 
-export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
+export function generateStatisticsMessage(userGameLogs: GameLog[], language: WorldlyLanguage = 'en'): string {
+  const text = worldlyText(language);
   const currentStreak = getStreak(userGameLogs.map((game) => game.createdAt));
   const longestStreak = getLongestStreak(userGameLogs.map((game) => game.createdAt));
   const todayKey = formatInTimeZone(new Date(), DEFAULT_TIMEZONE, 'yyyy-MM-dd');
@@ -14,14 +16,14 @@ export function generateStatisticsMessage(userGameLogs: GameLog[]): string {
   return [
     [
       `💣`,
-      `היום:`,
+      text.today,
       `${todayCorrectGames.length}/${todayGameLogs.length}`,
       todayCorrectGames.length ? `-` : '',
       todayCorrectGames.length ? `${((todayCorrectGames.length / todayGameLogs.length) * 100).toFixed(2)}%` : '',
     ].join(' '),
-    [`🤓`, 'רצף התשובות הנכונות הנוכחי:', `${currentCorrectAnsweredStreak}`].join(' '),
-    [`🚀`, 'רצף התשובות הנכונות הכי ארוך:', `${longestCorrectAnsweredStreak}`].join(' '),
-    [`💯`, 'רצף הימים הנוכחי:', `${currentStreak}`].join(' '),
-    [`🚀`, 'רצף הימים הכי ארוך:', `${longestStreak}`].join(' '),
+    [`🤓`, text.currentCorrectStreak, `${currentCorrectAnsweredStreak}`].join(' '),
+    [`🚀`, text.longestCorrectStreak, `${longestCorrectAnsweredStreak}`].join(' '),
+    [`💯`, text.currentDayStreak, `${currentStreak}`].join(' '),
+    [`🚀`, text.longestDayStreak, `${longestStreak}`].join(' '),
   ].join('\n');
 }

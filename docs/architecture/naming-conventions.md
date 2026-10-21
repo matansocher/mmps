@@ -120,7 +120,7 @@ export async function callAPI(url: string): Promise<Response> {
 // services/openai/constants.ts
 export const OPENAI_TIMEOUT_MS = 30000;
 export const OPENAI_MAX_RETRIES = 3;
-export const CHAT_COMPLETIONS_MINI_MODEL = 'gpt-4-mini';
+export const CHAT_MODEL = 'gpt-6-luna';
 ```
 
 ## Types and Interfaces
@@ -219,7 +219,7 @@ export * from './chatbot.service';  // Too broad
 OPENAI_API_KEY=sk-...
 MONGO_DB_URL=mongodb://...
 CHATBOT_TELEGRAM_BOT_TOKEN=...
-GOOGLE_SHEETS_SPREADSHEET_ID=...
+GOOGLE_PLACES_API_KEY=...
 IS_PROD=true
 
 # ❌ AVOID

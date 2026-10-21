@@ -1,6 +1,6 @@
 import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
-import { CHAT_COMPLETIONS_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { provideOpenAiClient } from '@services/openai/provide-openai-client';
 
 type GetResponseOptions<T extends z.ZodTypeAny> = {
@@ -19,9 +19,11 @@ type GetResponseRes<T> = {
 };
 
 function createRequestOptions<T extends z.ZodTypeAny>(options: GetResponseOptions<T>) {
-  const { input, store = true, instructions, previousResponseId, model = CHAT_COMPLETIONS_MODEL, schema } = options;
+  const { input, store = true, instructions, previousResponseId, model = CHAT_MODEL, temperature, schema } = options;
   return {
     model,
+    reasoning: { effort: CHAT_MODEL_REASONING_EFFORT },
+    ...(temperature !== undefined ? { temperature } : {}),
     store,
     instructions,
     input,

@@ -8,9 +8,11 @@ import { closeRedisConnection } from '@core/services';
 import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
+import { initClaims } from '@features/claims';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
+import { initRail, BOT_CONFIG as railConfig } from '@features/rail';
 import { initSavings } from '@features/savings';
 import { initStickers } from '@features/stickers';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
@@ -21,7 +23,6 @@ import { stopAllTelegramBots } from '@services/telegram';
 axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
 
 async function main() {
-  // await initConsoleOverride();
   const app = express();
   const port = env.PORT || 3000;
   const logger = new Logger('bootstrap');
@@ -63,6 +64,13 @@ async function main() {
     logger.error(`Failed to init zika app: ${getErrorMessage(err)}`);
   }
 
+  try {
+    initClaims(app);
+  } catch (err) {
+    failedComponents.push('claims');
+    logger.error(`Failed to init claims app: ${getErrorMessage(err)}`);
+  }
+
   registerPortfolioApiRoutes(app);
 
   registerSwaggerRoutes(app);
@@ -80,10 +88,11 @@ async function main() {
 
   await initBot(chatbotConfig, () => initChatbot(app));
   await initBot(chilliConfig, () => initChilli());
-  await initBot(coachConfig, () => initCoach());
+  await initBot(coachConfig, () => initCoach(app));
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
   await initBot(learnerConfig, () => initLearner(app));
+  await initBot(railConfig, () => initRail());
 
   if (failedComponents.length) {
     logger.error(`Startup completed with unavailable components: ${failedComponents.join(', ')}`);

@@ -18,10 +18,9 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 - **node-cron** - Scheduled tasks
 
 ### AI & LLM
-- **Anthropic SDK** - Claude models
 - **OpenAI** - ChatGPT models
 - **LangChain** - AI orchestration
-- **LangGraph** - Agentic workflows with MemorySaver
+- **LangGraph** - Agentic workflows with a MongoDB checkpointer
 
 ### Data & Persistence
 - **MongoDB** - Native driver for data persistence
@@ -34,7 +33,7 @@ MMPS uses a **plain TypeScript architecture** with manual dependency injection a
 ### Integration & Tools
 - **MCP SDK** - Model Context Protocol for tool integration
 - **Axios** - HTTP client
-- **Google Cloud** - Google Sheets and other services
+- **Google APIs** - Calendar, Gmail, Maps and Places
 
 ### Code Quality
 - **ESLint 9.x** - Linting with flat config
@@ -70,7 +69,7 @@ features/{bot-name}/
 
 ### Available Bots
 
-1. **Chatbot** - AI assistant with 27 tools
+1. **Chatbot** - AI assistant with 31 tools
 2. **Chilli** - Cat persona bot (Hebrew)
 3. **Coach** - Sports analytics and predictions
 4. **Wolt** - Restaurant notifications
@@ -117,11 +116,14 @@ An Express server runs alongside the bots:
 | Route | Owner |
 | --- | --- |
 | `GET /` | Health check (`{ success: true }`) |
-| `/api-docs` | Swagger UI (`registerSwaggerRoutes`) |
+| `/api/docs`, `/api/docs.json` | Swagger UI and OpenAPI JSON (`registerSwaggerRoutes`) |
 | `/savings/*`, `/api/savings/*` | [Savings](/bots/savings) SPA and API |
-| `/earth/*` | [Earth](/bots/earth) SPA (no API), served by `initWorldly` |
+| `/earth/*`, `/api/worldly/globe/*` | [Earth](/bots/earth) SPA plus progress sync and analytics, served by `initWorldly` |
+| `/coach/*`, `/api/coach/*` | [Coach](/bots/coach) live scores mini-app and API |
 | `/zika/*` | [Zika](/bots/zika) static showcase |
-| `/learner/*`, `/api/learner/*` | Learner bot mini-app and progress API |
+| `/claims/*` | [Claims](/bots/claims) static app |
+| `/learner/*`, `/api/learner/*` | [Learner](/bots/learner) bot mini-app and progress API |
+| `POST /api/calendar-events/sync` | Calendar events sync (shared secret), registered by `initChatbot` |
 | `POST /portfolio/contact` | Portfolio site contact form (rate-limited) |
 | `GET/POST /whatsapp-webhook` | [Stickers](/bots/stickers) WhatsApp webhook |
 
@@ -242,7 +244,6 @@ Response back to user
 
 - **Development**: `IS_PROD=false`, `LOCAL_ACTIVE_BOT_ID=CHATBOT`
 - **Production**: `IS_PROD=true` (all bots run)
-- **Google Sheets Logging**: Service account credentials for production logging
 
 ## Next Steps
 

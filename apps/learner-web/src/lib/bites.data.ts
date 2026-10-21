@@ -73,7 +73,21 @@ GET  /v1/feed?cursor=...                                     -&gt; { items: Twee
 
   <h3>6 · Deep Dives</h3>
   <p>Harden against the non-functional reqs. Seniority = how proactively you drive this. Junior: interviewer points at weak spots. Senior: you identify fanout-on-read vs write, sharding, caching yourself — <b>but leave room for the interviewer's probes</b> (don't talk over them; you'll miss the signals they want).</p>
-  <div class="next"><a href="#home">← Overview</a><a href="#numbers">Next: Numbers to Know →</a></div>`,
+  <div class="next"><a href="#home">← Overview</a><a href="#numbers">Next: Numbers to Know →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why limit functional requirements to the top 3?</summary>
+        <div class="answer">Interviewers explicitly evaluate focus. A long feature list eats your time and leaves you without a working design at the end. Treat requirements as a PM conversation, agree on the 3 that matter, and park the rest.</div></details>
+      <details class="qa"><summary>What makes a non-functional requirement useful rather than vague?</summary>
+        <div class="answer">It has a number and names a specific operation. "Low latency" says nothing; "feed renders in under 200ms at 100M DAU" is a target you can design against. Pick the 3-5 that matter from CAP, scale, latency, durability, and the consistency window.</div></details>
+      <details class="qa"><summary>Should you do capacity estimates at the start of the interview?</summary>
+        <div class="answer">Usually not. Computing DAU, QPS, and storage just to conclude "it's a lot" wastes time. Say you'll do the math where it changes a decision, for example to decide between a single min-heap and a sharded one.</div></details>
+      <details class="qa"><summary>Where should the current user's ID come from in your API?</summary>
+        <div class="answer">From the authenticated token, never from the request body or path. Trusting a client-supplied <code>userId</code> lets anyone act as anyone. Calling this out unprompted is an easy senior signal.</div></details>
+      <details class="qa"><summary>How should you handle caching or other optimizations during the high-level design?</summary>
+        <div class="answer">Don't build them yet. Note "we'll add a cache here" verbally and in writing, then move on so you finish a design that satisfies every endpoint. Complexity belongs in the deep dives.</div></details>
+      <details class="qa"><summary>What separates a senior candidate from a junior one in the deep dives?</summary>
+        <div class="answer">The senior candidate finds the weak spots (fanout-on-read vs fanout-on-write, sharding, caching) without being prompted. The junior waits for the interviewer to point them out. A senior still leaves room for the interviewer's probes instead of talking over them.</div></details>`,
   },
   {
     id: "system-design:numbers",
@@ -117,7 +131,19 @@ GET  /v1/feed?cursor=...                                     -&gt; { items: Twee
   <div class="callout danger"><div class="t">Three classic mistakes</div>
     <b>1. Premature sharding</b> — a single modern Postgres handles far more than textbooks claim. <b>2. Overestimating latency</b> — same-region calls are ~1ms, not 50ms. <b>3. Over-engineering for "high" write throughput</b> that's actually ~dozens/sec.
   </div>
-  <div class="next"><a href="#delivery">← Delivery</a><a href="#networking">Next: Networking →</a></div>`,
+  <div class="next"><a href="#delivery">← Delivery</a><a href="#networking">Next: Networking →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why does using outdated hardware numbers hurt you?</summary>
+        <div class="answer">It signals book knowledge without hands-on experience, and it leads to bad decisions. A big instance today has around 512 GiB of RAM and 128 vCPUs, and memory-optimized ones go to several TB. Many workloads that "need" a distributed system fit on one machine.</div></details>
+      <details class="qa"><summary>How do you quickly convert a daily volume into a per-second rate?</summary>
+        <div class="answer">Use about 100k seconds per day (the real value is 86,400). So 1M events per day is roughly 12 per second, and 1B per day is roughly 12k per second.</div></details>
+      <details class="qa"><summary>A system takes 1M writes per day. Should you shard the database?</summary>
+        <div class="answer">No. That's about 12 writes per second, which a single Postgres instance handles easily. Sharding for it is premature and adds cross-shard pain for no benefit.</div></details>
+      <details class="qa"><summary>How do same-region and cross-region latency compare, and why does it matter?</summary>
+        <div class="answer">Same-region round trips are about 1-2ms; cross-region ones are 50-150ms. Overestimating same-region calls leads to unnecessary caching or co-location, while cross-region round trips really can dominate a request's latency.</div></details>
+      <details class="qa"><summary>Is storage usually the constraint that forces a distributed design?</summary>
+        <div class="answer">Rarely. Local SSDs go up to about 60 TB per instance, HDDs to over 300 TB, and S3 is effectively unlimited with 11 nines of durability. Write throughput, memory, or latency are more often the real limits.</div></details>`,
   },
   {
     id: "system-design:networking",
@@ -161,7 +187,21 @@ GET  /v1/feed?cursor=...                                     -&gt; { items: Twee
 
   <h4>HTTP verb idempotency (say it)</h4>
   <p><code>GET</code>, <code>PUT</code>, <code>DELETE</code> should be idempotent; <code>POST</code> is not. Design retries around this.</p>
-  <div class="next"><a href="#numbers">← Numbers</a><a href="#api-design">Next: API Design →</a></div>`,
+  <div class="next"><a href="#numbers">← Numbers</a><a href="#api-design">Next: API Design →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What's the difference between TCP and UDP, and when would you pick UDP?</summary>
+        <div class="answer">TCP is connection-oriented, reliable, and ordered, at the cost of a handshake and connection state. UDP is connectionless and fast with no delivery guarantees. Pick UDP for live video, VoIP, or gaming, where a dropped packet is a small hiccup but retransmits would add lag.</div></details>
+      <details class="qa"><summary>How do you serve real-time UDP-style updates to browser users?</summary>
+        <div class="answer">Browsers can only use UDP through WebRTC. A common answer is to give native app users a UDP path and give browser users a batched HTTP fallback, as in the Facebook Live reactions design.</div></details>
+      <details class="qa"><summary>When would you choose gRPC over REST?</summary>
+        <div class="answer">For internal, performance-critical service-to-service calls. gRPC uses HTTP/2 and protobuf and gets much higher throughput. Browsers don't support it, so the usual pattern is gRPC internally and REST externally.</div></details>
+      <details class="qa"><summary>When would you use WebSockets instead of SSE?</summary>
+        <div class="answer">When the client also needs to send frequent messages, such as chat or collaborative editing, because WebSockets are full-duplex. SSE only goes server to client, but it runs over plain HTTP and reconnects automatically using Last-Event-ID. Watch for load balancers and proxies that kill long-lived connections.</div></details>
+      <details class="qa"><summary>What is the "two-hop" framing for real-time features?</summary>
+        <div class="answer">Hop 1 is how the server pushes to the client (polling, SSE, WebSockets, and so on). Hop 2 is how the server learns about the event in the first place, for example pub/sub or routing the event to the server holding that client's connection via consistent hashing. Naming both hops shows you've thought past the transport.</div></details>
+      <details class="qa"><summary>Which HTTP verbs should be idempotent, and why does it matter?</summary>
+        <div class="answer"><code>GET</code>, <code>PUT</code>, and <code>DELETE</code> should be idempotent; <code>POST</code> is not. Idempotent calls can be retried safely after timeouts, so you design retry behavior around this distinction.</div></details>`,
   },
   {
     id: "system-design:api-design",
@@ -213,7 +253,21 @@ async function listFeed(userId: string, cursor?: string, limit = 20): Promise&lt
 }</code></pre>
 
   <div class="callout warn"><div class="t">GraphQL in interviews</div>Only raise it when the problem is explicitly about client flexibility / uncertain requirements. Otherwise it usually obscures the query-pattern optimizations the interviewer wants to see.</div>
-  <div class="next"><a href="#networking">← Networking</a><a href="#data-modeling">Next: Data Modeling →</a></div>`,
+  <div class="next"><a href="#networking">← Networking</a><a href="#data-modeling">Next: Data Modeling →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>How should you name REST resources?</summary>
+        <div class="answer">Use plural nouns like <code>/tweets</code>, not <code>/tweet</code> or verbs like <code>/getTweet</code>. The HTTP method expresses the action. Version the path (<code>/v1/</code>) and return proper status codes.</div></details>
+      <details class="qa"><summary>How does an idempotency key prevent a double charge?</summary>
+        <div class="answer">The client generates a UUID and sends the same key on every retry of that request. The server looks up the key first and, if an order already exists, returns it instead of creating another. A retry after a timeout then gets the same result with no second charge.</div></details>
+      <details class="qa"><summary>Why is cursor pagination preferred over offset pagination at scale?</summary>
+        <div class="answer">Offset pages shift when new rows are inserted, so users see duplicates or miss items, and large offsets make the database scan and discard many rows. A cursor encodes the last seen sort key and id, so the next query starts right after it. That stays stable under inserts and is cheap with an index.</div></details>
+      <details class="qa"><summary>Why does the cursor include the id and not just the timestamp?</summary>
+        <div class="answer">Several rows can share the same <code>created_at</code>. Sorting and filtering on <code>(created_at, id)</code> gives a unique, total order, so no rows are skipped or repeated at page boundaries.</div></details>
+      <details class="qa"><summary>How do you know whether there's a next page without a separate count query?</summary>
+        <div class="answer">Fetch <code>limit + 1</code> rows. If you got more than <code>limit</code>, there's another page, so return the first <code>limit</code> items and build the next cursor from the last one returned.</div></details>
+      <details class="qa"><summary>When is it worth bringing up GraphQL in an interview?</summary>
+        <div class="answer">Only when the problem is explicitly about client flexibility or uncertain requirements. Otherwise it tends to hide the query-pattern optimizations the interviewer wants to see you reason about.</div></details>`,
   },
   {
     id: "system-design:data-modeling",
@@ -261,7 +315,19 @@ type FeedItem = {
 };</code></pre>
 
   <div class="callout"><div class="t">🎤 Say the fields that matter</div>Don't write every column. Call out the ones that drive the design: partition/sort keys, foreign keys, the field you'll index, and anything that affects consistency.</div>
-  <div class="next"><a href="#api-design">← API Design</a><a href="#caching">Next: Caching →</a></div>`,
+  <div class="next"><a href="#api-design">← API Design</a><a href="#caching">Next: Caching →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What should drive your data model in an interview?</summary>
+        <div class="answer">Your access patterns. Model the entities, identifiers, and relationships so the queries your API needs are cheap. The bar is lower than production, so focus on the fields that shape the design.</div></details>
+      <details class="qa"><summary>Why is Postgres a reasonable default over NoSQL?</summary>
+        <div class="answer">Modern relational databases scale much further than folklore claims, and they give you JOINs, transactions, ad-hoc queries, and room to change later. Reach for NoSQL only with a concrete reason, such as fixed access patterns, massive write throughput, or predictable single-digit-ms latency at any scale.</div></details>
+      <details class="qa"><summary>When would you denormalize, and what does it cost you?</summary>
+        <div class="answer">When reads dominate and read-time JOINs are the bottleneck, as with feeds or product pages. You pay with more complex writes, since data is copied in several places, and with the risk of those copies drifting out of sync.</div></details>
+      <details class="qa"><summary>What does query-driven modeling look like in Cassandra or DynamoDB?</summary>
+        <div class="answer">You design each table around one exact query, and having one table per access pattern is normal. For a feed, the partition key is the feed owner and the sort key is the creation time, with display data like the author handle embedded so no lookup is needed at render time.</div></details>
+      <details class="qa"><summary>Which fields should you actually call out when sketching a schema?</summary>
+        <div class="answer">The ones that drive the design: partition and sort keys, foreign keys, fields you'll index, and anything that affects consistency. Skip obvious columns like name or email.</div></details>`,
   },
   {
     id: "system-design:caching",
@@ -321,7 +387,23 @@ async function updateUser(id: string, patch: Partial&lt;User&gt;) {
   <p><b>LRU</b> is the safe default; add <b>TTL</b> to bound staleness. Mention <b>CDN</b> for static media, <b>in-process</b> for extreme hot keys.</p>
 
   <div class="callout danger"><div class="t">Don't cache everything</div>Cache data that's read often, changes rarely, and is expensive to fetch. Sometimes a well-indexed DB is enough — saying that is a senior signal.</div>
-  <div class="next"><a href="#data-modeling">← Data Modeling</a><a href="#sharding">Next: Sharding →</a></div>`,
+  <div class="next"><a href="#data-modeling">← Data Modeling</a><a href="#sharding">Next: Sharding →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>When should you bring caching into a design?</summary>
+        <div class="answer">After you've named a specific bottleneck. Caching gives faster reads and less database load, but you pay with staleness and invalidation complexity. Sometimes a well-indexed database is enough, and saying so is a senior signal.</div></details>
+      <details class="qa"><summary>How does cache-aside work and why is it the default?</summary>
+        <div class="answer">The app checks the cache, and on a miss it reads the database and populates the cache. It's simple, only caches data that's actually read, and suits read-heavy workloads. On writes, update the database and delete the cache key so the next read repopulates fresh data.</div></details>
+      <details class="qa"><summary>Compare write-through and write-behind.</summary>
+        <div class="answer">Write-through writes the cache and the database synchronously, which keeps them closer to consistent. Write-behind writes the cache and flushes to the database asynchronously, which handles very high write volume but can lose data if the cache fails before the flush.</div></details>
+      <details class="qa"><summary>What is request coalescing and what problem does it solve?</summary>
+        <div class="answer">When many requests miss the same key at once, only the first one fetches from the database; the rest wait on that same in-flight promise. It stops a cache stampede, where a hot key's TTL expires and thousands of requests hit the database together.</div></details>
+      <details class="qa"><summary>How do you handle a single hot key, like a celebrity's profile?</summary>
+        <div class="answer">One key can overload the single Redis node that owns it. Replicate the key across several nodes, add an in-process local cache in front of Redis, or rate-limit access.</div></details>
+      <details class="qa"><summary>What happens if the cache goes down, and how do you protect against it?</summary>
+        <div class="answer">All the traffic it was absorbing falls on the database, which can get crushed. Use a circuit breaker with a fallback, plus a small in-process cache as a last resort.</div></details>
+      <details class="qa"><summary>What's a sensible eviction setup?</summary>
+        <div class="answer">LRU as the default policy, with a TTL to bound how stale data can get. Use a CDN for static media and an in-process cache for extremely hot keys.</div></details>`,
   },
   {
     id: "system-design:sharding",
@@ -363,7 +445,21 @@ function shardKeyFor(metric: string, ts: number, buckets = 16): string {
   return \`\${metric}#\${bucket}\`;                          // read = fan-in over 16 buckets
 }</code></pre>
   <div class="callout"><div class="t">🎤 Say this</div>"A single modern Postgres handles a lot — I'd only shard once we're actually near disk/write limits, and I'd pick <shard key> because our dominant query is <pattern>."</div>
-  <div class="next"><a href="#caching">← Caching</a><a href="#consistent-hashing">Next: Consistent Hashing →</a></div>`,
+  <div class="next"><a href="#caching">← Caching</a><a href="#consistent-hashing">Next: Consistent Hashing →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>When should you shard?</summary>
+        <div class="answer">When one machine can't hold the data or keep up with the write throughput. A single modern Postgres goes a long way, so shard only when you're actually near disk or write limits, and tie the shard key to your dominant query.</div></details>
+      <details class="qa"><summary>What's the difference between partitioning and sharding?</summary>
+        <div class="answer">Partitioning is logically splitting a dataset by key. Sharding is putting those partitions on separate machines. Vertical partitioning splits by columns or tables; horizontal partitioning splits rows by key.</div></details>
+      <details class="qa"><summary>Compare hash-based and range-based sharding.</summary>
+        <div class="answer">Hashing spreads keys evenly but makes range queries impossible and resharding hard, which is why it's paired with consistent hashing. Range sharding supports range scans but creates hotspots, for example all recent timestamps landing on one shard.</div></details>
+      <details class="qa"><summary>What makes a good shard key?</summary>
+        <div class="answer">High cardinality and even access, like <code>userId</code> rather than <code>country</code>. It should also match the dominant query so most requests hit one shard instead of scatter-gathering across all of them.</div></details>
+      <details class="qa"><summary>How do you avoid every write hitting the newest shard in a time-series workload?</summary>
+        <div class="answer">Add a hash or bucket prefix to the key, such as <code>metric#0</code> to <code>metric#15</code>, so writes spread across buckets. Reads then fan in over all the buckets and aggregate. The same sub-key trick works for a single key that's too hot for one shard.</div></details>
+      <details class="qa"><summary>What pain points does sharding introduce?</summary>
+        <div class="answer">Hotspots, slow cross-shard queries and JOINs (scatter-gather), cross-shard transactions that need 2PC or sagas, and resharding, which means moving data. That's why you avoid sharding until you need it.</div></details>`,
   },
   {
     id: "system-design:consistent-hashing",
@@ -405,7 +501,17 @@ function shardKeyFor(metric: string, ts: number, buckets = 16): string {
   }
 }</code></pre>
   <div class="callout"><div class="t">Where it shows up</div>Cache clusters (which Redis node?), sharded DBs (Cassandra/Dynamo), and the "pushing updates via consistent hashing" real-time pattern (route a user's connection to a stable server).</div>
-  <div class="next"><a href="#sharding">← Sharding</a><a href="#cap">Next: CAP Theorem →</a></div>`,
+  <div class="next"><a href="#sharding">← Sharding</a><a href="#cap">Next: CAP Theorem →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>How does consistent hashing assign a key to a node?</summary>
+        <div class="answer">Nodes and keys are hashed onto the same ring. A key belongs to the first node found going clockwise from its position, wrapping around at the end. Lookups use a binary search over the sorted node positions.</div></details>
+      <details class="qa"><summary>How many keys move when you add or remove a node?</summary>
+        <div class="answer">About 1/N of them, only the slice next to the changed node. With <code>hash % N</code>, nearly every key would move, causing mass cache misses or a full data reshuffle.</div></details>
+      <details class="qa"><summary>How do virtual nodes help with machines of different sizes?</summary>
+        <div class="answer">Each physical node gets many points on the ring. Besides smoothing out the distribution, you can give a bigger machine more virtual nodes so it owns a proportionally larger share of keys.</div></details>
+      <details class="qa"><summary>Where does consistent hashing show up in practice?</summary>
+        <div class="answer">Picking which Redis node holds a key in a cache cluster, partitioning data in Cassandra and DynamoDB, and routing a user's real-time connection or events to a stable server.</div></details>`,
   },
   {
     id: "system-design:cap",
@@ -437,7 +543,21 @@ function shardKeyFor(metric: string, ts: number, buckets = 16): string {
   </ul>
   <div class="callout"><div class="t">🎤 Quorum knob</div>Dynamo-style systems tune W + R vs N. <b>W + R &gt; N ⇒ strong consistency</b> (overlapping quorums). Lower them for availability/latency. Naming this shows depth.</div>
   <div class="callout warn"><div class="t">PACELC (bonus)</div>Even without a partition (Else), you trade <b>Latency vs Consistency</b>. Explains why "AP" stores like Cassandra also default to low-latency eventual reads.</div>
-  <div class="next"><a href="#consistent-hashing">← Consistent Hashing</a><a href="#indexing">Next: Indexing →</a></div>`,
+  <div class="next"><a href="#consistent-hashing">← Consistent Hashing</a><a href="#indexing">Next: Indexing →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why can't you just pick "CA" and skip partition tolerance?</summary>
+        <div class="answer">In a distributed system, network partitions will happen, so partition tolerance isn't optional. The real choice is what you do during a partition: stay correct by rejecting or stalling, or stay up by answering with possibly stale data.</div></details>
+      <details class="qa"><summary>Does a system have to be entirely CP or entirely AP?</summary>
+        <div class="answer">No. The choice can differ per operation. A shopping app might keep inventory decrements and payments consistent while serving product feeds and view counts with availability first.</div></details>
+      <details class="qa"><summary>Give examples of operations that should prefer consistency and ones that should prefer availability.</summary>
+        <div class="answer">Consistency: payments and ledgers, booking the last seat, and enforcing unique usernames, where a wrong answer is costly. Availability: feeds, likes, presence, and analytics, where slightly stale data is fine.</div></details>
+      <details class="qa"><summary>What is read-your-writes consistency and how do you get it?</summary>
+        <div class="answer">A user always sees their own updates, even if other users' views lag. You get it by routing that user's reads to the leader or using sticky sessions to the replica that took the write.</div></details>
+      <details class="qa"><summary>With N = 3 replicas, which W and R values give strong consistency?</summary>
+        <div class="answer">Any combination where W + R &gt; N, such as W = 2 and R = 2. The read and write quorums must overlap, so every read touches at least one replica with the latest write. Lowering W or R improves latency and availability at the cost of that guarantee.</div></details>
+      <details class="qa"><summary>What does PACELC add to CAP?</summary>
+        <div class="answer">It covers normal operation: when there's no partition, you still trade latency against consistency. That's why stores like Cassandra default to fast eventual reads even when the network is healthy.</div></details>`,
   },
   {
     id: "system-design:indexing",
@@ -475,7 +595,23 @@ CREATE INDEX idx_tweets_author_time ON tweets (author_id, created_at DESC);
 -- Covering: no heap fetch needed if you only select these columns
 CREATE INDEX idx_orders_user_status ON orders (user_id, status) INCLUDE (total, created_at);</code></pre>
   <div class="callout"><div class="t">🎤 LSM vs B-tree</div>"Cassandra writes are fast because it's an LSM tree — append to a memtable, flush to immutable SSTables, compact later. The cost is read amplification, mitigated with bloom filters." That one sentence signals real internals knowledge.</div>
-  <div class="next"><a href="#cap">← CAP</a><a href="#p-realtime">Next: Real-time Updates →</a></div>`,
+  <div class="next"><a href="#cap">← CAP</a><a href="#p-realtime">Next: Real-time Updates →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What does an index cost you?</summary>
+        <div class="answer">Every index slows writes, since it must be updated on each insert or update, and it uses extra storage. Add indexes for real query patterns, not just in case.</div></details>
+      <details class="qa"><summary>When would you use a hash index instead of a B-tree?</summary>
+        <div class="answer">Only for exact-equality lookups. A B-tree handles equality, ranges, sorting, and prefix matches because it's ordered, which is why it's the default in Postgres and MySQL. A hash index can't serve range queries.</div></details>
+      <details class="qa"><summary>Given an index on (a, b, c), which queries can use it?</summary>
+        <div class="answer">Queries filtering on <code>a</code>, <code>a</code> and <code>b</code>, or all three, per the left-prefix rule. A query filtering on <code>b</code> alone can't use it.</div></details>
+      <details class="qa"><summary>How would you order columns in a composite index for "a user's tweets, newest first"?</summary>
+        <div class="answer">Equality columns first, then range or sort columns: <code>(author_id, created_at DESC)</code>. The index jumps to one author and reads that author's tweets already in time order.</div></details>
+      <details class="qa"><summary>What is a covering index?</summary>
+        <div class="answer">An index that contains every column the query selects, for example by using <code>INCLUDE</code> in Postgres. The database can answer from the index alone with an index-only scan and skip fetching the table rows.</div></details>
+      <details class="qa"><summary>Why are LSM-tree writes fast, and what's the downside?</summary>
+        <div class="answer">Writes go to an in-memory memtable and get flushed to immutable SSTables, which are compacted later, so there are no random in-place updates. The cost is read amplification, since a read may check the memtable and several SSTables. Bloom filters reduce that by skipping SSTables that can't contain the key.</div></details>
+      <details class="qa"><summary>Which index type fits full-text search, "near me" queries, and semantic similarity?</summary>
+        <div class="answer">An inverted index for full-text search (Elasticsearch, Lucene). A geospatial index like geohash or R-tree for proximity (PostGIS, Redis GEO). A vector ANN index like HNSW or IVF for semantic similarity (pgvector, Pinecone).</div></details>`,
   },
   {
     id: "system-design:p-realtime",
@@ -507,7 +643,19 @@ redis.subscribe(\`feed:\${userId}\`, (msg) =&gt; {
   socket?.send(msg);
 });</code></pre>
   <p class="q">Deep dives you'll get: reconnection &amp; missed messages (last-event-id, buffering), ordering across servers, one user with millions of followers.</p>
-  <div class="next"><a href="#indexing">← Indexing</a><a href="#p-contention">Next: Contention →</a></div>`,
+  <div class="next"><a href="#indexing">← Indexing</a><a href="#p-contention">Next: Contention →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What are the "two hops" in a real-time update design?</summary>
+        <div class="answer">Hop 1 is client to server: which protocol carries the update (polling, long polling, SSE, WebSocket, WebRTC). Hop 2 is source to server: how the server that holds the client's connection finds out about the event, usually via pub/sub or by routing the event to the right server with consistent hashing. Treating them separately keeps the design clear.</div></details>
+      <details class="qa"><summary>When would you pick SSE over WebSockets?</summary>
+        <div class="answer">When traffic is one-way server push, such as notifications, live scores, or streaming LLM tokens. SSE is cheap and runs over plain HTTP. Use WebSockets when the client also sends frequent messages, as in chat, collaborative editing, multiplayer games, or trading.</div></details>
+      <details class="qa"><summary>Why do persistent connections make fanout hard?</summary>
+        <div class="answer">Connections are stateful: a user's socket lives on one specific server. You need a registry (for example in Redis) that maps users to connection servers, or a pub/sub layer that every connection server subscribes to so it can push to whichever sockets it holds locally.</div></details>
+      <details class="qa"><summary>How does a client recover messages it missed while disconnected?</summary>
+        <div class="answer">On reconnect, the client sends the ID of the last event it received (SSE has a built-in <code>Last-Event-ID</code> header). The server replays anything newer from a buffer or durable log. Without that, events sent during the gap are lost.</div></details>
+      <details class="qa"><summary>When is long polling still a reasonable choice?</summary>
+        <div class="answer">When you need near-real-time updates but can't hold open connections, for example because of proxies, infrastructure limits, or very simple clients. It costs more requests and latency than SSE or WebSockets but works almost anywhere.</div></details>`,
   },
   {
     id: "system-design:p-contention",
@@ -546,7 +694,21 @@ async function applyBid(id: string, expectedVersion: number, amount: number) {
 }</code></pre>
   <div class="callout danger"><div class="t">🎤 Say this about Redis locks</div>"A Redis lock is an efficiency optimization that occasionally fails, not a correctness guarantee. If a stale lock holder would corrupt data, enforce the invariant where the data lives (a row lock or conditional update) or use etcd/ZooKeeper." That distinction is a staff-level signal.</div>
   <p class="q">Deep dives: deadlocks with pessimistic locking, ABA problem with OCC, performance when everyone wants the same row (hot row → queue/serialize).</p>
-  <div class="next"><a href="#p-realtime">← Real-time</a><a href="#p-multistep">Next: Multi-step →</a></div>`,
+  <div class="next"><a href="#p-realtime">← Real-time</a><a href="#p-multistep">Next: Multi-step →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why does a naive read-check-write cause double-booking?</summary>
+        <div class="answer">Two requests can both read "1 seat left" before either writes. Both pass the check and both decrement, so the seat is sold twice. The check and the write have to happen atomically, or under a lock, to close that gap.</div></details>
+      <details class="qa"><summary>What should you try first when facing contention on a single row?</summary>
+        <div class="answer">An atomic conditional write, such as <code>UPDATE ... SET seats = seats - 1 WHERE id = $1 AND seats &gt; 0</code>, then check the affected row count. The database enforces the invariant in one statement, with no explicit lock and no race. Reach for heavier tools only if that can't express the rule.</div></details>
+      <details class="qa"><summary>How does optimistic concurrency control work, and when does it break down?</summary>
+        <div class="answer">You read a row with its version, then update only <code>WHERE version = expected</code> and bump the version. Zero rows updated means someone else got there first, so you re-read and retry. Under heavy contention most attempts fail and retry, so pessimistic locking or serializing through a queue works better.</div></details>
+      <details class="qa"><summary>What is the main risk of pessimistic locking with <code>SELECT ... FOR UPDATE</code>?</summary>
+        <div class="answer">Deadlocks: two transactions each hold a lock the other needs. Locks also reduce throughput because waiters queue up. Acquire locks in a consistent order and keep transactions short.</div></details>
+      <details class="qa"><summary>Why isn't a Redis lock a correctness guarantee?</summary>
+        <div class="answer">The lock has a TTL. If the holder pauses (GC, network) past the TTL, another client takes the lock while the first still believes it holds it, and both write. Treat it as an efficiency optimization. If a stale holder would corrupt data, enforce the invariant in the database (row lock or conditional update) or use etcd/ZooKeeper.</div></details>
+      <details class="qa"><summary>What do you do when everyone wants the same row?</summary>
+        <div class="answer">A hot row turns any locking scheme into a bottleneck. Serialize the writes instead: push requests onto a queue and have a single consumer apply them in order, so the row sees one writer at a time.</div></details>`,
   },
   {
     id: "system-design:p-multistep",
@@ -582,7 +744,19 @@ async function placeOrder(o: Order) {
 }</code></pre>
   <div class="callout"><div class="t">🎤 Idempotency + exactly-once</div>Steps must be idempotent (retries!). "Exactly once" is really "at-least-once delivery + idempotent handlers". Durable-execution engines give you retries, timers, and versioning for free — mention it when there's lots of state + failure handling.</div>
   <p class="q">Deep dives: what if the orchestrator crashes? workflow versioning/migrations, keeping state size bounded, external events, ensuring a step runs exactly once.</p>
-  <div class="next"><a href="#p-contention">← Contention</a><a href="#p-reads">Next: Scaling Reads →</a></div>`,
+  <div class="next"><a href="#p-contention">← Contention</a><a href="#p-reads">Next: Scaling Reads →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What is a compensating action, and why do sagas need them?</summary>
+        <div class="answer">It's an operation that undoes a step that already committed, such as refunding a charge or releasing reserved inventory. A saga is a series of local transactions with no global rollback, so when a later step fails you run the compensations for completed steps in reverse order.</div></details>
+      <details class="qa"><summary>Choreography or orchestration: how do you choose?</summary>
+        <div class="answer">Choreography has services react to each other's events. It's loosely coupled, but the overall flow is hard to trace and change. Orchestration puts a central coordinator in charge of the steps, which is easier to reason about, monitor, and version. For anything non-trivial, orchestration is usually the safer default.</div></details>
+      <details class="qa"><summary>What problem does durable execution solve that a hand-written saga doesn't?</summary>
+        <div class="answer">If your orchestrator process crashes mid-flow, an in-memory saga loses track of where it was. Engines like Temporal or AWS Step Functions persist workflow state after every step, so a crash resumes exactly where it stopped. You also get retries, timers, and versioning without writing them yourself.</div></details>
+      <details class="qa"><summary>Why must every step be idempotent?</summary>
+        <div class="answer">Steps get retried after timeouts and crashes, so the same step can run more than once. "Exactly once" in practice means at-least-once delivery plus idempotent handlers: running the step twice has the same effect as running it once, for example by using an idempotency key on the payment call.</div></details>
+      <details class="qa"><summary>Why does this pattern matter for AI agent pipelines?</summary>
+        <div class="answer">Agent pipelines are long chains of flaky, stateful steps such as model calls and tool calls. The same issues apply: steps fail or time out, the process may crash, and work shouldn't be redone or lost. Sagas and durable execution give those pipelines resumability and clean failure handling.</div></details>`,
   },
   {
     id: "system-design:p-reads",
@@ -602,7 +776,17 @@ async function placeOrder(o: Order) {
   </ol>
   <div class="callout warn"><div class="t">Replica lag trap</div>Read replicas are async → a user may not see their own just-written data. Fix with <b>read-your-writes</b>: route the writer's next reads to the leader, or read from cache you updated.</div>
   <p class="q">Deep dives: queries slow as data grows (index/denormalize), millions of concurrent reads on one key (hot key → replicate), cache rebuild stampede (coalesce), invalidation when updates must be instantly visible.</p>
-  <div class="next"><a href="#p-multistep">← Multi-step</a><a href="#p-writes">Next: Scaling Writes →</a></div>`,
+  <div class="next"><a href="#p-multistep">← Multi-step</a><a href="#p-writes">Next: Scaling Writes →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>In what order should you reach for read-scaling techniques?</summary>
+        <div class="answer">Cheapest first. Optimize inside the database (indexes, bigger hardware, denormalizing to remove JOINs), then scale it horizontally with read replicas and eventually sharding, then add external caching: an application cache like Redis, then a CDN or edge cache for static and cacheable responses.</div></details>
+      <details class="qa"><summary>What is read-your-writes, and how do you provide it with async replicas?</summary>
+        <div class="answer">It's the guarantee that a user sees their own writes immediately. Async replicas lag, so a read right after a write can return stale data. Route that user's next reads to the leader for a short window, or serve them from a cache you updated on write.</div></details>
+      <details class="qa"><summary>How do you handle millions of concurrent reads on a single key?</summary>
+        <div class="answer">That's a hot key: one cache node or shard takes all the load. Replicate the hot value across several nodes or keys, or keep a short-lived local in-process cache on the app servers, so reads spread out instead of hammering one place.</div></details>
+      <details class="qa"><summary>What is a cache stampede and how do you prevent it?</summary>
+        <div class="answer">When a popular cache entry expires, many requests miss at once and all hit the database to rebuild it. Coalesce the requests so only one rebuilds the value while the others wait for it or get the stale copy.</div></details>`,
   },
   {
     id: "system-design:p-writes",
@@ -632,7 +816,19 @@ class Aggregator {
   }
 }</code></pre>
   <p class="q">Deep dives: resharding when adding shards (consistent hashing), a hot key too big for one shard (split all keys, or split hot keys dynamically).</p>
-  <div class="next"><a href="#p-reads">← Scaling Reads</a><a href="#p-blobs">Next: Large Blobs →</a></div>`,
+  <div class="next"><a href="#p-reads">← Scaling Reads</a><a href="#p-blobs">Next: Large Blobs →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why is scaling writes harder than scaling reads?</summary>
+        <div class="answer">Reads can be served from copies: replicas, caches, CDNs. Every write has to land on the authoritative store, so copying doesn't help. You have to spread writes across nodes, reduce how many there are, or absorb them over time.</div></details>
+      <details class="qa"><summary>What are the four main levers for scaling writes?</summary>
+        <div class="answer">A bigger box or a write-optimized LSM-tree store like Cassandra; sharding to spread writes across nodes; a write queue with workers to absorb bursts, plus load shedding when overloaded; and batching or hierarchical aggregation to turn many small writes into fewer large ones.</div></details>
+      <details class="qa"><summary>How does hierarchical aggregation reduce write load?</summary>
+        <div class="answer">Instead of writing every event, each node keeps local partial counts and flushes the deltas periodically, for example one <code>UPDATE counters SET n = n + delta</code> per key every few seconds. Write QPS drops by orders of magnitude. It fits counters, metrics, and ad clicks, where slight delay is acceptable.</div></details>
+      <details class="qa"><summary>Why shed load instead of accepting every write?</summary>
+        <div class="answer">An overloaded system that keeps accepting work slows down for everyone and can collapse entirely. Rejecting excess requests early keeps the system healthy for the traffic it can actually handle, and clients can retry later.</div></details>
+      <details class="qa"><summary>What do you do when a single key is too hot for one shard?</summary>
+        <div class="answer">Split it. Either spread every key across multiple sub-keys or shards, or detect hot keys and split only those dynamically, for example by appending a suffix and summing the parts on read. Adding shards also means resharding, which consistent hashing keeps cheap.</div></details>`,
   },
   {
     id: "system-design:p-blobs",
@@ -660,7 +856,19 @@ async function getUploadUrl(userId: string, filename: string) {
   return { uploadUrl: url, key };
 }</code></pre>
   <p class="q">Deep dives: upload fails at 99% (resumable parts), preventing abuse (scoped keys, size limits, quotas), fast downloads (CDN + range requests).</p>
-  <div class="next"><a href="#p-writes">← Scaling Writes</a><a href="#p-longtasks">Next: Long-Running Tasks →</a></div>`,
+  <div class="next"><a href="#p-writes">← Scaling Writes</a><a href="#p-longtasks">Next: Long-Running Tasks →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why shouldn't large files go through your app servers or into your database?</summary>
+        <div class="answer">Streaming gigabytes ties up app server bandwidth, memory, and connections, and bloats the database with data you never query with SQL. Blob storage like S3 is effectively unlimited and highly durable, so put the bytes there and keep only metadata in your DB.</div></details>
+      <details class="qa"><summary>How does a presigned URL upload flow work?</summary>
+        <div class="answer">The client asks your server for an upload URL. The server picks an object key, mints a scoped, expiring URL, records a <code>PENDING</code> metadata row, and returns the URL. The client uploads directly to S3, and an S3 event or webhook confirms completion so the row can be marked done.</div></details>
+      <details class="qa"><summary>How do you handle an upload that fails at 99%?</summary>
+        <div class="answer">Use multipart or resumable uploads. The file is sent in parts, and only the failed part is retried instead of restarting the whole 2GB file.</div></details>
+      <details class="qa"><summary>How do you prevent abuse of direct-to-storage uploads?</summary>
+        <div class="answer">Scope each URL to a specific key under the user's prefix, make it expire quickly, and enforce size limits and per-user quotas. The server controls what the URL allows, so clients can't write anywhere they like.</div></details>
+      <details class="qa"><summary>How do you make downloads fast?</summary>
+        <div class="answer">Serve files through a CDN so they come from edge locations near the user, and support range requests so clients can fetch parts of a file, which also enables video seeking and resumed downloads.</div></details>`,
   },
   {
     id: "system-design:p-longtasks",
@@ -694,7 +902,19 @@ async function worker() {
   }
 }</code></pre>
   <p class="q">Deep dives: retries + DLQ for repeated failures, exactly-once via idempotency, <b>backpressure</b> (queue depth), mixed workloads (priority queues), job dependencies (DAG).</p>
-  <div class="next"><a href="#p-blobs">← Large Blobs</a><a href="#dd-redis">Next: Redis →</a></div>`,
+  <div class="next"><a href="#p-blobs">← Large Blobs</a><a href="#dd-redis">Next: Redis →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why can't long-running work happen inside the HTTP request?</summary>
+        <div class="answer">HTTP timeouts are around 30 to 60 seconds, and holding a request open ties up server resources. Anything that takes more than a few seconds, like a video transcode or a big report, should run asynchronously.</div></details>
+      <details class="qa"><summary>Walk through the async job pattern end to end.</summary>
+        <div class="answer">The API validates the request, writes a job record as <code>QUEUED</code>, pushes it onto a queue, and returns <code>202</code> with a job ID within milliseconds. Workers pull jobs, set them to <code>RUNNING</code>, do the work, and record <code>DONE</code> with the result or <code>FAILED</code> with the error. The client polls a status URL or gets notified by SSE or a webhook.</div></details>
+      <details class="qa"><summary>What happens to a job that keeps failing?</summary>
+        <div class="answer">Retry it a limited number of times, ideally with backoff. After that, move it to a dead-letter queue (DLQ) so it stops consuming worker capacity and someone can inspect it. Since retries mean a job may run more than once, workers must be idempotent.</div></details>
+      <details class="qa"><summary>What is backpressure in this context?</summary>
+        <div class="answer">Queue depth tells you whether workers keep up. If it keeps growing, scale out workers or slow down and reject new submissions, rather than letting the backlog and latency grow without bound.</div></details>
+      <details class="qa"><summary>How do you keep quick jobs from getting stuck behind slow ones?</summary>
+        <div class="answer">Use separate or priority queues for different workloads, with dedicated workers, so a burst of heavy transcodes doesn't delay small, latency-sensitive jobs.</div></details>`,
   },
   {
     id: "system-design:dd-redis",
@@ -729,7 +949,19 @@ async function allow(userId: string, limit: number, windowMs: number): Promise&l
   return (res[2][1] as number) &lt;= limit;
 }</code></pre>
   <div class="callout warn"><div class="t">Interview traps</div><b>Hot keys</b> (replicate/local cache), <b>durability</b> (default persistence can lose recent writes on crash — Streams aren't a Kafka replacement), and the lock caveat. Naming the hot-key problem <em>and</em> a fix is the senior move.</div>
-  <div class="next"><a href="#p-longtasks">← Long Tasks</a><a href="#dd-kafka">Next: Kafka →</a></div>`,
+  <div class="next"><a href="#p-longtasks">← Long Tasks</a><a href="#dd-kafka">Next: Kafka →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why is Redis so fast, and what does single-threaded imply?</summary>
+        <div class="answer">It keeps data in memory, so reads take around a millisecond. Commands run on a single thread, so each command is atomic without locks. The flip side is that one slow command blocks everything else.</div></details>
+      <details class="qa"><summary>How would you build a sliding-window rate limiter in Redis?</summary>
+        <div class="answer">Keep a sorted set per user with request timestamps as scores. For each request, in one <code>MULTI</code> pipeline: remove entries older than the window, add the current request, count the set, and set an expiry on the key. Allow the request if the count is within the limit.</div></details>
+      <details class="qa"><summary>Can Redis Streams replace Kafka?</summary>
+        <div class="answer">Not as a durable backbone. Streams give you an append-only log with consumer groups, but with default persistence Redis can lose recent writes on a crash, and data is bounded by memory. Use Kafka when you need durable, replayable, high-volume event logs.</div></details>
+      <details class="qa"><summary>What is the hot-key problem and how do you fix it?</summary>
+        <div class="answer">One key gets so much traffic that the single node holding it becomes the bottleneck. Fix it by replicating the key across nodes (for example several copies with suffixes, picked at random on read) or by adding a short-lived local cache in the app servers.</div></details>
+      <details class="qa"><summary>What does Redis use for geospatial queries?</summary>
+        <div class="answer"><code>GEOADD</code> and <code>GEOSEARCH</code>, backed by a sorted set whose scores are geohashes. Nearby points share prefixes, so proximity search becomes a range lookup.</div></details>`,
   },
   {
     id: "system-design:dd-kafka",
@@ -757,7 +989,21 @@ await producer.send({
 });</code></pre>
   <div class="callout"><div class="t">🎤 Queue vs stream</div>"Same log; the difference is consumption. As a queue, one consumer per message. As a stream, the log is retained so multiple consumer groups replay independently and process continuously." Then mention <b>hot partitions</b> (bad key choice) as the scaling risk.</div>
   <p><b>Reach for Kafka when:</b> decoupling producers/consumers, buffering bursts, event sourcing/CDC pipelines, or fan-out to many independent consumers.</p>
-  <div class="next"><a href="#dd-redis">← Redis</a><a href="#dd-postgres">Next: PostgreSQL →</a></div>`,
+  <div class="next"><a href="#dd-redis">← Redis</a><a href="#dd-postgres">Next: PostgreSQL →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What's the difference between a topic and a partition?</summary>
+        <div class="answer">A topic is a logical stream of events. A partition is one physical, ordered log within that topic. Partitions are the unit of parallelism and ordering: more partitions allow more consumers, but ordering only holds within one partition.</div></details>
+      <details class="qa"><summary>How do you guarantee all events for one game are processed in order?</summary>
+        <div class="answer">Use the game ID as the message key. Messages with the same key go to the same partition, and a partition is consumed by exactly one consumer in a group, so that game's events are read in the order they were written.</div></details>
+      <details class="qa"><summary>How far can you scale consumers in a consumer group?</summary>
+        <div class="answer">Up to the number of partitions. Each partition is assigned to exactly one consumer in the group, so consumers beyond that count sit idle. Plan the partition count with future parallelism in mind.</div></details>
+      <details class="qa"><summary>What delivery guarantee does Kafka give by default, and how do you get exactly-once?</summary>
+        <div class="answer">At-least-once: after a failure, a consumer may reprocess messages it handled but hadn't committed. Exactly-once needs an idempotent producer plus transactions, or in practice idempotent consumers that can safely handle duplicates.</div></details>
+      <details class="qa"><summary>Kafka as a queue versus as a stream: what's the difference?</summary>
+        <div class="answer">It's the same log; only consumption differs. As a queue, each message is handled by one consumer. As a stream, the log is retained and multiple consumer groups read it independently and can replay from any offset.</div></details>
+      <details class="qa"><summary>What causes a hot partition and why does it matter?</summary>
+        <div class="answer">A bad key choice, where one key (a celebrity user or a huge game) carries a large share of the traffic. That partition's single consumer can't keep up while others sit idle. Pick keys with even distribution, or split hot keys.</div></details>`,
   },
   {
     id: "system-design:dd-postgres",
@@ -788,7 +1034,19 @@ COMMIT;
 UPDATE inventory SET available = available - 1, version = version + 1
 WHERE sku = 'x123' AND version = 42;   -- 0 rows => someone else won, retry</code></pre>
   <div class="callout"><div class="t">🎤 Isolation levels</div>Default is Read Committed. Bump to <b>Repeatable Read / Serializable</b> to prevent write skew in things like double-booking — Postgres uses SSI (serializable snapshot isolation) and aborts conflicting txns to retry.</div>
-  <div class="next"><a href="#dd-kafka">← Kafka</a><a href="#dd-cassandra">Next: Cassandra →</a></div>`,
+  <div class="next"><a href="#dd-kafka">← Kafka</a><a href="#dd-cassandra">Next: Cassandra →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why is Postgres a strong default answer in a system design interview?</summary>
+        <div class="answer">It gives you ACID transactions and strong consistency, JOINs, and a wide range of indexes, and it scales much further than people assume. Starting there and scaling only when needed is a defensible, "boring" choice.</div></details>
+      <details class="qa"><summary>What does MVCC buy you?</summary>
+        <div class="answer">Multi-version concurrency control keeps multiple versions of rows, so each transaction reads a consistent snapshot. Readers don't block writers and writers don't block readers, which keeps throughput high under mixed workloads.</div></details>
+      <details class="qa"><summary>Which index types let one Postgres cover several workloads?</summary>
+        <div class="answer">B-tree for standard lookups, composite and partial indexes for targeted queries, GIN for JSONB and full-text search, GiST for things like geometric data, and pgvector for embeddings. That covers relational, JSON, basic search, and vector similarity in one database.</div></details>
+      <details class="qa"><summary>What is the scaling path for Postgres?</summary>
+        <div class="answer">Add the right indexes first, then read replicas for read load, then table partitioning, and only when truly necessary shard across machines with something like Citus.</div></details>
+      <details class="qa"><summary>Why might Read Committed allow double-booking, and how do you fix it?</summary>
+        <div class="answer">Under Read Committed, two transactions can each check that a slot is free and then both insert a booking. That's write skew. Use Serializable isolation, where Postgres's SSI detects the conflict and aborts one transaction so you retry it, or take a row lock with <code>SELECT ... FOR UPDATE</code>.</div></details>`,
   },
   {
     id: "system-design:dd-cassandra",
@@ -821,7 +1079,19 @@ CREATE TABLE messages_by_channel (
   body        text,
   PRIMARY KEY ((channel_id, bucket), created_at)
 ) WITH CLUSTERING ORDER BY (created_at DESC);</code></pre>
-  <div class="next"><a href="#dd-postgres">← PostgreSQL</a><a href="#dd-dynamodb">Next: DynamoDB →</a></div>`,
+  <div class="next"><a href="#dd-postgres">← PostgreSQL</a><a href="#dd-dynamodb">Next: DynamoDB →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why are writes so cheap in Cassandra?</summary>
+        <div class="answer">It uses an LSM-tree storage engine. A write is appended to an in-memory memtable (plus a commit log) and later flushed to immutable SSTables on disk, so there are no in-place updates or random disk seeks on the write path. That is why it suits high write throughput workloads.</div></details>
+      <details class="qa"><summary>How do you get strong consistency out of an AP-leaning database like Cassandra?</summary>
+        <div class="answer">Consistency is tunable per query (<code>ONE</code>, <code>QUORUM</code>, <code>ALL</code>). If the write replicas plus read replicas exceed the replication factor (<strong>W + R &gt; N</strong>), every read overlaps at least one replica that saw the latest write. <code>QUORUM</code> writes with <code>QUORUM</code> reads is the usual choice.</div></details>
+      <details class="qa"><summary>What is the difference between the partition key and the clustering key?</summary>
+        <div class="answer">The partition key decides which node holds the data and is how you look it up. The clustering key sorts rows inside that partition, so it drives range reads and ordering, for example newest messages first with <code>CLUSTERING ORDER BY (created_at DESC)</code>.</div></details>
+      <details class="qa"><summary>In the messages table, why is a time <code>bucket</code> part of the partition key?</summary>
+        <div class="answer">With only <code>channel_id</code>, a busy channel would grow one partition without limit and become a hot partition. Adding a time bucket caps partition size and spreads a channel's history across several partitions. Reads for recent messages just target the latest bucket or two.</div></details>
+      <details class="qa"><summary>When would you avoid Cassandra?</summary>
+        <div class="answer">When you need strict consistency, multi-table JOINs, or ad-hoc aggregations. Its data model is built around known access patterns, so queries you didn't plan a table for are slow or impossible. A relational database like Postgres fits those cases better.</div></details>`,
   },
   {
     id: "system-design:dd-dynamodb",
@@ -849,7 +1119,21 @@ await ddb.query({
   KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
   ExpressionAttributeValues: { ":pk": "USER#123", ":sk": "ORDER#" },
 });</code></pre>
-  <div class="next"><a href="#dd-cassandra">← Cassandra</a><a href="#dd-elasticsearch">Next: Elasticsearch →</a></div>`,
+  <div class="next"><a href="#dd-cassandra">← Cassandra</a><a href="#dd-elasticsearch">Next: Elasticsearch →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What roles do the partition key and sort key play in DynamoDB?</summary>
+        <div class="answer">The partition key is required and determines how items are distributed and looked up. The optional sort key orders items within a partition, which enables range and prefix queries such as <code>begins_with(SK, "ORDER#")</code>.</div></details>
+      <details class="qa"><summary>What is the difference between a GSI and an LSI?</summary>
+        <div class="answer">A <strong>GSI</strong> (global secondary index) lets you query on non-key attributes using a different partition key. An <strong>LSI</strong> (local secondary index) keeps the same partition key but gives you an alternate sort key within each partition.</div></details>
+      <details class="qa"><summary>What is single-table design?</summary>
+        <div class="answer">You store several entity types in one table and overload the generic <code>PK</code> and <code>SK</code> attributes with prefixed values like <code>USER#123</code> and <code>ORDER#2026-01#...</code>. One key layout then serves multiple access patterns, such as fetching all of a user's orders with a single prefix query.</div></details>
+      <details class="qa"><summary>An interviewer says "NoSQL means no transactions." How do you respond for DynamoDB?</summary>
+        <div class="answer">DynamoDB supports transactions across up to 100 items, so that critique doesn't hold. It is still not a relational database, so complex JOINs and ad-hoc aggregations remain a poor fit.</div></details>
+      <details class="qa"><summary>What are DAX and DynamoDB Streams used for?</summary>
+        <div class="answer"><strong>DAX</strong> is a write-through cache in front of DynamoDB that brings reads down to microseconds. <strong>Streams</strong> is DynamoDB's change data capture feed, used for triggers and for keeping other stores consistent with the table.</div></details>
+      <details class="qa"><summary>When should you pick something other than DynamoDB?</summary>
+        <div class="answer">When cost at very high write volume matters, when you need complex queries, JOINs or ad-hoc aggregations, or when you'd depend on many GSIs and LSIs (Postgres is usually the better choice then). Vendor lock-in is another reason, since many interviewers prefer vendor-neutral designs.</div></details>`,
   },
   {
     id: "system-design:dd-elasticsearch",
@@ -871,7 +1155,21 @@ await ddb.query({
   </ul>
   <div class="callout danger"><div class="t">🎤 The rule</div>Elasticsearch is a <b>secondary/derived</b> index, <b>not your source of truth</b>. Write to your primary DB, then sync to ES (via app dual-write or, better, <a href="#dd-cdc">CDC</a>). Near-real-time (~1s refresh), not transactional.</div>
   <p><b>Reach for it when:</b> full-text search, autocomplete/fuzzy, faceted filtering, log/analytics search, or "find the right thing among many".</p>
-  <div class="next"><a href="#dd-dynamodb">← DynamoDB</a><a href="#dd-flink">Next: Flink →</a></div>`,
+  <div class="next"><a href="#dd-dynamodb">← DynamoDB</a><a href="#dd-flink">Next: Flink →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why should Elasticsearch not be your source of truth?</summary>
+        <div class="answer">It's a derived, near-real-time index (about a 1 second refresh) and is not transactional. Write to your primary database first, then sync to Elasticsearch, ideally through CDC rather than app-level dual writes, so the index can always be rebuilt from the real data.</div></details>
+      <details class="qa"><summary>How does a search query execute across a sharded index?</summary>
+        <div class="answer">A coordinating node scatters the query to all relevant shards in parallel. Each shard (a Lucene index) returns its top hits, and the coordinator gathers and merges them into the final ranked result.</div></details>
+      <details class="qa"><summary>What do replicas give you in Elasticsearch?</summary>
+        <div class="answer">High availability, because a replica can take over if a primary shard's node fails, and more read throughput, because queries can be served by any copy. Roughly, read capacity scales with the number of replicas.</div></details>
+      <details class="qa"><summary>How are search results ranked by default?</summary>
+        <div class="answer">By a relevance <code>_score</code> based on TF-IDF style scoring, specifically BM25. Terms that appear often in a document but rarely across the corpus push that document higher.</div></details>
+      <details class="qa"><summary>How do you decide between nesting data in a document and using a separate index?</summary>
+        <div class="answer">It's the same tradeoff as normalizing versus denormalizing in SQL. Nesting makes queries faster but means rewriting the parent when the child changes, so it suits data that is queried often and updated rarely. Frequently updated data is better kept in a separate index.</div></details>
+      <details class="qa"><summary>Name typical problems where you'd reach for Elasticsearch.</summary>
+        <div class="answer">Full-text search, autocomplete and fuzzy matching, faceted filtering, log and analytics search, and generally "find the right thing among many." It also supports geo queries, aggregations, and vector search.</div></details>`,
   },
   {
     id: "system-design:dd-flink",
@@ -892,7 +1190,19 @@ await ddb.query({
     <li>vs batch (Spark): Flink is true streaming, sub-second latency.</li>
   </ul>
   <div class="callout"><div class="t">Where it appears</div>Ad-click aggregation, real-time metrics/monitoring, trending topics (Top-K), fraud detection. Pattern: Kafka → Flink (windowed aggregate) → sink (OLAP DB / cache). Pair with <b>hierarchical aggregation</b> from <a href="#p-writes">Scaling Writes</a>.</div>
-  <div class="next"><a href="#dd-elasticsearch">← Elasticsearch</a><a href="#dd-zookeeper">Next: ZooKeeper →</a></div>`,
+  <div class="next"><a href="#dd-elasticsearch">← Elasticsearch</a><a href="#dd-zookeeper">Next: ZooKeeper →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What is the difference between event time and processing time?</summary>
+        <div class="answer">Event time is when the event actually happened, usually a timestamp on the event. Processing time is when Flink happens to see it. Using event time gives correct windows even when events arrive late or out of order, which processing time cannot.</div></details>
+      <details class="qa"><summary>What problem do watermarks solve?</summary>
+        <div class="answer">They tell Flink how far event time has progressed, so it knows when a window can be considered complete and emitted despite late or out-of-order events. Without them it couldn't decide when to stop waiting.</div></details>
+      <details class="qa"><summary>Compare tumbling, sliding and session windows.</summary>
+        <div class="answer"><strong>Tumbling</strong> windows are fixed and non-overlapping, like per-minute counts. <strong>Sliding</strong> windows overlap, like a 5 minute window computed every minute. <strong>Session</strong> windows are defined by gaps in activity, so a window closes after a period with no events for that key.</div></details>
+      <details class="qa"><summary>How does Flink achieve exactly-once processing and recover from failures?</summary>
+        <div class="answer">It keeps managed keyed state and periodically takes checkpoints of that state together with the input offsets. After a crash it restores the latest checkpoint and replays input from those offsets, so each event affects the state exactly once.</div></details>
+      <details class="qa"><summary>When would you choose Flink over a batch engine like Spark?</summary>
+        <div class="answer">When you need results within seconds over an unbounded stream: ad-click aggregation, real-time metrics and monitoring, trending Top-K, or fraud detection. Flink is true streaming with sub-second latency. Batch is fine when results can wait.</div></details>`,
   },
   {
     id: "system-design:dd-zookeeper",
@@ -912,7 +1222,19 @@ await ddb.query({
     <li>Uses: <b>leader election</b>, cluster membership, distributed locks with correctness, dynamic config.</li>
   </ul>
   <div class="callout warn"><div class="t">🎤 Contrast with Redis locks</div>"For an efficiency lock, Redis is fine. For a lock whose failure would corrupt data — leader election, exclusive resource ownership — I'd use ZooKeeper/etcd because it survives holder crashes via ephemeral nodes + consensus." Keep the cluster small; it's for coordination, not bulk data.</div>
-  <div class="next"><a href="#dd-flink">← Flink</a><a href="#dd-apigw">Next: API Gateway →</a></div>`,
+  <div class="next"><a href="#dd-flink">← Flink</a><a href="#dd-apigw">Next: API Gateway →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What makes ZooKeeper and etcd strongly consistent?</summary>
+        <div class="answer">They run a consensus protocol (ZAB in ZooKeeper, Raft in etcd) across a small cluster. Every write is agreed on by a majority, which gives linearizable writes: all clients see changes in one agreed order.</div></details>
+      <details class="qa"><summary>What is an ephemeral node and why is it useful?</summary>
+        <div class="answer">It's a node tied to a client session that is deleted automatically when the client dies or its session expires. That makes it a natural liveness signal for membership and a lock that releases itself if the holder crashes.</div></details>
+      <details class="qa"><summary>How do watches help with service discovery and config?</summary>
+        <div class="answer">A client sets a watch on a node and gets notified when it changes. Services can react to membership changes or config updates immediately instead of polling.</div></details>
+      <details class="qa"><summary>When would you use ZooKeeper/etcd for a lock instead of Redis?</summary>
+        <div class="answer">When a broken lock would corrupt data, as in leader election or exclusive ownership of a resource. ZooKeeper/etcd survive holder crashes through ephemeral nodes and consensus. For an efficiency lock, where a rare double execution is harmless, Redis is fine.</div></details>
+      <details class="qa"><summary>Why shouldn't you store application data in ZooKeeper?</summary>
+        <div class="answer">It's built for coordination, not bulk data. Consensus on every write limits throughput, and the cluster should be kept small. Store small metadata like leaders, membership and config there, and keep real data elsewhere.</div></details>`,
   },
   {
     id: "system-design:dd-apigw",
@@ -934,7 +1256,17 @@ await ddb.query({
     <li>≠ load balancer (though often bundled): LB spreads load across identical instances; gateway routes by API semantics.</li>
   </ul>
   <div class="callout good"><div class="t">🎤 Efficient phrasing</div>"I'll add an API Gateway for routing and basic middleware (auth, rate limiting)" — then move on. Don't linger.</div>
-  <div class="next"><a href="#dd-zookeeper">← ZooKeeper</a><a href="#dd-proximity">Next: Proximity Search →</a></div>`,
+  <div class="next"><a href="#dd-zookeeper">← ZooKeeper</a><a href="#dd-proximity">Next: Proximity Search →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What is the core purpose of an API gateway?</summary>
+        <div class="answer">Request routing. It maps incoming requests by path, host or header to the right backend service using a routing table. Middleware is secondary, and the common mistake is listing middleware while forgetting to mention routing.</div></details>
+      <details class="qa"><summary>Which middleware responsibilities are most worth mentioning in an interview?</summary>
+        <div class="answer">Authentication, rate limiting, and IP allow/deny lists. Others include SSL termination, caching, request validation and response aggregation. Rejecting malformed or unauthenticated requests early also saves backend work.</div></details>
+      <details class="qa"><summary>How is an API gateway different from a load balancer?</summary>
+        <div class="answer">A load balancer spreads traffic across identical instances of one service. A gateway routes requests to different services based on API semantics. They are often bundled into one product but solve different problems.</div></details>
+      <details class="qa"><summary>How much interview time should you spend on the gateway?</summary>
+        <div class="answer">Very little. Say something like "I'll add an API gateway for routing and basic middleware such as auth and rate limiting" and move on to the parts of the design that matter more.</div></details>`,
   },
   {
     id: "system-design:dd-proximity",
@@ -970,7 +1302,21 @@ const candidates = await db.query(
 return candidates
   .map(p =&gt; ({ ...p, d: haversine(lat, lng, p.lat, p.lng) }))
   .filter(p =&gt; p.d &lt;= radiusM).sort((a, b) =&gt; a.d - b.d);   // exact refine</code></pre>
-  <div class="next"><a href="#dd-apigw">← API Gateway</a><a href="#dd-timeseries">Next: Time-Series →</a></div>`,
+  <div class="next"><a href="#dd-apigw">← API Gateway</a><a href="#dd-timeseries">Next: Time-Series →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why can't a normal sorted index answer "find things near me" directly?</summary>
+        <div class="answer">A sorted index is 1-D, but closeness on a map is 2-D. Points next to each other on the map can end up far apart on a single axis like latitude. Spatial trees and encoded keys are the two ways to recover 2-D locality.</div></details>
+      <details class="qa"><summary>How does a geohash turn proximity into a prefix query?</summary>
+        <div class="answer">It interleaves latitude and longitude bits along a space-filling curve and encodes the result as a string. Points that share a longer prefix are usually close together, so an ordinary B-tree index can find nearby points. Redis <code>GEOADD</code> stores the same idea as a 52-bit integer score.</div></details>
+      <details class="qa"><summary>What is the boundary problem and how do you fix it?</summary>
+        <div class="answer">Two points a meter apart can fall into different cells, so querying only your own cell misses close neighbors. The fix is the 3&times;3 trick: query your cell plus its 8 neighbors as one unit, then filter by exact distance.</div></details>
+      <details class="qa"><summary>Quadtree, BKD tree or R-tree: how do they differ?</summary>
+        <div class="answer">A <strong>quadtree</strong> splits cells into four and adapts to density, which works well in memory but is awkward on disk. A <strong>k-d/BKD tree</strong> alternates splits on x and y, and BKD packs points into disk pages (Elasticsearch geo fields). An <strong>R-tree</strong> uses bounding boxes, handles shapes and polygons, and is disk-native (PostGIS).</div></details>
+      <details class="qa"><summary>When would you choose S2 or H3 over geohash?</summary>
+        <div class="answer">S2 projects the globe onto a cube so cells stay roughly equal-area everywhere, which helps for planet-wide data. H3 uses hexagons, which have six equidistant neighbors and give uniform neighbor distance, a good fit for ride-sharing.</div></details>
+      <details class="qa"><summary>What's a sensible default design for proximity search in an interview?</summary>
+        <div class="answer">Use Postgres with PostGIS, Redis GEO for hot in-memory queries, or a geohash prefix column in any database. Pre-filter candidates by cell or bounding box, then compute exact distance (e.g. haversine) and sort the small candidate set. Don't hand-roll a quadtree unless asked.</div></details>`,
   },
   {
     id: "system-design:dd-timeseries",
@@ -992,7 +1338,19 @@ return candidates
   </ul>
   <div class="callout warn"><div class="t">🎤 Watch cardinality</div>High-cardinality tags (e.g. per-user IDs as labels) explode the index — the classic time-series scaling failure. Keep label sets bounded.</div>
   <div class="callout"><div class="t">Pattern</div>Ingest → <a href="#dd-kafka">Kafka</a> → <a href="#dd-flink">Flink</a> windowed aggregation → TSDB (raw + rollups) → cache/dashboard. Mirrors <a href="#p-writes">Scaling Writes</a> hierarchical aggregation.</div>
-  <div class="next"><a href="#dd-proximity">← Proximity</a><a href="#dd-vectordb">Next: Vector DBs →</a></div>`,
+  <div class="next"><a href="#dd-proximity">← Proximity</a><a href="#dd-vectordb">Next: Vector DBs →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What workloads is a time-series database built for?</summary>
+        <div class="answer">Append-heavy, timestamp-ordered data such as metrics, IoT readings, events and prices. The pattern is to write a lot, query by time range, and aggregate.</div></details>
+      <details class="qa"><summary>What are rollups (downsampling) and why do they matter?</summary>
+        <div class="answer">Raw points are pre-aggregated into coarser buckets like 1 minute, 1 hour and 1 day. Dashboards then read compact summaries instead of scanning billions of raw rows, which keeps queries fast and cheap.</div></details>
+      <details class="qa"><summary>How do time-series databases keep storage costs down?</summary>
+        <div class="answer">Data is stored by time in a columnar layout with delta or Gorilla compression, which works very well on regular numeric series. Retention policies automatically expire old data.</div></details>
+      <details class="qa"><summary>What is the classic way time-series systems fail at scale?</summary>
+        <div class="answer">High cardinality. Using unbounded values such as per-user IDs as labels or tags creates a huge number of series and blows up the index. Keep label sets bounded.</div></details>
+      <details class="qa"><summary>Describe a typical metrics ingestion pipeline.</summary>
+        <div class="answer">Ingest into Kafka, run windowed aggregation in Flink, write raw data and rollups to a TSDB such as TimescaleDB, InfluxDB, ClickHouse or Prometheus, and serve dashboards through a cache. It's the hierarchical aggregation idea from scaling writes.</div></details>`,
   },
   {
     id: "system-design:dd-vectordb",
@@ -1033,7 +1391,23 @@ const chunks = await db.query(
     LIMIT 8\`, [q, tenantId]);
 const prompt = \`Answer using only:\\n\${chunks.map(c =&gt; c.content).join("\\n---\\n")}\`;</code></pre>
   <div class="callout"><div class="t">🎤 Senior signals</div>Mention <b>chunking strategy</b> (size/overlap), <b>hybrid search</b> (vector + keyword + rerank), <b>recall vs latency</b> tuning (HNSW <code>ef</code>), <b>freshness</b> (re-embed on update via <a href="#dd-cdc">CDC</a>), and cost of re-embedding when you swap models.</div>
-  <div class="next"><a href="#dd-timeseries">← Time-Series</a><a href="#dd-bigdata">Next: Big Data →</a></div>`,
+  <div class="next"><a href="#dd-timeseries">← Time-Series</a><a href="#dd-bigdata">Next: Big Data →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>How does semantic search with embeddings work end to end?</summary>
+        <div class="answer">Documents are converted by a model into fixed-length vectors (embeddings) and stored. At query time you embed the query with the same model and find its nearest neighbors by cosine, dot-product or L2 distance. Items close in vector space are close in meaning, even without shared keywords.</div></details>
+      <details class="qa"><summary>Why use approximate nearest neighbor search instead of exact search?</summary>
+        <div class="answer">Exact nearest neighbor compares the query against every vector, which is O(n) and too slow at scale. ANN indexes give up a little recall in exchange for a large speedup.</div></details>
+      <details class="qa"><summary>Compare HNSW and IVF indexes.</summary>
+        <div class="answer"><strong>HNSW</strong> builds a multi-layer graph and greedily hops toward the nearest vectors. It has the best recall/latency and is the default, at the cost of more memory. <strong>IVF</strong> clusters vectors and searches only the closest clusters, often with PQ compression, so it uses less memory but needs a training step.</div></details>
+      <details class="qa"><summary>When would you choose pgvector over a dedicated vector database?</summary>
+        <div class="answer">When you want vectors next to your relational data and the ability to combine a metadata filter (e.g. <code>tenant_id</code>) and ANN search in one SQL query. Purpose-built options like Pinecone, Weaviate, Milvus or Qdrant make more sense when you need to scale to billions of vectors or want a managed service.</div></details>
+      <details class="qa"><summary>What is hybrid search and why use it?</summary>
+        <div class="answer">It combines vector similarity with keyword search (BM25), often followed by a reranker. Vectors catch meaning, while keywords catch exact terms like names or codes that embeddings can miss. Elasticsearch/OpenSearch can do both in one system.</div></details>
+      <details class="qa"><summary>How do you keep a vector index fresh, and what does changing the embedding model cost?</summary>
+        <div class="answer">Re-embed documents when they change, typically driven by CDC from the source database. Switching embedding models means re-embedding the entire corpus, because vectors from different models aren't comparable, which can be expensive.</div></details>
+      <details class="qa"><summary>What senior-level topics should you raise when designing RAG retrieval?</summary>
+        <div class="answer">Chunking strategy (size and overlap), hybrid search with reranking, recall versus latency tuning such as HNSW <code>ef</code>, freshness through re-embedding, and the cost of re-embedding when the model changes.</div></details>`,
   },
   {
     id: "system-design:dd-bigdata",
@@ -1054,7 +1428,17 @@ const prompt = \`Answer using only:\\n\${chunks.map(c =&gt; c.content).join("\\n
     <li><b>OLTP vs OLAP</b>: transactional row stores (Postgres) vs analytical column stores. Don't run heavy analytics on your OLTP DB.</li>
   </ul>
   <div class="callout"><div class="t">🎤 Lambda / Kappa</div>Lambda = batch layer (accurate, slow) + speed layer (approximate, real-time) merged at query. Kappa = one streaming path (<a href="#dd-flink">Flink</a>) for both. Cite when a design needs both real-time and correct-historical views.</div>
-  <div class="next"><a href="#dd-vectordb">← Vector DBs</a><a href="#dd-cdc">Next: CDC →</a></div>`,
+  <div class="next"><a href="#dd-vectordb">← Vector DBs</a><a href="#dd-cdc">Next: CDC →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Walk through the three phases of MapReduce.</summary>
+        <div class="answer"><strong>Map</strong> transforms input records and emits key-value pairs. <strong>Shuffle</strong> groups all values by key across machines. <strong>Reduce</strong> aggregates each key's values into the result. Most batch engines descend from this model.</div></details>
+      <details class="qa"><summary>Why did Spark largely replace Hadoop MapReduce?</summary>
+        <div class="answer">Spark runs an in-memory DAG of operations instead of writing to disk between every stage, so it's much faster. It also offers SQL, streaming and ML in one engine.</div></details>
+      <details class="qa"><summary>What is the difference between OLTP and OLAP, and why keep them separate?</summary>
+        <div class="answer">OLTP systems like Postgres are row stores tuned for small transactional reads and writes. OLAP warehouses like Snowflake, BigQuery and Redshift are column stores tuned for scanning and aggregating large data. Running heavy analytics on the OLTP database would hurt the production workload.</div></details>
+      <details class="qa"><summary>Compare the Lambda and Kappa architectures.</summary>
+        <div class="answer">Lambda runs a batch layer (accurate but slow) next to a speed layer (approximate, real-time) and merges them at query time. Kappa uses a single streaming path, for example Flink, for both real-time and historical results. Bring them up when a design needs both live and correct historical views.</div></details>`,
   },
   {
     id: "system-design:dd-cdc",
@@ -1074,7 +1458,17 @@ const prompt = \`Answer using only:\\n\${chunks.map(c =&gt; c.content).join("\\n
   </ul>
   <div class="callout good"><div class="t">🎤 Why it beats dual-writes</div>App-level "write DB then write ES" can partially fail → drift. CDC derives everything from the committed log, so downstream is <b>eventually consistent by construction</b>. This is the senior answer to the dual-write problem.</div>
   <div class="callout"><div class="t">Pattern</div>Postgres → Debezium → Kafka → {ES index, cache invalidation, vector re-embed, OLAP}. Ordering preserved per key.</div>
-  <div class="next"><a href="#dd-bigdata">← Big Data</a><a href="#cheatsheet">Next: Cheat Sheet →</a></div>`,
+  <div class="next"><a href="#dd-bigdata">← Big Data</a><a href="#cheatsheet">Next: Cheat Sheet →</a></div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why read the replication log instead of polling tables?</summary>
+        <div class="answer">The log (Postgres WAL, MySQL binlog, Mongo oplog) records every committed change in order, including deletes and intermediate updates that polling could miss. Reading it puts almost no load on the application.</div></details>
+      <details class="qa"><summary>What is the dual-write problem?</summary>
+        <div class="answer">The app writes to the database and then to another system such as Elasticsearch. If the second write fails or the process crashes in between, the two stores drift apart with nothing to repair them.</div></details>
+      <details class="qa"><summary>How does CDC solve the dual-write problem?</summary>
+        <div class="answer">Every downstream system is derived from the database's committed log, so the database is the only write the app makes. Downstream stores are eventually consistent by construction, and a failed consumer can catch up by replaying the log.</div></details>
+      <details class="qa"><summary>Describe a typical CDC pipeline and what it feeds.</summary>
+        <div class="answer">Postgres to Debezium to Kafka, with consumers that update an Elasticsearch index, invalidate caches, re-embed documents in a vector database, and load an OLAP warehouse. Ordering is preserved per key.</div></details>`,
   },
   {
     id: "system-design:q-ad-click",
@@ -1120,7 +1514,23 @@ const baseAdId = key.split(':')[0];</code></pre>
   </ul>
 
   <div class="callout key"><div class="t">Interview soundbite</div>"It's write-heavy, so I don't query raw logs. Clicks are appended to Kafka sharded by AdId, and Flink pre-aggregates them into event-time 1-minute windows, writing to an OLAP store for advertisers while the raw log lands in Cassandra. Viral ads get a salted key that Flink strips before summing. Clicks carry a unique id for idempotent, deduplicated counting, and 7 days of stream retention lets me replay any window after a failure."</div>
-  <div class="callout"><div class="t">Related</div>Builds on <b>Scaling Writes</b>, <b>Kafka</b>, <b>Flink</b>, and <b>Cassandra</b>.</div>`,
+  <div class="callout"><div class="t">Related</div>Builds on <b>Scaling Writes</b>, <b>Kafka</b>, <b>Flink</b>, and <b>Cassandra</b>.</div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why pre-aggregate clicks in a stream instead of querying raw logs?</summary>
+        <div class="answer">The system is heavily write-intensive, around 10k clicks/sec at peak, while advertiser reads are far fewer. Scanning raw logs for every query would be slow and expensive. Aggregating into 1-minute windows as events arrive gives advertisers small, fast tables to query.</div></details>
+      <details class="qa"><summary>What role does Kafka/Kinesis play in the design?</summary>
+        <div class="answer">It's an append-only buffer that absorbs traffic spikes and decouples ingestion from aggregation. The click service only appends the event and redirects the user, and the 7-day retention also makes the stream a replay source after failures.</div></details>
+      <details class="qa"><summary>Why aggregate by event time rather than processing time?</summary>
+        <div class="answer">Clicks can arrive late or out of order. Event time puts each click into the minute it actually happened, and watermarks plus allowed lateness let Flink include late clicks instead of counting them in the wrong window.</div></details>
+      <details class="qa"><summary>Where do raw clicks and aggregates get stored, and why different stores?</summary>
+        <div class="answer">Raw click logs go to a write-optimized store like Cassandra for replay and reconciliation. Aggregated metrics go to an OLAP database like ClickHouse, Snowflake or BigQuery, which handles fast multi-dimensional analytical queries for advertisers.</div></details>
+      <details class="qa"><summary>How do you handle a viral ad that overloads one partition?</summary>
+        <div class="answer">Salt the key for hot ads only, for example <code>AdId:0-N</code> with a random suffix, so traffic spreads across several partitions and workers. The aggregator strips the suffix before summing, so the partial counts merge into a single row per ad and minute.</div></details>
+      <details class="qa"><summary>How do you avoid double-counting with at-least-once delivery?</summary>
+        <div class="answer">Give every click a unique request or impression id and deduplicate within a deduplication window. Retries then become idempotent: a resent click is recognized and counted once.</div></details>
+      <details class="qa"><summary>What happens if the Flink job crashes?</summary>
+        <div class="answer">Flink restores from its last checkpoint and resumes from the matching stream offset. Because the stream keeps about 7 days of data, any missing windows can be replayed instead of lost.</div></details>`,
   },
   {
     id: "system-design:cheatsheet",
@@ -1321,7 +1731,21 @@ async function* streamLLM(messages: Message[]): AsyncGenerator&lt;string&gt; {
       <div class="callout tip">
         <span class="label">Deterministic vs probabilistic</span>
         LLMs are probabilistic. The same prompt can give different answers. This is why <strong>evaluation, validation, and guardrails</strong> (section 10) are not optional — they're how you make a non-deterministic component behave like reliable software.
-      </div>`,
+      </div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why does output length affect latency more than input length?</summary>
+        <div class="answer">The model generates output one token at a time, each step depending on the last, so latency grows with the number of output tokens. When speed matters, ask for concise answers and set <code>max_tokens</code> to stop runaway generations. Long inputs mostly hurt cost, not speed.</div></details>
+      <details class="qa"><summary>Should you tune <code>temperature</code> or <code>top_p</code>?</summary>
+        <div class="answer">Usually one, not both. <code>temperature</code> scales the randomness of sampling; <code>top_p</code> limits sampling to the tokens that make up the top <em>p</em> of probability mass. A common setup is temperature 0 to 0.3 for extraction, classification and code, and 0.7 to 1.0 for brainstorming or writing.</div></details>
+      <details class="qa"><summary>What are the four chat roles and what is each one for?</summary>
+        <div class="answer"><strong>system</strong> sets the persona and rules and has the highest priority. <strong>user</strong> is what the human asked. <strong>assistant</strong> is what the model said, kept so the conversation history makes sense. <strong>tool</strong> carries the result of a function the model asked you to run, linked back by <code>tool_call_id</code>.</div></details>
+      <details class="qa"><summary>What counts against the context window, and what do you do when you run out?</summary>
+        <div class="answer">Everything: the system prompt, every message in the history, any retrieved documents, and the answer itself. When it doesn't fit, you truncate, summarize older turns, or retrieve only the relevant pieces. That last option is the reason RAG exists.</div></details>
+      <details class="qa"><summary>Why stream responses, and what does the client have to handle?</summary>
+        <div class="answer">Streaming shows tokens as they are generated, so the app feels instant even if the full answer takes seconds. The client reads <code>data:</code> lines from the response body, stops at <code>[DONE]</code>, and buffers partial lines because a chunk can end in the middle of a JSON payload.</div></details>
+      <details class="qa"><summary>How do you decide which model to use for a task?</summary>
+        <div class="answer">Pick the smallest model that passes your eval. Route easy requests to small, cheap models and escalate hard ones to large models (routing or cascading). This only works if you have evals, since the model is probabilistic and "it looked fine once" proves nothing.</div></details>`,
   },
   {
     id: "ai-engineering:prompting",
@@ -1461,7 +1885,21 @@ const { object } = await generateObject({
         <li><strong>Give the model an out</strong> ("say 'unknown' if unsure") to reduce hallucination.</li>
         <li><strong>Separate data from instructions</strong> with delimiters (<code>"""</code>, XML tags) — also mitigates prompt injection.</li>
         <li><strong>Iterate against evals</strong>, not vibes. Version your prompts.</li>
-      </ul>`,
+      </ul>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What are the parts of a well-structured prompt?</summary>
+        <div class="answer">A role or persona, a single clear task, the context the model needs, constraints (format, length, what not to do), optional few-shot examples, and the exact output format you will parse. Missing pieces usually show up as ambiguity, which is the most common cause of bad output.</div></details>
+      <details class="qa"><summary>Why are few-shot examples often written as alternating user and assistant messages?</summary>
+        <div class="answer">It shows the model the exact input and output shape you want, as if it had already answered correctly. One good example tends to beat a paragraph of instructions, and it gives large gains on formatting and classification tasks. Two to five examples is usually enough.</div></details>
+      <details class="qa"><summary>What's the difference between JSON mode and schema-constrained structured outputs?</summary>
+        <div class="answer">JSON mode (<code>response_format: { type: "json_object" }</code>) only guarantees syntactically valid JSON. Schema-constrained output guarantees the JSON matches <em>your</em> JSON Schema. With plain JSON mode you can still get missing keys or wrong types.</div></details>
+      <details class="qa"><summary>Why validate with Zod even when the provider returns JSON?</summary>
+        <div class="answer">Never trust the model: <code>Schema.parse()</code> throws if the shape is wrong, so bad output fails loudly instead of corrupting data downstream. Zod also gives you the static type through <code>z.infer</code>, so one schema serves as both runtime validator and compile-time type. The AI SDK's <code>generateObject</code> wraps this into a single call.</div></details>
+      <details class="qa"><summary>Why separate data from instructions with delimiters?</summary>
+        <div class="answer">Wrapping context in <code>"""</code> or XML tags tells the model which text is material to read and which text is the task. That makes prompts clearer and also helps against prompt injection, because instructions hidden in the data are less likely to be treated as commands.</div></details>
+      <details class="qa"><summary>What is self-consistency and what does it cost?</summary>
+        <div class="answer">You sample several answers to the same question and take the majority vote. It improves reliability on reasoning tasks because one-off mistakes get outvoted. The cost is N calls instead of one, so it fits high-value questions, not every request.</div></details>`,
   },
   {
     id: "ai-engineering:embeddings",
@@ -1581,7 +2019,21 @@ class InMemoryVectorStore {
         <li><strong>Image embeddings</strong> (e.g. CLIP) put images and text in the <em>same</em> space → search images with a text query (Vision RAG).</li>
         <li><strong>Task types matter:</strong> some models want you to flag whether text is a <em>query</em> vs a <em>document</em> (e.g. Gemini's <code>retrieval_query</code> / <code>retrieval_document</code>).</li>
         <li><strong>Always embed with the same model</strong> you'll query with — vectors from different models aren't comparable.</li>
-      </ul>`,
+      </ul>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why not embed a whole 200-page document as a single vector?</summary>
+        <div class="answer">One vector has to summarize everything, so the specific details you want to find get averaged away. You split the document into chunks, embed each one, and retrieve only the chunks that match the query. Chunking quality directly limits retrieval quality.</div></details>
+      <details class="qa"><summary>Why do chunks overlap, and what smarter chunking strategies exist?</summary>
+        <div class="answer">Overlap (around 10 to 20%) keeps an idea from being cut in half at a chunk boundary. Beyond fixed-size splits, you can split recursively on paragraph then sentence boundaries, split where the topic shifts (semantic chunking), or follow the document structure such as Markdown headers, PDF pages, or code functions.</div></details>
+      <details class="qa"><summary>When is cosine similarity the same as a dot product?</summary>
+        <div class="answer">When the vectors are normalized to length 1. Cosine similarity is the dot product divided by the product of the magnitudes, and with unit vectors that denominator is 1. That's why many vector DBs offer cosine, dot, and euclidean as interchangeable metric choices.</div></details>
+      <details class="qa"><summary>A brute-force in-memory store works for a thousand chunks. What changes at ten million?</summary>
+        <div class="answer">Scoring every vector on every query becomes too slow. Real vector databases use approximate nearest neighbor indexes, most often <strong>HNSW</strong>, a navigable graph that finds close neighbors in milliseconds. You give up a little accuracy for a large speedup.</div></details>
+      <details class="qa"><summary>Why must queries and documents use the same embedding model?</summary>
+        <div class="answer">Each model builds its own vector space, so vectors from different models aren't comparable even if they have the same length. If you switch models, you have to re-embed the whole corpus. Some models also want a task type, like Gemini's <code>retrieval_query</code> vs <code>retrieval_document</code>.</div></details>
+      <details class="qa"><summary>How would you choose between Chroma, Qdrant, and pgvector?</summary>
+        <div class="answer">Chroma is lightweight and in-process, good for prototypes. Qdrant is a fast production default with filtering and hybrid search. pgvector keeps vectors inside Postgres next to your relational data, which is handy when you already run Postgres. They all expose the same basic idea: upsert vectors, query top-k.</div></details>`,
   },
   {
     id: "ai-engineering:rag",
@@ -1662,7 +2114,19 @@ async function ragAnswer(store: InMemoryVectorStore, question: string): Promise&
         <li><strong>Irrelevant chunks pollute the prompt</strong> — Fix: reranking, relevance grading (agentic RAG).</li>
         <li><strong>Model ignores context &amp; hallucinates</strong> — Fix: strict grounding prompt, "cite or say unknown", faithfulness eval.</li>
         <li><strong>Multi-hop questions</strong> — need info from several docs combined. Fix: GraphRAG, iterative/agentic retrieval.</li>
-      </ul>`,
+      </ul>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Which limits of an LLM does RAG address?</summary>
+        <div class="answer">Three: the model's knowledge is frozen at training time, it doesn't know your private data, and it hallucinates confidently. RAG retrieves relevant text at query time and puts it in the prompt, so the answer comes from current, private, citeable sources.</div></details>
+      <details class="qa"><summary>What happens in the ingestion phase versus the query phase?</summary>
+        <div class="answer">Ingestion runs offline, once per document: load, chunk, embed, store. The query phase runs per question: embed the query, run a similarity search, take the top-k chunks, build a prompt with them, and generate a grounded answer with citations.</div></details>
+      <details class="qa"><summary>Why does the RAG system prompt ask for citations and permit "I don't know"?</summary>
+        <div class="answer">Citations like [1], [2] tie each claim to a retrieved chunk, so users and evals can check it. Allowing "I don't know" gives the model an alternative to inventing an answer when retrieval missed. Together with <code>temperature: 0</code>, this keeps the answer grounded.</div></details>
+      <details class="qa"><summary>Why not just put all the documents in a long context window?</summary>
+        <div class="answer">It works for small, one-off document sets that fit. Past that, every call pays for the full context, the model suffers from "lost in the middle", and the approach doesn't scale as the corpus grows. RAG sends only the relevant chunks.</div></details>
+      <details class="qa"><summary>Why do multi-hop questions break basic RAG, and what helps?</summary>
+        <div class="answer">The answer needs facts from several documents combined, but a single top-k search tends to fetch chunks about only one part of the question. Iterative or agentic retrieval, which retrieves again based on what it has found so far, helps, and so does GraphRAG, which links entities across documents.</div></details>`,
   },
   {
     id: "ai-engineering:advanced-rag",
@@ -1798,7 +2262,21 @@ async function selfReflectiveRag(store: InMemoryVectorStore, question: string): 
       <div class="callout key">
         <span class="label">Why this matters in interviews</span>
         Agentic RAG shows you understand that <strong>retrieval is fallible and needs feedback loops</strong>. The graph is: <code>retrieve → grade → (rewrite → retrieve)* → generate</code>, capped at N loops. It's exactly a small <strong>state machine</strong> — which is the bridge to agents (next section). Frameworks like <strong>LangGraph</strong> model this as nodes + conditional edges.
-      </div>`,
+      </div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why does HyDE generate several hypothetical answers and average their embeddings?</summary>
+        <div class="answer">A single fake answer may lean in one odd direction. Generating a few at a moderate temperature (0.7 in the example) adds diversity, and averaging their vectors gives a more stable point near where real answers sit in embedding space. You then search with that averaged vector instead of the raw question.</div></details>
+      <details class="qa"><summary>Why does Reciprocal Rank Fusion combine results by rank rather than raw score?</summary>
+        <div class="answer">BM25 scores and cosine similarities are on different scales, so adding them directly is meaningless. RRF gives each result <code>1 / (k + rank)</code> from every list it appears in and sums those. Items ranked well by both searches rise to the top, and the constant <code>k</code> (often 60) dampens the effect of rank differences at the top.</div></details>
+      <details class="qa"><summary>Why is a cross-encoder reranker more accurate than embedding search, and why not use it for everything?</summary>
+        <div class="answer">It reads the query and each chunk together, so it judges actual relevance instead of comparing two independently computed vectors. That's also why it's slower and costlier per document. The usual pattern is to retrieve around 25 candidates cheaply, rerank, and keep the top 4.</div></details>
+      <details class="qa"><summary>What's the difference between multi-query and query decomposition?</summary>
+        <div class="answer">Multi-query generates several paraphrases of the same question, retrieves for each, and unions the results, which raises recall. Decomposition splits a complex question into different sub-questions and retrieves for each one, which suits multi-hop questions.</div></details>
+      <details class="qa"><summary>What is query routing in a RAG system?</summary>
+        <div class="answer">Instead of one big index, each query is sent to the store that fits it, such as products, support, or financial data. If no store matches, the system falls back to web search. Routing keeps unrelated content out of the prompt and lets each store be tuned separately.</div></details>
+      <details class="qa"><summary>Walk through the self-reflective RAG loop. Why does it need a cap?</summary>
+        <div class="answer">Retrieve, then have the LLM grade whether the context is sufficient. If the verdict is NO, use the refined query it suggests and retrieve again; if YES, generate the answer from the context. Without a cap (for example 3 iterations) a question the corpus can't answer would loop forever, so after the cap it answers from the best context found.</div></details>`,
   },
   {
     id: "ai-engineering:agents",
@@ -1915,7 +2393,21 @@ const getWeather: Tool = {
         <tr><td><strong>Reflection / Self-critique</strong></td><td>Agent reviews its own output and revises (Critic loops).</td></tr>
         <tr><td><strong>Router</strong></td><td>Classify the request, dispatch to a specialized handler/tool/DB.</td></tr>
         <tr><td><strong>Tool use + RAG</strong></td><td>Retrieval is just one tool among many the agent can choose.</td></tr>
-      </table>`,
+      </table>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>Why does each tool result message carry a <code>tool_call_id</code>?</summary>
+        <div class="answer">The model can request several tool calls in one turn, and each has an id. Sending each result back as a <code>tool</code> message with the matching <code>tool_call_id</code> tells the model which output belongs to which request. Without it, the model can't reliably match observations to its actions.</div></details>
+      <details class="qa"><summary>How does the agent loop know when to stop?</summary>
+        <div class="answer">If the model's reply contains no <code>tool_calls</code>, that reply is the final answer and the loop returns it. Otherwise you run the tools, append the results, and call the model again. A <code>maxSteps</code> limit is the backstop for when the model never settles.</div></details>
+      <details class="qa"><summary>What goes into a tool definition, and which part does the model actually see?</summary>
+        <div class="answer">A name, a description, a JSON Schema for the parameters, and the real function you run. The model only sees the name, description, and schema, and uses them to decide when to call the tool and how to fill in the arguments. The implementation stays in your code, so you should still validate the arguments it sends.</div></details>
+      <details class="qa"><summary>When would you pick Plan-and-Execute over ReAct?</summary>
+        <div class="answer">ReAct decides one step at a time based on each observation, which adapts well to surprises but uses an LLM call per step. Plan-and-Execute writes the full plan first and then runs the steps, which means fewer LLM calls and more predictable structure. It suits tasks whose steps are clear up front.</div></details>
+      <details class="qa"><summary>What changes when retrieval becomes a tool instead of a fixed RAG step?</summary>
+        <div class="answer">In a fixed pipeline, every question triggers a search. As a tool, the agent decides <em>when</em> to look something up, can search more than once with different queries, and can combine retrieval with other tools like SQL or web search. It skips retrieval entirely when it isn't needed.</div></details>
+      <details class="qa"><summary>What does an MCP server expose, and how does it connect to an agent?</summary>
+        <div class="answer">It exposes <em>tools</em>, <em>resources</em>, and <em>prompts</em> through a client/server protocol that works over stdio or HTTP. Any MCP-compatible agent can plug into it, so a tool provider writes the connector once instead of each agent author writing a custom integration per API.</div></details>`,
   },
   {
     id: "ai-engineering:multi-agent",
@@ -2013,7 +2505,19 @@ class AgentMemory {
       <div class="callout tip">
         <span class="label">TS frameworks</span>
         For real multi-agent systems in TypeScript, look at <strong>LangGraph.js</strong> (state-machine orchestration), the <strong>Vercel AI SDK</strong> (tools, <code>generateObject</code>, agents), <strong>Mastra</strong>, and <strong>LlamaIndex.TS</strong>. Python-only frameworks in the repo (CrewAI, Agno, AG2, smolagents) all map to these same concepts.
-      </div>`,
+      </div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What do you gain by splitting one big prompt into several agents?</summary>
+        <div class="answer">Each agent gets a focused system prompt, its own tools, and its own context, so it does one job well instead of many jobs poorly. It is easier to debug which step failed. You can also use different models per role, such as a cheap one for routing and a strong one for synthesis.</div></details>
+      <details class="qa"><summary>Describe the planner, researcher, writer, critic team.</summary>
+        <div class="answer">The planner breaks the goal into concrete steps. The researcher gathers findings for each step using search or RAG tools. The writer turns the findings into a structured report. The critic scores the draft and, if it's weak, sends feedback back to the writer for a revision.</div></details>
+      <details class="qa"><summary>When would you choose a sequential pipeline, a supervisor, or parallel fan-out?</summary>
+        <div class="answer">A pipeline fits work where each stage depends on the previous output, like planner, coder, reviewer. A supervisor fits open-ended tasks where a lead agent decides whom to delegate to and combines the results. Fan-out fits work that splits into independent parts, like researching several subtopics at once and merging them.</div></details>
+      <details class="qa"><summary>Why is the critic loop capped, and why does the critic reply in JSON?</summary>
+        <div class="answer">Without a cap, a critic that is never satisfied keeps the writer revising and burning tokens. In the example it stops after two rounds or once the score reaches 8. JSON like <code>{"score":n,"feedback":"..."}</code> lets the code read the score and route the feedback instead of parsing free text.</div></details>
+      <details class="qa"><summary>How is long-term memory implemented in practice?</summary>
+        <div class="answer">It is RAG over facts about the user or past conversations. You embed facts such as "this customer prefers email" into a vector store, and before answering you search it with the current request and inject the relevant memories into the system prompt.</div></details>`,
   },
   {
     id: "ai-engineering:multi-agent-harnesses",
@@ -2467,7 +2971,19 @@ async function speak(text: string): Promise&lt;ArrayBuffer&gt; {
       <div class="callout tip">
         <span class="label">Video</span>
         Video understanding = sample key frames as images + transcribe the audio track, then feed both to a multimodal model to produce chapters, summaries, and action items (repo's Video Understanding Agent).
-      </div>`,
+      </div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>How do you send an image to a multimodal model?</summary>
+        <div class="answer">The message <code>content</code> becomes an array of parts: a text part with the question and an image part. The image can be a public URL or a base64 data URL like <code>data:image/png;base64,...</code>, which is how you send a local file.</div></details>
+      <details class="qa"><summary>What is the general recipe for turning any document into structured data?</summary>
+        <div class="answer">Render pages to images, send them to a vision LLM, constrain the output to a Zod schema, and validate against an external authority when correctness matters, such as checking drug names against RxNorm. The schema replaces fragile regex parsing of OCR text.</div></details>
+      <details class="qa"><summary>Describe-then-embed or true multimodal embeddings: how do they differ?</summary>
+        <div class="answer">Describe-then-embed has a vision model caption each image, then embeds the captions as text, so retrieval stays plain text search and only finds what the caption mentions. Multimodal embeddings (CLIP-style or Gemini Embedding) put images and text in a shared space, so a text query can retrieve an image directly.</div></details>
+      <details class="qa"><summary>What does a voice agent pipeline look like?</summary>
+        <div class="answer">Three model types in a chain: speech-to-text (for example Whisper) to transcribe the user, an LLM with RAG or tools to understand and respond, and text-to-speech to speak the reply. Each stage adds latency, so the total response time is the sum of all three.</div></details>
+      <details class="qa"><summary>How do you get a model to understand a video?</summary>
+        <div class="answer">Sample key frames as images and transcribe the audio track, then give both to a multimodal model. From that it can produce chapters, summaries, and action items.</div></details>`,
   },
   {
     id: "ai-engineering:finetuning",
@@ -2528,7 +3044,21 @@ const example: FineTuneExample = {
       <div class="callout tip">
         <span class="label">Local &amp; open models</span>
         Many repo projects run fully offline via <strong>Ollama</strong> (a local model runtime). As a TS engineer you'd hit Ollama's HTTP API (<code>http://localhost:11434</code>) exactly like any other provider — same messages shape. Reasons to go local: privacy, cost, offline (medical/field use cases), no rate limits.
-      </div>`,
+      </div>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>What are good and bad reasons to fine-tune?</summary>
+        <div class="answer">Good: a consistent format, style or tone you can't reliably get by prompting; a narrow, repetitive task where a small tuned model beats a big prompted one on cost and latency; or shrinking a huge prompt into learned behavior. Bad: adding fresh or changing facts (use RAG), having fewer than a few hundred good examples, or not having exhausted prompting yet.</div></details>
+      <details class="qa"><summary>What does QLoRA add on top of LoRA?</summary>
+        <div class="answer">LoRA freezes the base weights and trains small adapter matrices, about 0.1% of the parameters. QLoRA also loads the base model in 4-bit quantized form, which cuts memory enough to fine-tune large models on a single GPU.</div></details>
+      <details class="qa"><summary>What does training data look like for hosted fine-tuning?</summary>
+        <div class="answer">A JSONL file where each line is a chat example: a <code>messages</code> array with system, user, and the ideal assistant reply. You collect hundreds to thousands of them, upload the file, run a tuning job, and then call the new model id like any other model.</div></details>
+      <details class="qa"><summary>How do you guard against overfitting and catastrophic forgetting?</summary>
+        <div class="answer">Overfitting means the model memorized the training set; hold out a validation set and don't run too many epochs. Catastrophic forgetting means tuning degraded the model's general abilities; LoRA reduces this because the original weights stay frozen.</div></details>
+      <details class="qa"><summary>How is distillation different from regular fine-tuning?</summary>
+        <div class="answer">In distillation, the training targets come from a large model's outputs, and a small model learns to mimic them. The goal is to keep most of the big model's quality on a task while paying small-model cost and latency.</div></details>
+      <details class="qa"><summary>Why run a model locally with Ollama?</summary>
+        <div class="answer">Privacy, cost, offline use (for example medical or field settings), and no rate limits. Quantized weights make local models small enough to run on ordinary hardware. From TypeScript you call its HTTP API on <code>localhost:11434</code> with the same messages shape as any hosted provider.</div></details>`,
   },
   {
     id: "ai-engineering:production",
@@ -2624,7 +3154,23 @@ async function robustLLM(messages: Message[], tries = 3): Promise&lt;string&gt; 
         <li>☐ Caching + model routing for cost</li>
         <li>☐ Tracing/observability on every call</li>
         <li>☐ Versioned prompts &amp; pinned model versions</li>
-      </ul>`,
+      </ul>
+
+      <h2>Interview Q&amp;A</h2>
+      <details class="qa"><summary>How do you pick the right eval type for a task?</summary>
+        <div class="answer">Use rule-based checks (exact match, regex, schema validity, code compiles) for classification, extraction, and structured output. Use reference-based similarity to a gold answer for summaries and translation. Use LLM-as-judge with a rubric for open-ended answers and tone, and human ratings to establish ground truth and calibrate the judge.</div></details>
+      <details class="qa"><summary>A RAG answer is wrong. Which metrics tell you whether retrieval or generation failed?</summary>
+        <div class="answer">Low context precision or recall means retrieval fetched the wrong chunks or missed the right ones. If retrieval looks good but faithfulness is low, the model ignored or went beyond the context. Answer relevance tells you whether it addressed the question at all.</div></details>
+      <details class="qa"><summary>What's the difference between prompt caching and a semantic cache?</summary>
+        <div class="answer">Prompt caching is a provider feature that reuses work on a repeated prefix, like a long system prompt or shared context, so each call is cheaper and faster. A semantic cache is your own layer: you embed incoming queries, and if a near-identical past query exists you return its stored answer without calling the model.</div></details>
+      <details class="qa"><summary>Why wrap LLM calls with retries, backoff, and a timeout?</summary>
+        <div class="answer">LLM APIs fail transiently, so a retry often succeeds. Exponential backoff (0.5s, 1s, 2s) avoids hammering an overloaded API, and a hard timeout keeps a hung call from blocking the request forever. After the last attempt, the error is thrown so a fallback can take over.</div></details>
+      <details class="qa"><summary>Which agent actions need human approval, and how else do you limit tool risk?</summary>
+        <div class="answer">Anything irreversible or high-stakes, like sending email, posting a review, or moving money, should wait for a user OK. On top of that, apply least privilege: scope API keys, sandbox code execution, rate-limit tools, and validate tool arguments before running them.</div></details>
+      <details class="qa"><summary>What should LLM observability capture, and why does it feed evals?</summary>
+        <div class="answer">Every call's prompt, response, token counts, cost, latency, and tool calls, plus the full trace of an agent run. Real production failures are the best source of new eval cases, so you capture them from traces and add them to the eval set.</div></details>
+      <details class="qa"><summary>Why version prompts and pin model versions?</summary>
+        <div class="answer">The output depends on both, so changing either can silently change behavior. Pinning and versioning let you rerun the eval set on each change and know exactly what caused a regression. An unpinned model alias can change under you without any code change.</div></details>`,
   },
   {
     id: "ai-engineering:interview",

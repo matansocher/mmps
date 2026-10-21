@@ -3,12 +3,12 @@ import { ChatOpenAI } from '@langchain/openai';
 import { env } from 'node:process';
 import { agent, createAgentService } from '@features/chatbot/agent';
 import { formatAgentResponse } from '@features/chatbot/utils';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
 import { UsageCallbackHandler } from '@shared/ai';
 import type { CapturedCall, EvalCase, RunResult, ToolFixture } from './types';
 
 // Prod-parity model. Temperature matches ChatbotService.
-const model = new ChatOpenAI({ model: CHAT_COMPLETIONS_MINI_MODEL, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
+const model = new ChatOpenAI({ model: CHAT_MODEL, reasoning: { effort: CHAT_MODEL_REASONING_EFFORT }, temperature: 0.2, apiKey: env.OPENAI_API_KEY });
 
 // The real chatbot descriptor — we reuse its exact system prompt and the real tool set,
 // but swap every tool body for a spy that records the call and returns a stub. This tests

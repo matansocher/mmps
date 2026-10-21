@@ -3,6 +3,7 @@ export { dailySummary } from './daily-summary';
 export { earthquakeMonitor } from './earthquake-monitor';
 export { flightTrafficCheck } from './flight-traffic-check';
 export { emailSummary } from './email-summary';
+export { emailCleanup } from './email-cleanup';
 export { exerciseReminder } from './exercise-reminder';
 export { sendExerciseReminder } from './exercise-reminder';
 export { buildExerciseKeyboard, parseExerciseCallbackData } from './exercise-actions';

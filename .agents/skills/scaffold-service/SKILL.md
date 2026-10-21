@@ -13,7 +13,7 @@ Use this when the user says "integrate X", "add a service for X", "I want to scr
 
 1. **Service name** — kebab-case dir (e.g. `alpha-vantage`, `yahoo-finance`).
 2. **Provider details** — base URL or SDK package, auth method (API key? OAuth? none?), and which endpoints/operations are needed.
-3. **Env var name** — follow the existing convention (e.g. `ALPHA_VANTAGE_API_KEY`, `YOUTUBE_API_KEY`). Read `node:process` `env`.
+3. **Env var name** — follow the existing convention (e.g. `WEATHERAPI_KEY`, `GOOGLE_PLACES_API_KEY`). Read `node:process` `env`.
 4. **Consumer** — is this for a chatbot AI tool, a bot feature, or a script? (Determines who calls it; the service itself stays consumer-agnostic.)
 
 If an npm SDK is involved, install it with `npm install <pkg>` (only after confirming it's a real dependency change).
@@ -60,7 +60,7 @@ export { getSomething } from './api';
 export type { {Name}Response } from './types';
 ```
 
-## Wire-up & docs
+## Wire-up
 
 1. **Env**: add the new var to `.env.example` (with a placeholder/comment).
 2. **Path alias**: confirm `@services/{name}` resolves (covered by `@services/*` in `tsconfig.json` — no config change needed).

@@ -7,22 +7,23 @@ Detailed breakdown of the MMPS directory structure.
 ```
 mmps/
 ├── src/                    # Source code
-├── apps/                   # npm workspaces — Vite mini-apps (savings-web, earth-web, learner-web, zika-web)
+├── apps/                   # npm workspaces — Vite mini-apps (savings-web, earth-web, learner-web, zika-web, claims-web, coach-web)
 ├── docs/                   # VitePress documentation
 ├── dist/                   # Compiled JavaScript (generated)
+├── test/                   # integration/, e2e/ and eval/ suites
 ├── coverage/               # Test coverage reports (generated)
 ├── .github/
 │   └── workflows/          # GitHub Actions
 ├── .agents/
 │   └── skills/             # Project-local agent skills (SKILL.md format)
 ├── .husky/                 # Git hooks
-├── scripts/                # Utility scripts
 ├── AGENTS.md               # Canonical agent instructions (CLAUDE.md, GEMINI.md, .github/copilot-instructions.md are symlinks)
 ├── package.json            # Dependencies and scripts
 ├── tsconfig.json           # TypeScript config
 ├── vitest.config.ts        # Test config (unit)
 ├── vitest.integration.config.ts # Test config (integration)
 ├── vitest.e2e.config.ts    # Test config (bot E2E)
+├── vitest.eval.config.ts   # Test config (chatbot evals)
 ├── eslint.config.mjs       # Linting rules
 └── .prettierrc.json        # Code formatting
 ```
@@ -34,11 +35,12 @@ src/
 ├── core/                   # Core utilities and config
 │   ├── config/            # Configuration
 │   │   └── main.config.ts # Main configuration (timezone, env)
+│   ├── mongo/             # MongoDB connection helpers
+│   ├── telemetry/         # OpenTelemetry setup (preloaded in prod)
 │   ├── utils/             # Utility functions
 │   │   ├── logger.ts      # Logger class
-│   │   ├── mongo.ts       # MongoDB connection helpers
 │   │   └── ...
-│   └── index.ts           # Barrel export
+│   └── ...                # express, openapi, queue, services
 │
 ├── features/              # Bot implementations (6 bots + web features)
 │   ├── chatbot/           # AI-powered assistant bot
@@ -62,7 +64,6 @@ src/
 │   ├── telegram/          # grammY bot utilities (THE telegram service)
 │   ├── telegram-client/   # MTProto user-mode client
 │   ├── openai/            # OpenAI integration
-│   ├── anthropic/         # Anthropic integration
 │   ├── scores-365/        # Sports data API
 │   ├── weather/           # Weather services
 │   └── ...
@@ -153,7 +154,6 @@ services/github/
 | `gmail` | Gmail send/list/delete |
 | `google-calendar` | Calendar CRUD |
 | `google-places` | Place search + details (Places API New) |
-| `google-sheets` | Sheets logging (prod) |
 | `igdb` | IGDB game data (Twitch auth) |
 | `imgur` | Image upload |
 | `ims` | Israel Meteorological Service |

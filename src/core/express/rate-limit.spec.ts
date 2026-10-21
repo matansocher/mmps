@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { createRateLimiter } from './rate-limit';
+import { createRateLimitCounter, createRateLimiter } from './rate-limit';
 
 vi.mock('@core/services', () => ({
   getRedisConnection: vi.fn(() => {
@@ -87,6 +87,23 @@ describe('createRateLimiter() (in-memory fallback)', () => {
     await limiter(mockReq(), afterWindow, next);
     expect(afterWindow.statusCode).toEqual(200);
 
+    vi.useRealTimers();
+  });
+});
+
+describe('createRateLimitCounter() (in-memory fallback)', () => {
+  it('should count hits per key within the window', async () => {
+    const hit = createRateLimitCounter({ windowMs: 1000, prefix: 'test-counter' });
+    expect([await hit('a'), await hit('a'), await hit('b')]).toEqual([1, 2, 1]);
+  });
+
+  it('should reset the count after the window expires', async () => {
+    vi.useFakeTimers();
+    const hit = createRateLimitCounter({ windowMs: 1000, prefix: 'test-counter-reset' });
+    await hit('a');
+    await hit('a');
+    vi.advanceTimersByTime(1001);
+    expect(await hit('a')).toEqual(1);
     vi.useRealTimers();
   });
 });

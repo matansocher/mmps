@@ -1,10 +1,10 @@
 # Chatbot
 
-**AI-Powered Conversational Assistant** - The flagship bot with advanced features and 20+ integrated tools.
+**AI-Powered Conversational Assistant** - The flagship bot with advanced features and 30+ integrated tools.
 
 ## Overview
 
-The Chatbot is MMPS's most advanced bot, powered by OpenAI's ChatGPT or Anthropic's Claude. It provides intelligent conversation with access to external tools like weather, reminders, calendar integration, GitHub, and more.
+The Chatbot is MMPS's most advanced bot, powered by OpenAI models via LangChain/LangGraph. It provides intelligent conversation with access to external tools like weather, reminders, calendar integration, GitHub, and more.
 
 ::: tip Deep dive
 For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoDB checkpointer, summarization, and token/cost observability — see the [Chatbot Deep Dive](/bots/chatbot-deep-dive).
@@ -14,7 +14,7 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 
 ### Core Features
 - **Conversational AI** - Natural language understanding and generation
-- **Tool Integration** - 27 tools for extending capabilities
+- **Tool Integration** - 31 tools for extending capabilities
 - **Memory** - Durable conversation history persisted to MongoDB (LangGraph checkpointer), with automatic summarization to keep context bounded
 - **Observability** - Cross-bot token usage and cost are metered, logged, and persisted (90-day TTL), with a weekly summary
 - **Error Handling** - Graceful degradation and fallbacks
@@ -24,12 +24,10 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 - ⏰ **Reminders** - Set and manage reminders
 - 📅 **Calendar** - Create, list, update and delete Google Calendar events, and invite guests by email (Google sends them the invite, update and cancellation emails)
 - 🐙 **GitHub** - Repository and code interaction
-- 📊 **Google Sheets** - Spreadsheet operations
 - 🔍 **Web Search** - Search the internet
 - 🌐 **Browse URL** - Open a link and read its main text (no JavaScript or clicking)
 - 🎮 **Game Scores** - Metacritic score, user score and details for a game, with fuzzy name matching and suggestions (IGDB fallback)
-- ✅ **Todo Lists** - Task management
-- And 13+ more tools
+- And 24 more tools (see [AI Tools](/development/ai-tools#available-tools))
 
 ## Configuration
 
@@ -39,16 +37,14 @@ For a full walkthrough of the AI internals — the LangGraph ReAct agent, MongoD
 # Required
 CHATBOT_TELEGRAM_BOT_TOKEN=your-token
 
-# AI Model (choose one)
+# AI Model
 OPENAI_API_KEY=sk-...           # For ChatGPT
-ANTHROPIC_API_KEY=sk-ant-...    # For Claude (alternative)
 
 # Optional Tools
 GITHUB_APP_ID=123456                 # For GitHub App authentication
 GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----...  # GitHub App private key
 GITHUB_APP_INSTALLATION_ID=456789    # GitHub App installation ID for the repo
 WEATHERAPI_KEY=...              # For weather data
-GOOGLE_SHEETS_CREDENTIALS=...   # For Sheets integration
 GOOGLE_CALENDAR_REFRESH_TOKEN=... # OAuth refresh token (calendar scope, minted with GMAIL_CLIENT_ID/SECRET), needed to invite attendees; without it the calendar falls back to the GOOGLE_CALENDAR_CLIENT_EMAIL/PRIVATE_KEY service account, which can't invite
 ```
 
@@ -57,13 +53,10 @@ GOOGLE_CALENDAR_REFRESH_TOKEN=... # OAuth refresh token (calendar scope, minted 
 ```typescript
 export const BOT_CONFIG = {
   id: 'CHATBOT',
-  name: 'Chatbot',
+  name: 'Chatbot 🤖',
   token: 'CHATBOT_TELEGRAM_BOT_TOKEN',
   commands: {
-    START: { command: '/start', description: 'Start chatbot' },
-    HELP: { command: '/help', description: 'Get help' },
-    STATUS: { command: '/status', description: 'Check status' },
-    CLEAR: { command: '/clear', description: 'Clear conversation' },
+    START: { command: '/start', description: 'Start over', hide: true },
   },
 };
 ```
@@ -78,17 +71,10 @@ export const BOT_CONFIG = {
 
 ### 2. Set Up AI Model
 
-Choose either OpenAI or Anthropic:
-
 **OpenAI:**
 - Visit [platform.openai.com](https://platform.openai.com)
 - Create an API key
 - Add to `.env`: `OPENAI_API_KEY=sk-...`
-
-**Anthropic (Claude):**
-- Visit [console.anthropic.com](https://console.anthropic.com)
-- Create an API key
-- Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-...`
 
 ### 3. Set Up GitHub Integration (Optional)
 
@@ -128,7 +114,6 @@ Open Telegram and search for your bot. Send `/start` to begin!
 | Command | Description |
 |---------|-------------|
 | `/start` | Start the bot |
-| `/exercise` | Log a workout |
 
 ## Architecture
 
@@ -150,13 +135,14 @@ Tools (weather, reminders, etc.)
 - **Football Updates** - Updates sports data at 12:59 and 23:59
 - **Flight Traffic Alerts** - Hourly at :05, counts airborne aircraft over Israel and Iran (ADS-B via adsb.lol with an adsb.fi fallback, filtered to the Worldly border polygon), and DMs the owner once when traffic drops to 25% or less of the same-hour median of the last 14 days. It sends a second message when traffic is back to at least 50%. Nothing fires during the first 7 days of history or in hours whose typical count is below 8 (`schedulers/flight-traffic-check.ts`, `shared/flight-traffic/`)
 - **Weekly Usage Summary** - Saturdays at 22:30, DMs the owner the past week's cross-bot LLM cost/usage breakdown (per bot + per user, from `aggregateUsage`)
+- **Email Cleanup** - 12:00 and 20:00 (Asia/Jerusalem). Checks up to 50 unread inbox emails from the last 24h using OpenAI `gpt-6-luna` structured responses, in batches of 20. Sends only Gmail ID, sender, subject, and snippet, treating email fields as untrusted data rather than instructions; response storage is disabled (`store: false`). Moves only `spam` or `advertisement` results with confidence > 0.75 to Gmail Trash; `keep` results stay untouched at any confidence. Confidence is model-assessed, not a calibrated probability. Before any trash action, validates the entire batch schema and requires every input ID exactly once (no missing, duplicate, or unknown IDs). Failed batches remain untouched and later batches still run; Gmail trash calls are limited to 5 at a time. Silent unless something was successfully trashed (then a report with confidence scores), or every classification batch failed (then a warning DM). Uses the existing `OPENAI_API_KEY`; no new credentials.
 
 ### Memory & Context
 
 Conversation memory is two complementary layers:
 
 - **Persistence (checkpointer)** — `agent/checkpointer.ts` provides a MongoDB-backed LangGraph checkpointer (`@langchain/langgraph-checkpoint-mongodb`, db `Chatbot`, 30-day TTL, older snapshots pruned so each thread keeps only its 2 newest checkpoints), injected into `ChatbotService` via `chatbot.init.ts`. Each user's history is keyed by `thread_id` (derived from `chatId`) and **survives restarts and deploys** — replacing the in-memory `MemorySaver`.
-- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~24k tokens, or ~40 messages holding at least ~16k tokens), the older turns are compressed into a running summary and the most recent ~8k tokens are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on the small model (`gpt-5-nano`), not the main agent model.
+- **Summarization** — `chatbot.service.ts` registers LangChain's `summarizationMiddleware`. When a thread grows past the trigger (~24k tokens, or ~40 messages holding at least ~16k tokens), the older turns are compressed into a running summary and the most recent ~8k tokens are kept verbatim. The summary is persisted by the checkpointer, so old context is **compressed in Mongo rather than dropped**. Summaries run on a separate `gpt-6-luna` instance without a custom temperature.
 
 Tune via environment variables:
 
@@ -194,13 +180,13 @@ Collections:
 - LangGraph checkpoint collections (`checkpoints`, `checkpoint_writes`) - Durable conversation memory with 30-day TTL; pruned to the 2 newest checkpoints per thread (backfill: `npx tsx src/features/chatbot/scripts/prune-checkpoints.ts [--apply]`)
 - `usage` - Per-turn token/cost records with 90-day TTL
 
-Chatbot tools also connect to shared databases such as `Reminders`, `CalendarEvents`, `Trainer`, `Coach`, `Wolt`, `Worldly`, `Cooker`, and related follower/friends databases.
+Shared domains used by the tools (reminders, calendar events, trainer, cooker, friends, followers, watchers) also live in the `Chatbot` database; the tools additionally read the `Coach`, `Wolt` and `Worldly` databases.
 
 ## Tool Development
 
 To add a new tool to the chatbot:
 
-1. Create a tool file in `shared/ai/tools/{name}/{name}.tool.ts`
+1. Create a tool file in `src/shared/ai/tools/{name}/{name}.tool.ts`
 2. Define schema with Zod:
 
 ```typescript
@@ -222,7 +208,7 @@ export const myTool = tool(runner, {
 });
 ```
 
-3. Add to `features/chatbot/agent/index.ts`
+3. Export it from `src/shared/ai/tools/index.ts` and register it in `src/features/chatbot/agent/agent.ts`
 4. Test thoroughly
 
 ## Troubleshooting
@@ -231,7 +217,7 @@ export const myTool = tool(runner, {
 
 Check:
 - Bot token is correct in `.env`
-- OPENAI_API_KEY or ANTHROPIC_API_KEY is set
+- OPENAI_API_KEY is set
 - MongoDB is running
 - No errors in console logs
 
@@ -247,14 +233,14 @@ If you get rate limit errors:
 If the bot uses too much memory:
 - Lower `CHATBOT_SUMMARY_TRIGGER_TOKENS` / `CHATBOT_SUMMARY_KEEP_TOKENS` so threads are summarized sooner and kept shorter
 - Old conversations expire automatically via the checkpointer's 30-day TTL
-- Monitor with `npm run start:debug`
+- Monitor with `npm run dev:debug`
 
 ## Performance Tips
 
-1. **Use faster models** - Use gpt-4-mini for faster responses
+1. **Use faster models** - Keep reasoning effort at `none` for the fastest responses
 2. **Cache tool results** - Don't call same tool twice
 3. **Bound context** - Summarization keeps thread size in check; tune the trigger/keep thresholds
-4. **Monitor logs** - Use Google Sheets logging in production
+4. **Monitor logs** - Use [Grafana Cloud logging](/deployment/monitoring) in production
 
 ## Next Steps
 

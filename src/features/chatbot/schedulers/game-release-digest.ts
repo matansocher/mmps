@@ -3,6 +3,7 @@ import { getErrorMessage, Logger } from '@core/utils';
 import { sendRichMessage } from '@services/telegram';
 import { formatDaysUntilRelease, getActiveFollows, getDaysUntilRelease } from '@shared/game-releases';
 import type { GameFollow } from '@shared/game-releases';
+import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('chatbot:scheduler:game-release-digest');
 
@@ -23,7 +24,7 @@ export function buildDigestMessage(follows: readonly GameFollow[], now: Date = n
 }
 
 // Weekly rundown of every followed game with its countdown.
-export async function gameReleaseDigest(bot: Bot): Promise<void> {
+export async function gameReleaseDigest(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const follows = await getActiveFollows();
     if (!follows.length) {
@@ -38,7 +39,9 @@ export async function gameReleaseDigest(bot: Bot): Promise<void> {
     }
 
     for (const [chatId, chatFollows] of followsByChatId) {
-      await sendRichMessage(bot, chatId, buildDigestMessage(chatFollows));
+      const message = buildDigestMessage(chatFollows);
+      await sendRichMessage(bot, chatId, message);
+      await chatbotService.recordProactiveMessage(chatId, message, 'game-release-digest');
     }
   } catch (err) {
     logger.error(`Failed to send the weekly game release digest: ${getErrorMessage(err)}`);

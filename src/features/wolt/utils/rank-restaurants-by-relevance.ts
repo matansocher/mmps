@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { getErrorMessage, Logger } from '@core/utils';
 import { getResponse } from '@services/openai';
-import { CHAT_COMPLETIONS_MINI_MODEL } from '@services/openai/constants';
+import { CHAT_MODEL } from '@services/openai/constants';
 import type { WoltRestaurant } from '@shared/wolt';
 import { MAX_NUM_OF_RESTAURANTS_TO_RANK } from '../wolt.config';
 
@@ -35,7 +35,7 @@ export async function rankRestaurantsByRelevance(allRestaurants: WoltRestaurant[
       input,
       instructions: INSTRUCTIONS,
       schema: RankedRestaurantsSchema,
-      model: CHAT_COMPLETIONS_MINI_MODEL,
+      model: CHAT_MODEL,
       temperature: 0,
       store: false,
     });

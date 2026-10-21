@@ -6,6 +6,7 @@ import type { PsStorePrice } from '@services/playstation-store';
 import { sendRichMessage } from '@services/telegram';
 import { calculateDiscountPercent, formatPrice, getActiveWatches, updateLowestPrice } from '@shared/game-price-watcher';
 import type { GamePriceWatch } from '@shared/game-price-watcher';
+import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('chatbot:scheduler:game-price-check');
 
@@ -50,7 +51,7 @@ async function findDrop(watch: GamePriceWatch): Promise<PriceDrop | null> {
 // Re-checks every watched PlayStation Store game once a day and sends one combined digest per chat
 // listing only the games that reached a new observed low. The new low is stored after the digest is
 // sent, so a failed send is retried tomorrow rather than silently swallowed.
-export async function gamePriceCheck(bot: Bot): Promise<void> {
+export async function gamePriceCheck(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   const watches = await getActiveWatches();
   if (!watches.length) {
     return;
@@ -68,12 +69,14 @@ export async function gamePriceCheck(bot: Bot): Promise<void> {
   }
 
   for (const [chatId, drops] of dropsByChatId) {
+    const digest = buildPriceDropDigest(drops);
     try {
-      await sendRichMessage(bot, chatId, buildPriceDropDigest(drops));
+      await sendRichMessage(bot, chatId, digest);
     } catch (err) {
       logger.error(`Failed to send the game price digest to chatId ${chatId}: ${getErrorMessage(err)}`);
       continue;
     }
+    await chatbotService.recordProactiveMessage(chatId, digest, 'game-price-check');
 
     for (const { watch, price } of drops) {
       await updateLowestPrice(watch.chatId, watch.conceptId, price.discountedValue);

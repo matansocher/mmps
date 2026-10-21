@@ -62,7 +62,7 @@ This file holds **conventions and workflow only**. Feature behaviour (what each 
 
 ### 6. Documentation Policy
 
-Docs are **not** part of every change. Each fact has exactly one home:
+**Never edit `docs/`, `README.md` or `AGENTS.md` unless the user explicitly asks.** Docs are synced manually via `/update-docs` — not as part of feature work. Each fact has exactly one home:
 
 | Kind of fact | Home |
 |---|---|
@@ -70,19 +70,16 @@ Docs are **not** part of every change. Each fact has exactly one home:
 | Feature behaviour, schedules, collections, env flags, setup, architecture | `docs/` (VitePress) |
 | Implementation details | the code itself |
 
-- **Update `docs/`** only when user-visible behaviour, setup, env vars or architecture change.
-- **Update `AGENTS.md`** only when conventions, structure or agent workflow change.
 - **Never duplicate** feature facts between the two — link to the docs page instead.
-- **No doc edits** for internal refactors, tests, or bug fixes that don't change documented behaviour.
-- New env var → add it to `.env.example` (always).
-- Larger drift is fixed by the periodic `/update-docs` sweep, not per change.
+- New env var → add it to `.env.example` (always — this is config, not docs).
+- Docs drift between sweeps is expected; the user runs `/update-docs` manually.
 
 ---
 
 ## Tech Stack
 
 - **Plain TypeScript 5.9**, ES2022, **non-strict**; Node.js 24; Express 5; `node-cron`.
-- **AI:** `langchain`, `@langchain/langgraph` (+ `@langchain/langgraph-checkpoint-mongodb`), `@langchain/openai`, `@langchain/anthropic`, `openai`, `@anthropic-ai/sdk`.
+- **AI:** `langchain`, `@langchain/langgraph` (+ `@langchain/langgraph-checkpoint-mongodb`), `@langchain/openai`, `openai`.
 - **Data/bots:** `mongodb` (no ODM), `grammy` (+ `@grammyjs/hydrate`), `telegram` (MTProto client mode).
 - **Utils:** `date-fns` / `date-fns-tz` (default tz `Asia/Jerusalem`), `zod`.
 - **Quality:** Vitest 4, ESLint 9 (flat), Prettier 3 (200 cols, single quotes, trailing commas, **semicolons**).
@@ -106,8 +103,7 @@ mmps/
 │   └── index.ts        # Entry point — Express server + conditional bot init
 ├── apps/               # Vite mini-apps (npm workspaces)
 ├── docs/               # VitePress site (matansocher.github.io/mmps)
-├── scripts/            # Standalone scripts
-├── test/               # integration/ and e2e/ suites
+├── test/               # integration/, e2e/ and eval/ suites
 ├── .github/workflows/  # ci, ai (Codex), docs-deploy, heroku-deploy, pr-notify
 └── .agents/skills/     # MMPS skills (.claude/skills is a symlink)
 ```
@@ -151,7 +147,7 @@ src/services/{name}/
 | `COACH` | `src/features/coach/` | [coach](docs/bots/coach.md) |
 | `WOLT` | `src/features/wolt/` | [wolt](docs/bots/wolt.md) |
 | `WORLDLY` | `src/features/worldly/` | [worldly](docs/bots/worldly.md); also serves the [Earth](docs/bots/earth.md) globe quiz mini app at `/earth/*` |
-| `LEARNER` | `src/features/learner/` | [overview](docs/bots/overview.md) |
+| `LEARNER` | `src/features/learner/` | [learner](docs/bots/learner.md) |
 
 Token env var for each bot: `{ID}_TELEGRAM_BOT_TOKEN`.
 
@@ -161,6 +157,7 @@ Token env var for each bot: `{ID}_TELEGRAM_BOT_TOKEN`.
 |---|---|---|
 | Savings | `/savings/*`, `/api/savings/*` | [savings](docs/bots/savings.md) |
 | Zika | `/zika/*` | [zika](docs/bots/zika.md) |
+| Claims | `/claims/*` | [claims](docs/bots/claims.md) |
 | Stickers (WhatsApp) | `GET/POST /whatsapp-webhook` | [stickers](docs/bots/stickers.md) |
 | Portfolio | `POST /portfolio/contact` | — |
 
@@ -342,6 +339,7 @@ export async function createReminder(data: CreateReminderData): Promise<InsertOn
 The full list is in `.env.example` — every `env.X` the code reads must be there.
 Machine bootstrap, required development credentials, mode flags, and production
 delivery are documented in [environment setup](docs/guide/environment-setup.md).
+`IS_PROD=true` boots everything; `PORT` defaults to 3000. Timezone default: `Asia/Jerusalem` (`DEFAULT_TIMEZONE` in `@core/config`).
 
 ---
 

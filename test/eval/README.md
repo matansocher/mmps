@@ -115,6 +115,6 @@ Guidelines:
 
 - Agent is built **isolated**: in-memory saver, no Mongo checkpointer, no summarization —
   we test the prompt + tools, not persistence.
-- Model is `gpt-4.1-mini` at `temperature: 0.2` (prod parity).
+- Model is `gpt-6-luna` (reasoning effort `none`) at `temperature: 0.2` (prod parity).
 - Spy tools are cloned from `agent().tools`, so the eval automatically tracks the real
   registered tool set and schemas.

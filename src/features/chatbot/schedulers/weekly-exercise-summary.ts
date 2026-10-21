@@ -4,6 +4,7 @@ import { DAYS_OF_WEEK, MY_USER_ID } from '@core/config';
 import { getErrorMessage, getStars, Logger } from '@core/utils';
 import { sendRichMessage } from '@services/telegram';
 import { getWeeklyExerciseStats, type WeeklyExerciseStats } from '@shared/trainer';
+import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('chatbot:scheduler:weekly-exercise-summary');
 
@@ -25,7 +26,7 @@ function buildStatsTable({ exerciseCount, currentStreak, longestStreak }: Weekly
   ].join('\n');
 }
 
-export async function weeklyExerciseSummary(bot: Bot): Promise<void> {
+export async function weeklyExerciseSummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const stats = await getWeeklyExerciseStats(MY_USER_ID);
     const range = `${format(stats.weekStart, 'dd/MM')} - ${format(stats.weekEnd, 'dd/MM')}`;
@@ -33,6 +34,7 @@ export async function weeklyExerciseSummary(bot: Bot): Promise<void> {
     const message = [`*🏋️ Weekly exercise summary* (${range})`, buildDaysTable(stats), buildStatsTable(stats)].join('\n\n');
 
     await sendRichMessage(bot, MY_USER_ID, message);
+    await chatbotService.recordProactiveMessage(MY_USER_ID, message, 'weekly-exercise-summary');
   } catch (err) {
     logger.error(`Failed to send weekly exercise summary: ${getErrorMessage(err)}`);
   }

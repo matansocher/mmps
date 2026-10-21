@@ -8,6 +8,7 @@ import { generateLineChartImage } from '@services/chart';
 import { sendShortenedMessage } from '@services/telegram';
 import { aggregateUsage } from '@shared/ai';
 import type { UsageAggregateRow } from '@shared/ai';
+import type { ChatbotService } from '../chatbot.service';
 
 const logger = new Logger('chatbot:scheduler:usage-summary');
 
@@ -16,7 +17,7 @@ const PREVIOUS_WEEKS = 3;
 // How far back the weekly-spend trend chart looks. Bounded by the usage records' 90-day TTL.
 const TREND_LOOKBACK_DAYS = 84; // 12 weeks
 
-export async function usageSummary(bot: Bot): Promise<void> {
+export async function usageSummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
     const to = new Date();
     const from = subDays(to, LOOKBACK_DAYS);
@@ -40,6 +41,7 @@ export async function usageSummary(bot: Bot): Promise<void> {
     const comparisonRows = rows.filter((row) => row.day >= comparisonFromDay);
     const message = buildUsageSummaryMessage(comparisonRows, thisWeekRows, weekStartDay, from, to);
     await sendShortenedMessage(bot, MY_USER_ID, message, { parse_mode: 'Markdown' });
+    await chatbotService.recordProactiveMessage(MY_USER_ID, message, 'usage-summary');
   } catch (err) {
     logger.error(`Failed to send weekly usage summary: ${getErrorMessage(err)}`);
     await bot.api.sendMessage(MY_USER_ID, '⚠️ Failed to create the weekly usage summary.').catch(() => {});
