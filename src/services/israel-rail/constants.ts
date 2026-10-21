@@ -13,6 +13,9 @@ export const RAIL_API_HEADERS = {
 
 export const DEFAULT_TRAINS_LIMIT = 5;
 
+// Spare minutes between reaching the station and the train departure (entering, security check, getting to the platform).
+export const STATION_BUFFER_MINUTES = 5;
+
 // Common nicknames / alternative spellings → station id
 export const STATION_ALIASES: Readonly<Record<string, number>> = {
   savidor: 3700,
