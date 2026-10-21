@@ -1,4 +1,12 @@
-import type { FindDeparturesParams, FindLastDeparturesParams, LightRailDeparture, LightRailServiceCalendar, LightRailTimetable } from './types';
+import type {
+  FindDeparturesParams,
+  FindDirectionalDeparturesParams,
+  FindLastDeparturesParams,
+  LightRailDeparture,
+  LightRailDirectionDepartures,
+  LightRailServiceCalendar,
+  LightRailTimetable,
+} from './types';
 
 const DAY_SECONDS = 24 * 60 * 60;
 const DEFAULT_LIMIT = 5;
@@ -73,4 +81,51 @@ export function findLastLightRailDepartures(timetable: LightRailTimetable, { fro
   const nextDate = toIsoDate(shiftDate(date, 1));
   const departures = findLightRailDepartures(timetable, { fromStationId, toStationId, date, time: SERVICE_DAY_END_TIME, limit: Number.MAX_SAFE_INTEGER });
   return departures.filter((departure) => departure.date === date || (departure.date === nextDate && departure.departureTime < SERVICE_DAY_END_TIME)).slice(-limit);
+}
+
+// Groups the next departures from a station by direction along the line, labelled with the line end each direction heads to.
+export function findLightRailDeparturesByDirection(
+  timetable: LightRailTimetable,
+  { fromStationId, date, time, limit = DEFAULT_LIMIT }: FindDirectionalDeparturesParams,
+): LightRailDirectionDepartures[] {
+  const fromIndex = timetable.stations.findIndex(({ id }) => id === fromStationId);
+  if (fromIndex === -1) throw new Error('Unknown light rail station');
+
+  const [hours, minutes] = time.split(':').map(Number);
+  const requestedSec = hours * 3600 + minutes * 60;
+  const servicesById = new Map(timetable.services.map((service) => [service.id, service]));
+  const lastIndex = timetable.stations.length - 1;
+  const candidates = new Map<number, { readonly departureSec: number; readonly terminusIndex: number }[]>();
+
+  for (const dayOffset of [-1, 0, 1]) {
+    const serviceDate = shiftDate(date, dayOffset);
+    const offsetSec = dayOffset * DAY_SECONDS;
+    for (const trip of timetable.trips) {
+      const service = servicesById.get(trip.serviceId);
+      if (!service || !isServiceActive(service, serviceDate)) continue;
+      const originPos = trip.stops.findIndex(([stationIndex]) => stationIndex === fromIndex);
+      if (originPos === -1 || originPos === trip.stops.length - 1) continue;
+      const departureSec = trip.stops[originPos][1] + offsetSec;
+      if (departureSec < requestedSec) continue;
+      const lineEndIndex = trip.stops[originPos + 1][0] > fromIndex ? lastIndex : 0;
+      const group = candidates.get(lineEndIndex) ?? [];
+      group.push({ departureSec, terminusIndex: trip.stops[trip.stops.length - 1][0] });
+      candidates.set(lineEndIndex, group);
+    }
+  }
+
+  return [0, lastIndex]
+    .filter((lineEndIndex) => candidates.get(lineEndIndex)?.length)
+    .map((lineEndIndex) => ({
+      towards: timetable.stations[lineEndIndex],
+      departures: candidates
+        .get(lineEndIndex)
+        .sort((a, b) => a.departureSec - b.departureSec)
+        .slice(0, limit)
+        .map(({ departureSec, terminusIndex }) => ({
+          date: toIsoDate(shiftDate(date, Math.floor(departureSec / DAY_SECONDS))),
+          departureTime: formatClock(departureSec),
+          terminus: timetable.stations[terminusIndex],
+        })),
+    }));
 }

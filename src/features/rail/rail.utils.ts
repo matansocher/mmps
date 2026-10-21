@@ -1,7 +1,8 @@
 import { addMinutes, format, max, parse } from 'date-fns';
-import type { InlineKeyboard } from 'grammy';
+import { InlineKeyboard } from 'grammy';
 import { CROWDING_EMOJI, getTravelCrowding } from '@services/israel-rail';
-import type { CrowdingLevel, RailStation, TrainLeg, TrainTravel } from '@services/israel-rail';
+import type { CrowdingLevel, NearbyRailStation, RailStation, TrainLeg, TrainTravel } from '@services/israel-rail';
+import type { GeoPoint, LightRailDirectionDepartures, NearbyLightRailStation } from '@services/light-rail';
 import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
 import { buildWakeButton } from './rail-wake.utils';
@@ -25,6 +26,12 @@ export type RailRouteContext = {
   readonly to: RailStation;
   readonly trains: readonly TrainTravel[];
   readonly searchedFrom: string; // Format: "YYYY-MM-DD HH:mm"
+};
+
+export type NearestStationsResult = {
+  readonly origin: GeoPoint;
+  readonly rail: NearbyRailStation | null;
+  readonly lightRail: { readonly stop: NearbyLightRailStation; readonly directions: readonly LightRailDirectionDepartures[] } | null;
 };
 
 const CALLBACK_SEPARATOR = '|';
@@ -176,4 +183,54 @@ export function appendSourceFooter(message: string, sources: readonly RailDataSo
 // Used before we have any text to detect from (e.g. a voice message). Hebrew unless Telegram says otherwise.
 export function getUserLanguage(languageCode?: string): ImageLanguage {
   return languageCode && !languageCode.toLowerCase().startsWith('he') ? 'en' : 'he';
+}
+
+const LONG_WALK_MINUTES = 25;
+
+function formatWalk(
+  { walkingMinutes, walkingMeters, walkingIsEstimate }: { readonly walkingMinutes: number; readonly walkingMeters: number; readonly walkingIsEstimate: boolean },
+  language: ImageLanguage,
+): string {
+  const distance = walkingMeters >= 1000 ? `${(walkingMeters / 1000).toFixed(1)} ${language === 'he' ? 'ק״מ' : 'km'}` : `${Math.round(walkingMeters)} ${language === 'he' ? 'מ׳' : 'm'}`;
+  const approx = walkingIsEstimate ? '~' : '';
+  const walk = language === 'he' ? `🚶 ${approx}${walkingMinutes} דק׳ הליכה (${distance})` : `🚶 ${approx}${walkingMinutes} min walk (${distance})`;
+  if (walkingMinutes <= LONG_WALK_MINUTES) return walk;
+  return `${walk}\n${language === 'he' ? 'רחוק להליכה - כדאי אוטובוס או מונית 🚕' : 'A long walk - a bus or taxi may be better 🚕'}`;
+}
+
+export function formatNearestStationsMessage({ rail, lightRail }: NearestStationsResult, language: ImageLanguage): string {
+  const he = language === 'he';
+  const sections: string[] = [];
+  if (rail) {
+    const name = he ? rail.station.nameHe : rail.station.nameEn;
+    sections.push([`🚆 *${he ? 'תחנת הרכבת הקרובה' : 'Nearest train station'}:* ${name}`, formatWalk(rail, language)].join('\n'));
+  }
+  if (lightRail) {
+    const name = he ? lightRail.stop.station.nameHe : lightRail.stop.station.nameEn;
+    const lines = [`🚊 *${he ? 'תחנת הקו האדום הקרובה' : 'Nearest Red Line stop'}:* ${name}`, formatWalk(lightRail.stop, language)];
+    for (const { towards, departures } of lightRail.directions) {
+      const times = departures.map(({ departureTime }) => departureTime).join(', ');
+      lines.push(he ? `• לכיוון ${towards.nameHe}: ${times}` : `• Towards ${towards.nameEn}: ${times}`);
+    }
+    sections.push(lines.join('\n'));
+  }
+  if (!sections.length) return he ? 'לא מצאתי תחנות רכבת או רכבת קלה בקרבת המיקום הזה 🤷' : "I couldn't find any train or light rail stations near this location 🤷";
+  const footer = he ? 'רוצים לנסוע? כתבו לי לאן, למשל "לחיפה" 🙂' : 'Going somewhere? Tell me where to, e.g. "to Haifa" 🙂';
+  return [...sections, footer].join('\n\n');
+}
+
+export function buildWalkingDirectionsUrl(origin: GeoPoint, destination: GeoPoint): string {
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lon}&destination=${destination.lat},${destination.lon}&travelmode=walking`;
+}
+
+export function buildNearestStationsKeyboard({ origin, rail, lightRail }: NearestStationsResult, language: ImageLanguage): InlineKeyboard | null {
+  const he = language === 'he';
+  const keyboard = new InlineKeyboard();
+  if (rail) keyboard.url(he ? '🚶 הליכה לרכבת' : '🚶 Walk to the train', buildWalkingDirectionsUrl(origin, rail.station));
+  if (lightRail) keyboard.url(he ? '🚶 הליכה לרכבת הקלה' : '🚶 Walk to the light rail', buildWalkingDirectionsUrl(origin, lightRail.stop.station));
+  return rail || lightRail ? keyboard : null;
+}
+
+export function buildLocationMemoryNote({ lat, lon }: GeoPoint): string {
+  return `I shared my current location (${lat}, ${lon}). Use it as my origin for follow-up questions unless I say otherwise.`;
 }

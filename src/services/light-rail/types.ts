@@ -44,6 +44,18 @@ export type FindDeparturesParams = {
 
 export type FindLastDeparturesParams = Omit<FindDeparturesParams, 'time'>;
 
+export type FindDirectionalDeparturesParams = {
+  readonly fromStationId: string;
+  readonly date: string; // Format: "YYYY-MM-DD"
+  readonly time: string; // Format: "HH:mm"
+  readonly limit?: number;
+};
+
+export type LightRailDirectionDepartures = {
+  readonly towards: LightRailStation;
+  readonly departures: readonly { readonly date: string; readonly departureTime: string; readonly terminus: LightRailStation }[];
+};
+
 export type GeoPoint = {
   readonly lat: number;
   readonly lon: number;
