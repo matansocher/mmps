@@ -10,7 +10,11 @@ The standard way to develop and test locally:
 npm run dev
 ```
 
-This uses `tsx watch` to automatically reload when you make changes.
+After [Doppler setup](/guide/environment-setup), this injects development secrets
+and uses `tsx watch` to reload when code changes. No `.env` is needed in a fresh
+worktree. Restart the command to fetch changed secrets.
+
+For a manually maintained `.env`, use `npm run dev:manual` instead.
 
 ### Run a Specific Bot
 
@@ -20,7 +24,8 @@ By default, all bots run in production mode. In development, run one bot at a ti
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
-Available bot IDs: `CHATBOT`, `CHILLI`, `COACH`, `WOLT`, `WORLDLY`, `LEARNER`
+Available bot IDs: `CHATBOT`, `CHILLI`, `COACH`, `WOLT`, `WORLDLY`, `LEARNER`.
+Use a unique `PORT` for each concurrently running worktree.
 
 ### Watch Mode for TypeScript Only
 
@@ -87,19 +92,17 @@ npm run test:watch
 ### Testing Chatbot Locally
 
 1. Create a test Telegram bot with @BotFather
-2. Add the token to `.env`: `CHATBOT_TELEGRAM_BOT_TOKEN=...`
+2. Add the token to Doppler `mmps/dev`: `PLAYGROUNDS_TELEGRAM_BOT_TOKEN=...`
 3. Run: `LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev`
 4. Open Telegram and find your bot
 5. Send `/start` to begin testing
 
 ### Testing Multiple Bots
 
-To test multiple bots without running separate instances, comment out bots in `src/index.ts`:
-
-```typescript
-// Temporarily disable in src/index.ts
-// if (shouldInitBot(coachConfig)) await initCoach();
-```
+Run separate instances with different `PORT` values and active bot IDs.
+Each concurrent polling instance needs a distinct playground token; use separate
+development configs if necessary. Do not enable production mode to run multiple
+bots locally.
 
 ## Troubleshooting
 
@@ -115,7 +118,7 @@ kill -9 <PID>
 
 ### Bot Not Responding
 
-1. Check `.env` file has correct bot token
+1. Check the development config has the correct playground token and both mode flags
 2. Verify MongoDB is running: `mongosh` should connect
 3. Check console logs for errors
 4. Ensure `LOCAL_ACTIVE_BOT_ID` is set correctly

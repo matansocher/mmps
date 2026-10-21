@@ -9,16 +9,20 @@ A TypeScript Node.js 24 app hosting **8 AI-powered Telegram bots** plus an Expre
 ```bash
 git clone https://github.com/matansocher/mmps
 cd mmps
-npm install
+npm ci
 
-# Configure environment
-cp .env.example .env          # then fill in values you need
-# At minimum: MONGO_DB_URL, LOCAL_ACTIVE_BOT_ID, the bot's *_TELEGRAM_BOT_TOKEN,
-# and OPENAI_API_KEY.
+# One-time per computer: install Doppler and authenticate.
+# Follow docs/guide/environment-setup.md to populate mmps/dev.
+brew install gnupg
+brew install dopplerhq/cli/doppler
+doppler login --scope "$HOME/Projects" # adjust to your checkout/worktree parent
 
-# Run a single bot locally (IDs are UPPERCASE: CHATBOT, CHILLI, COACH, SECRETARY, WOLT, WORLDLY)
-LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
+# Run with development secrets; choose an unused port per worktree.
+PORT=43101 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
+
+See [environment setup](docs/guide/environment-setup.md) for machine login scopes,
+fresh AI worktrees, Heroku sync, and the explicit `npm run dev:manual` dotenv fallback.
 
 ## Available Bots
 
@@ -51,8 +55,9 @@ Full architecture overview: <https://matansocher.github.io/mmps/architecture/ove
 ## Development
 
 ```bash
-npm run dev                # tsx watch — local dev (single bot via LOCAL_ACTIVE_BOT_ID)
+npm run dev                # Doppler dev secrets + tsx watch
 npm run dev:debug          # with --inspect
+npm run dev:manual         # explicit .env fallback
 npm test                   # Vitest
 npm run lint               # ESLint
 npm run lint:fix

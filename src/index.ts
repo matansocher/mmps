@@ -1,5 +1,4 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import { env } from 'node:process';
 import { isProd } from '@core/config';
@@ -20,8 +19,6 @@ import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
 import { initWorldly, BOT_CONFIG as worldlyConfig } from '@features/worldly';
 import { initZika } from '@features/zika';
 import { stopAllTelegramBots } from '@services/telegram';
-
-dotenv.config();
 
 axios.defaults.timeout = 30_000; // bound all outbound HTTP calls
 
