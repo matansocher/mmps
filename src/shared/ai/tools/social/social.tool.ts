@@ -3,27 +3,34 @@ import { z } from 'zod';
 import { MY_USER_ID } from '@core/config';
 import { sleep } from '@core/utils';
 import { fetchChannelPosts } from '@services/telegram-scraper';
-import { getLatestPosts, getUserInfo, getUserVideos } from '@services/tiktok';
+import { getLatestPosts, getUserInfo, getUserVideos, getVideoDetails } from '@services/tiktok';
 import { fetchLatestPosts } from '@services/twitter-scraper';
 import { getChannelInfo, getChannelVideoIds, getTranscriptText, getVideoMetadata, getVideosFromRSS } from '@services/youtube';
 import { createSubscription, getActiveSubscriptionsByChatId, getSubscription, removeSubscription } from '@shared/social-follower';
 
 const chatId = MY_USER_ID;
 
+const TIKTOK_PROFILE_URL_REGEX = /^https?:\/\/(?:www\.|m\.)?tiktok\.com\/@([^/?#]+)\/?(?:[?#].*)?$/i;
+
 const schema = z.object({
   platform: z.enum(['twitter', 'tiktok', 'youtube', 'telegram']).describe('The social platform to operate on: "twitter" (X), "tiktok", "youtube", or "telegram" (public channels)'),
   action: z
     .enum(['latest_posts', 'user_info', 'video_transcript', 'subscribe', 'unsubscribe', 'list'])
     .describe(
-      'Action to perform: "latest_posts" fetches recent posts/videos of a user/channel; "user_info" fetches profile/channel details (tiktok profile, youtube channel info); "video_transcript" fetches a specific YouTube video transcript (youtube only); "subscribe" adds the user/channel to the daily 22:45 social media digest; "unsubscribe" removes them; "list" shows current subscriptions for the platform',
+      'Action to perform: "latest_posts" fetches recent posts/videos of a user/channel; "user_info" fetches profile/channel details (tiktok profile, youtube channel info); "video_transcript" fetches a single video transcript (youtube) or details + transcript (tiktok); "subscribe" adds the user/channel to the daily 22:45 social media digest; "unsubscribe" removes them; "list" shows current subscriptions for the platform',
     ),
   username: z
     .string()
     .optional()
     .describe(
-      'The account identifier without the @ prefix. Twitter/TikTok: username/handle (e.g., "elonmusk", "khaby.lame"). Telegram: public channel handle or t.me link (e.g., "durov"). YouTube: handle (@Fireship), channel URL, or channel ID (UC...). Required for all actions except "list" and youtube "video_transcript"',
+      'The account identifier without the @ prefix. Twitter/TikTok: username/handle (e.g., "elonmusk", "khaby.lame"). Telegram: public channel handle or t.me link (e.g., "durov"). YouTube: handle (@Fireship), channel URL, or channel ID (UC...). Required for all actions except "list" and "video_transcript". Never pass a video link here - use "video"',
     ),
-  video: z.string().optional().describe('YouTube video URL or video ID (e.g., "https://www.youtube.com/watch?v=dQw4w9WgXcQ" or "dQw4w9WgXcQ"). Required for the youtube "video_transcript" action'),
+  video: z
+    .string()
+    .optional()
+    .describe(
+      'Video link. YouTube: URL or video ID (e.g., "https://www.youtube.com/watch?v=dQw4w9WgXcQ" or "dQw4w9WgXcQ"). TikTok: any video link, including short links (e.g., "https://vt.tiktok.com/ZSgUAqY7h/"). Required for the "video_transcript" action',
+    ),
   count: z.number().min(1).max(20).optional().describe('Number of latest posts/videos to fetch. Only used with "latest_posts". Defaults to 5. Max 20 for twitter/telegram, max 10 for tiktok/youtube'),
   includeRetweets: z.boolean().optional().describe('Whether to include retweets (default: true). Twitter "latest_posts" only'),
   includeReplies: z.boolean().optional().describe('Whether to include replies (default: true). Twitter "latest_posts" only'),
@@ -217,11 +224,16 @@ async function runTwitter({ action, username, count, includeRetweets, includeRep
   }
 }
 
-async function runTiktok({ action, username, count }: SocialInput) {
-  const cleanUsername = username?.replace(/^@/, '');
-  if (action === 'video_transcript') {
-    return 'the "video_transcript" action is not supported for tiktok';
+async function runTiktok({ action, username, video, count }: SocialInput) {
+  // the model sometimes passes a TikTok link as the username - route video links to the video lookup
+  const videoUrl = video ?? (username && /^https?:\/\//i.test(username) && !TIKTOK_PROFILE_URL_REGEX.test(username) ? username : undefined);
+  if (action === 'video_transcript' || (videoUrl && (action === 'latest_posts' || action === 'user_info'))) {
+    return videoUrl ? getVideoDetails(videoUrl) : 'video is required for the "video_transcript" action';
   }
+  if (videoUrl && action !== 'list') {
+    return `"${action}" needs a TikTok username, not a video link`;
+  }
+  const cleanUsername = username?.replace(TIKTOK_PROFILE_URL_REGEX, '$1').replace(/^@/, '');
   if (action !== 'list' && !cleanUsername) {
     return `username is required for the "${action}" action`;
   }
@@ -296,6 +308,6 @@ async function runner(input: SocialInput) {
 export const socialTool = tool(runner, {
   name: 'social',
   description:
-    'Interact with social accounts across four platforms (twitter, tiktok, youtube, telegram) via a "platform" discriminator. Fetch latest posts/videos ("latest_posts"), profile/channel info ("user_info" for tiktok/youtube), a YouTube video transcript ("video_transcript", youtube only), or manage subscriptions for the daily 22:45 social media digest ("subscribe"/"unsubscribe"/"list"). Twitter/Telegram new posts are summarized into key points in the digest; TikTok/YouTube are listed. Additionally, up to 5 of the newest new TikTok videos per chat are attached to the digest as individual playable Telegram videos (with a caption + source link). Accepts handles, usernames, channel URLs/IDs, or t.me links as appropriate per platform. For "summarize this video" / "what does [channel] say", get the YouTube video transcript (find the video via latest_posts first if needed) and answer from it. TikTok posts include transcripts too — use them to answer questions about a video.',
+    'Interact with social accounts across four platforms (twitter, tiktok, youtube, telegram) via a "platform" discriminator. Fetch latest posts/videos ("latest_posts"), profile/channel info ("user_info" for tiktok/youtube), a single video transcript ("video_transcript": youtube transcript, or tiktok description/author/stats + transcript), or manage subscriptions for the daily 22:45 social media digest ("subscribe"/"unsubscribe"/"list"). Twitter/Telegram new posts are summarized into key points in the digest; TikTok/YouTube are listed. Additionally, up to 5 of the newest new TikTok videos per chat are attached to the digest as individual playable Telegram videos (with a caption + source link). Accepts handles, usernames, channel URLs/IDs, or t.me links as appropriate per platform. For "summarize this video" / "what does [channel] say", get the YouTube video transcript (find the video via latest_posts first if needed) and answer from it. When the user shares a TikTok video link (tiktok.com/.../video/..., vt.tiktok.com, vm.tiktok.com) and asks about it, call platform "tiktok" with action "video_transcript" and the link in "video", then answer from its description and transcript. TikTok latest_posts include transcripts too.',
   schema,
 });

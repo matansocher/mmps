@@ -1,5 +1,16 @@
 import { getErrorMessage, Logger } from '@core/utils';
-import type { RapidAPIDownloadResponse, RapidAPIUserPostsResponse, TikTokPost, TikTokTranscript, TikTokUserInfo, TikTokVideo, TikwmResponse, TranscriptResponse, UserVideosResponse } from './types';
+import type {
+  RapidAPIDownloadResponse,
+  RapidAPIUserPostsResponse,
+  TikTokPost,
+  TikTokTranscript,
+  TikTokUserInfo,
+  TikTokVideo,
+  TikTokVideoDetails,
+  TikwmResponse,
+  TranscriptResponse,
+  UserVideosResponse,
+} from './types';
 import {
   extractSecUid,
   fetchUserInfo,
@@ -151,16 +162,23 @@ export async function getTranscriptText(videoUrl: string): Promise<string> {
 // so resolve a fresh downloadable URL: tikwm (free) first, RapidAPI download as fallback.
 // Each provider is attempted at most once here (RapidAPI adds its own bounded internal
 // retries), so the fallback can't multiply into an unbounded retry storm.
-async function fetchTikwmDownloadUrl(videoUrl: string): Promise<string | null> {
+async function fetchTikwmVideo(videoUrl: string): Promise<TikwmResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), DOWNLOAD_URL_TIMEOUT_MS);
   try {
     const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(videoUrl)}`, { signal: controller.signal });
     if (!response.ok) {
-      logger.warn(`tikwm returned HTTP ${response.status} for ${videoUrl}`);
-      return null;
+      throw new Error(`tikwm returned HTTP ${response.status}`);
     }
-    const data = (await response.json()) as TikwmResponse;
+    return (await response.json()) as TikwmResponse;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchTikwmDownloadUrl(videoUrl: string): Promise<string | null> {
+  try {
+    const data = await fetchTikwmVideo(videoUrl);
     if (data.code === 0 && data.data?.play) {
       return data.data.play;
     }
@@ -169,9 +187,47 @@ async function fetchTikwmDownloadUrl(videoUrl: string): Promise<string | null> {
   } catch (err) {
     logger.warn(`tikwm download url lookup failed for ${videoUrl}: ${getErrorMessage(err)}`);
     return null;
-  } finally {
-    clearTimeout(timeout);
   }
+}
+
+// Works with any TikTok video link, including vt.tiktok.com / vm.tiktok.com short links.
+export async function getVideoDetails(videoUrl: string): Promise<TikTokVideoDetails> {
+  const tikwm = await fetchTikwmVideo(videoUrl).catch((err) => {
+    logger.warn(`tikwm video lookup failed for ${videoUrl}: ${getErrorMessage(err)}`);
+    return null;
+  });
+  const data = tikwm?.code === 0 ? tikwm.data : undefined;
+  const author = data?.author?.unique_id ?? null;
+  const canonicalUrl = data?.id && author ? `https://www.tiktok.com/@${author}/video/${data.id}` : videoUrl;
+
+  const transcript = await getTranscriptText(canonicalUrl)
+    .then((text) => text.trim() || null)
+    .catch((err) => {
+      logger.warn(`transcript lookup failed for ${canonicalUrl}: ${getErrorMessage(err)}`);
+      return null;
+    });
+
+  if (!data && !transcript) {
+    throw new Error(`Could not fetch TikTok video ${videoUrl}`);
+  }
+
+  return {
+    id: data?.id ?? null,
+    url: canonicalUrl,
+    description: data?.title || null,
+    author,
+    authorName: data?.author?.nickname ?? null,
+    duration: data?.duration ?? null,
+    createdAt: data?.create_time ? new Date(data.create_time * 1000).toISOString() : null,
+    stats: {
+      views: data?.play_count ?? null,
+      likes: data?.digg_count ?? null,
+      comments: data?.comment_count ?? null,
+      shares: data?.share_count ?? null,
+      saves: data?.collect_count ?? null,
+    },
+    transcript,
+  };
 }
 
 export async function getVideoDownloadUrl(videoUrl: string): Promise<string> {

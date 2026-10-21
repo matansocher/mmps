@@ -145,9 +145,42 @@ export type TikTokPost = TikTokVideo & {
 
 export type TikwmResponse = {
   readonly code: number;
+  readonly msg?: string;
   readonly data?: {
+    readonly id?: string;
+    readonly title?: string;
+    readonly duration?: number;
     readonly play?: string;
+    readonly cover?: string;
+    readonly play_count?: number;
+    readonly digg_count?: number;
+    readonly comment_count?: number;
+    readonly share_count?: number;
+    readonly collect_count?: number;
+    readonly create_time?: number;
+    readonly author?: {
+      readonly unique_id?: string;
+      readonly nickname?: string;
+    };
   };
+};
+
+export type TikTokVideoDetails = {
+  readonly id: string | null;
+  readonly url: string;
+  readonly description: string | null;
+  readonly author: string | null;
+  readonly authorName: string | null;
+  readonly duration: number | null;
+  readonly createdAt: string | null;
+  readonly stats: {
+    readonly views: number | null;
+    readonly likes: number | null;
+    readonly comments: number | null;
+    readonly shares: number | null;
+    readonly saves: number | null;
+  };
+  readonly transcript: string | null;
 };
 
 export type RapidAPIDownloadResponse = {
