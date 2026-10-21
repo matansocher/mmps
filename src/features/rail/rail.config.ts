@@ -40,7 +40,7 @@ export const BOT_PROFILE = {
 
 Ask by text or voice: where from, where to and when. Use a station, an address or a place, search by arrival time, or share your location for the nearest stations.
 
-You get platforms, transfers, delays, crowding and the last train home. Each result has buttons for the stops, later trains, the way back and a live train map.
+You get platforms, transfers, delays, crowding and the last train home. Each result has buttons for later trains, the way back and a live train map.
 
 Try:
 • Savidor to Haifa Hof HaCarmel
@@ -53,7 +53,7 @@ Try:
 
 כתבו או הקליטו מאיפה, לאן ומתי. אפשר תחנה, כתובת או מקום, לחפש לפי שעת הגעה, או לשלוח מיקום ולקבל את התחנות הקרובות.
 
-תקבלו רציפים, החלפות, עיכובים, עומס ואת הרכבת האחרונה הביתה. מכל תוצאה אפשר לראות עצירות, רכבות מאוחרות יותר, את הדרך חזרה ומפה חיה של הרכבת.
+תקבלו רציפים, החלפות, עיכובים, עומס ואת הרכבת האחרונה הביתה. מכל תוצאה אפשר לראות רכבות מאוחרות יותר, את הדרך חזרה ומפה חיה של הרכבת.
 
 נסו:
 • סבידור לחיפה חוף הכרמל
@@ -107,9 +107,9 @@ Hi! 🚆 I'm the Israel Rail bot. Which language do you prefer?`,
   },
   tryIt: {
     he: `(3/3) בואו ננסה! לחצו על הכפתור לרכבות הקרובות מסבידור לחיפה חוף הכרמל.
-בתשובה יש כפתורים לעצירות, רכבות מאוחרות יותר ומיקום הרכבת 🚀`,
+בתשובה יש כפתורים לרכבות מאוחרות יותר, לכיוון ההפוך ולמיקום הרכבת 🚀`,
     en: `(3/3) Let's try it! Tap the button for the next trains from Tel Aviv Savidor to Haifa Hof HaCarmel.
-The result has buttons for stops, later trains and where your train is 🚀`,
+The result has buttons for later trains, the way back and where your train is 🚀`,
   },
   buttons: {
     he: { next: 'המשך ➡️', skip: 'דילוג ⏭', tryIt: '🚆 סבידור ← חיפה חוף הכרמל' },
