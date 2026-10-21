@@ -36,6 +36,14 @@ export type DocumentMessageOptions = {
   readonly chat?: FakeChatOptions;
 };
 
+export type MediaMessageOptions = {
+  readonly chatId?: number;
+  readonly userId?: number;
+  readonly fileId?: string;
+  readonly caption?: string;
+  readonly messageId?: number;
+};
+
 export type CallbackQueryOptions = {
   readonly chatId?: number;
   readonly userId?: number;
@@ -138,6 +146,33 @@ export function buildDocumentMessageUpdate(opts: DocumentMessageOptions): Update
     update_id: updateIdCounter++,
     message,
   } as Update;
+}
+
+function buildMediaMessageUpdate(opts: MediaMessageOptions, media: Partial<Message>): Update {
+  const chatId = opts.chatId ?? DEFAULT_CHAT_ID;
+  const userId = opts.userId ?? DEFAULT_USER_ID;
+
+  const message = {
+    message_id: opts.messageId ?? messageIdCounter++,
+    date: Math.floor(Date.now() / 1000),
+    chat: buildChat(undefined, chatId),
+    from: buildUser({ userId }),
+    caption: opts.caption,
+    ...media,
+  } as Message;
+
+  return {
+    update_id: updateIdCounter++,
+    message,
+  } as Update;
+}
+
+export function buildPhotoMessageUpdate(opts: MediaMessageOptions = {}): Update {
+  return buildMediaMessageUpdate(opts, { photo: [{ file_id: opts.fileId ?? 'photo-file-id', file_unique_id: 'photo-file-unique-id', width: 100, height: 100 }] });
+}
+
+export function buildVoiceMessageUpdate(opts: MediaMessageOptions = {}): Update {
+  return buildMediaMessageUpdate(opts, { voice: { file_id: opts.fileId ?? 'voice-file-id', file_unique_id: 'voice-file-unique-id', duration: 3 } });
 }
 
 export function buildCallbackQueryUpdate(opts: CallbackQueryOptions): Update {

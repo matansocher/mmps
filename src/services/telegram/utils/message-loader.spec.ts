@@ -70,4 +70,15 @@ describe('MessageLoader', () => {
 
     expect(api.deleteMessage).toHaveBeenCalledWith(1, 77);
   });
+
+  it('should rethrow action errors after removing the loader message', async () => {
+    const action = vi.fn(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+      throw new Error('boom');
+    });
+
+    await expect(loader.handleMessageWithLoader(action)).rejects.toThrow('boom');
+
+    expect(api.deleteMessage).toHaveBeenCalledWith(1, 99);
+  });
 });

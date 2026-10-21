@@ -31,15 +31,14 @@ describe('E2E edge cases', () => {
   });
 
   describe('error paths', () => {
-    it('chilli does not crash when ChilliService.processMessage throws (MessageLoader swallows the error)', async () => {
+    it('chilli propagates ChilliService.processMessage errors through MessageLoader so bot.catch can log them', async () => {
       const testBot = createTestBot(CHILLI_CONFIG);
       const processMessage = vi.fn().mockRejectedValue(new Error('LLM unavailable'));
       const controller = new ChilliController({ processMessage } as any, testBot.bot);
       controller.init();
 
-      await expect(simulateUpdate(testBot, buildTextMessageUpdate({ text: 'שלום' }))).resolves.not.toThrow();
+      await expect(simulateUpdate(testBot, buildTextMessageUpdate({ text: 'שלום' }))).rejects.toThrow('LLM unavailable');
       expect(processMessage).toHaveBeenCalledTimes(1);
-      // No reply because the loader caught the error before ctx.reply ran
       expect(testBot.transport.callsByMethod('sendMessage')).toHaveLength(0);
     });
 
