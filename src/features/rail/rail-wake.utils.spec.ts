@@ -14,7 +14,7 @@ import {
 
 const FROM = { id: 3700, nameEn: 'Tel Aviv - Savidor Center', nameHe: 'תל אביב - סבידור מרכז' };
 const TO = { id: 2300, nameEn: 'Haifa - Hof HaCarmel', nameHe: 'חיפה - חוף הכרמל' };
-const LEG = { trainNumber: 123, from: FROM, to: TO, departureTime: '08:00', arrivalTime: '08:55', originPlatform: 3, destinationPlatform: 1, delayMinutes: 0, intermediateStops: 4 };
+const LEG = { trainNumber: 123, from: FROM, to: TO, departureTime: '08:00', arrivalTime: '08:55', originPlatform: 3, destinationPlatform: 1, delayMinutes: 0, intermediateStops: 4, stops: [] };
 
 function buildTravel(overrides: Partial<TrainTravel> = {}): TrainTravel {
   return { date: '2026-10-19', departureTime: '08:00', arrivalTime: '08:55', durationMinutes: 55, transfers: 0, transferDetails: [], legs: [LEG], ...overrides };
