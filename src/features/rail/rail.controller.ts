@@ -1,4 +1,7 @@
 import { type Bot, type Context, InputFile } from 'grammy';
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { LOCAL_FILES_PATH } from '@core/config';
 import { createRateLimitCounter } from '@core/express';
 import { deleteFile, getErrorMessage, Logger } from '@core/utils';
@@ -7,12 +10,13 @@ import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage, type UserDetails } from '@services/telegram';
 import { detectLanguage, type ImageLanguage } from '@shared/image-card';
-import { saveUserDetails } from './mongo';
+import { getAvatarHash, saveAvatarHash, saveUserDetails } from './mongo';
 import { BOT_CONFIG, BOT_PROFILE, MESSAGES, RAIL_LIMITS, START_MESSAGE } from './rail.config';
 import { RailService } from './rail.service';
 import { buildRouteKeyboard, formatRouteMessage, getRouteContext, getUserLanguage, parseCallbackData } from './rail.utils';
 
 const GLOBAL_KEY = 'all';
+const AVATAR_PATH = resolve(process.cwd(), 'assets/images/rail/avatar.png');
 
 function notifyConversation(action: string, question: string, answer: string, userDetails: UserDetails): void {
   notify(BOT_CONFIG, { action, plainText: `❓ ${question}\n\n💬 ${answer}` }, userDetails);
@@ -34,6 +38,7 @@ export class RailController {
     this.bot.on(['message:voice', 'message:audio'], (ctx) => this.audioHandler(ctx));
     this.bot.on('callback_query:data', (ctx) => this.callbackQueryHandler(ctx));
     this.syncBotProfile().catch((err) => this.logger.error(`Failed to set bot profile: ${getErrorMessage(err)}`));
+    this.syncBotAvatar().catch((err) => this.logger.error(`Failed to set bot avatar: ${getErrorMessage(err)}`));
   }
 
   // English is the default for every Telegram language except Hebrew, matching getUserLanguage.
@@ -45,6 +50,16 @@ export class RailController {
       this.bot.api.setMyDescription(he.description, { language_code: 'he' }),
       this.bot.api.setMyShortDescription(he.shortDescription, { language_code: 'he' }),
     ]);
+  }
+
+  // Every upload adds a new photo to the bot's profile history, so only upload when the file changed.
+  private async syncBotAvatar(): Promise<void> {
+    const avatar = await readFile(AVATAR_PATH);
+    const hash = createHash('sha256').update(avatar).digest('hex');
+    if ((await getAvatarHash()) === hash) return;
+    await this.bot.api.setMyProfilePhoto({ type: 'static', photo: new InputFile(avatar, 'avatar.png') });
+    await saveAvatarHash(hash);
+    this.logger.log('Bot avatar updated');
   }
 
   private async startHandler(ctx: Context): Promise<void> {
