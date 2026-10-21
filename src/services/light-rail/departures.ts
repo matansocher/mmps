@@ -1,4 +1,4 @@
-import type { FindDeparturesParams, LightRailDeparture, LightRailServiceCalendar, LightRailTimetable } from './types';
+import type { FindDeparturesParams, FindLastDeparturesParams, LightRailDeparture, LightRailServiceCalendar, LightRailTimetable } from './types';
 
 const DAY_SECONDS = 24 * 60 * 60;
 const DEFAULT_LIMIT = 5;
@@ -63,4 +63,14 @@ export function findLightRailDepartures(timetable: LightRailTimetable, { fromSta
       stopsCount,
       terminus: timetable.stations[terminusIndex],
     }));
+}
+
+// A "night" ends before the morning service starts, so trips after midnight still count as tonight's trips.
+const SERVICE_DAY_END_TIME = '04:00';
+const DEFAULT_LAST_LIMIT = 3;
+
+export function findLastLightRailDepartures(timetable: LightRailTimetable, { fromStationId, toStationId, date, limit = DEFAULT_LAST_LIMIT }: FindLastDeparturesParams): LightRailDeparture[] {
+  const nextDate = toIsoDate(shiftDate(date, 1));
+  const departures = findLightRailDepartures(timetable, { fromStationId, toStationId, date, time: SERVICE_DAY_END_TIME, limit: Number.MAX_SAFE_INTEGER });
+  return departures.filter((departure) => departure.date === date || (departure.date === nextDate && departure.departureTime < SERVICE_DAY_END_TIME)).slice(-limit);
 }

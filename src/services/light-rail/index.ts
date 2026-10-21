@@ -4,4 +4,4 @@ export * from './nearby';
 export * from './nearest';
 export * from './station-search';
 export * from './timetable';
-export type { FindDeparturesParams, GeoPoint, LightRailDeparture, LightRailStation, LightRailTimetable, NearbyLightRailResult, NearbyLightRailStation } from './types';
+export type { FindDeparturesParams, FindLastDeparturesParams, GeoPoint, LightRailDeparture, LightRailStation, LightRailTimetable, NearbyLightRailResult, NearbyLightRailStation } from './types';

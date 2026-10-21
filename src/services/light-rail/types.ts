@@ -42,6 +42,8 @@ export type FindDeparturesParams = {
   readonly limit?: number;
 };
 
+export type FindLastDeparturesParams = Omit<FindDeparturesParams, 'time'>;
+
 export type GeoPoint = {
   readonly lat: number;
   readonly lon: number;

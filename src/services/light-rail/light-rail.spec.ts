@@ -1,4 +1,4 @@
-import { findLightRailDepartures } from './departures';
+import { findLastLightRailDepartures, findLightRailDepartures } from './departures';
 import { buildTimetable, parseGtfsTime } from './gtfs-parser';
 import type { GtfsLineReader } from './gtfs-parser';
 import { findLightRailStations } from './station-search';
@@ -99,6 +99,19 @@ describe('findLightRailDepartures()', () => {
   test('should throw when origin and destination are the same', async () => {
     const timetable = await buildTimetable(readLines);
     expect(() => findLightRailDepartures(timetable, { fromStationId: 'PA', toStationId: 'PA', date: '2026-03-02', time: '07:00' })).toThrow();
+  });
+});
+
+describe('findLastLightRailDepartures()', () => {
+  test('should return the final trips of the night including trips after midnight', async () => {
+    const timetable = await buildTimetable(readLines);
+    const departures = findLastLightRailDepartures(timetable, { fromStationId: 'PB', toStationId: 'C1', date: '2026-03-02', limit: 2 });
+    expect(departures.map(({ date, departureTime }) => `${date} ${departureTime}`)).toEqual(['2026-03-02 08:05', '2026-03-03 00:03']);
+  });
+
+  test('should not roll over to the next day when there is no service', async () => {
+    const timetable = await buildTimetable(readLines);
+    expect(findLastLightRailDepartures(timetable, { fromStationId: 'PA', toStationId: 'C1', date: '2026-03-07' })).toEqual([]);
   });
 });
 

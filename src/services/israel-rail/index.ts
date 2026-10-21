@@ -1,5 +1,6 @@
 export * from './api';
 export { STATION_BUFFER_MINUTES } from './constants';
+export * from './last-train';
 export * from './leave-by';
 export * from './nearby';
 export * from './route-image';
