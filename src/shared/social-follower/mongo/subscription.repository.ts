@@ -7,9 +7,9 @@ function getCollection() {
   return getMongoCollection<SocialSubscription>(DB_NAME, 'SocialSubscription');
 }
 
-export async function getActiveSubscriptions(platform?: SocialPlatform): Promise<SocialSubscription[]> {
+export async function getActiveSubscriptions(platform?: SocialPlatform, timeoutMS?: number): Promise<SocialSubscription[]> {
   const collection = getCollection();
-  return collection.find({ isActive: true, ...(platform ? { platform } : {}) }).toArray();
+  return collection.find({ isActive: true, ...(platform ? { platform } : {}) }, timeoutMS ? { timeoutMS } : {}).toArray();
 }
 
 export async function getActiveSubscriptionsByChatId(chatId: number, platform?: SocialPlatform): Promise<SocialSubscription[]> {
