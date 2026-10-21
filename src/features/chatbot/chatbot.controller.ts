@@ -27,6 +27,7 @@ import {
   updateActionStatus,
 } from './secretary';
 import { buildToolImages } from './tool-images';
+import { ToolStatusReporter } from './tool-status';
 import type { ChatbotResponse, ProcessMessageOptions } from './types';
 import { fileToDataUrl } from './utils';
 
@@ -348,7 +349,14 @@ export class ChatbotController {
   }
 
   private async replyWithAgent(chatId: number, prompt: string, options?: ProcessMessageOptions): Promise<void> {
-    const response = await this.chatbotService.processMessage(prompt, chatId, options);
+    const toolStatus = new ToolStatusReporter(this.bot.api, chatId);
+    let response: ChatbotResponse;
+    try {
+      response = await this.chatbotService.processMessage(prompt, chatId, { ...options, callbacks: [toolStatus] });
+    } finally {
+      // Removed before the reply is sent, and also when the turn fails
+      await toolStatus.dispose();
+    }
     await this.handleBotResponse(chatId, response);
   }
 

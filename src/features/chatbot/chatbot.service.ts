@@ -111,7 +111,7 @@ export class ChatbotService {
           images: options?.images,
           signal,
           invocationSource: 'chatbot',
-          callbacks: usageHandler ? [usageHandler] : undefined,
+          callbacks: [...(usageHandler ? [usageHandler] : []), ...(options?.callbacks ?? [])],
           responseSchema,
         });
 
