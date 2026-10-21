@@ -76,8 +76,11 @@ export type TrainLeg = {
   readonly destinationPlatform: number;
   readonly delayMinutes: number;
   readonly predictedLoadPercent?: number;
+  readonly crowding?: CrowdingLevel;
   readonly intermediateStops: number;
 };
+
+export type CrowdingLevel = 'quiet' | 'moderate' | 'busy';
 
 export type TrainTransfer = {
   readonly station: RailStation;

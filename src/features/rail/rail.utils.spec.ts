@@ -80,6 +80,27 @@ describe('formatTrainLine()', () => {
       language: 'en' as const,
       expected: '• 08:00 → 08:55 · 55 min · platform 3 · 1 transfer · ⚠️ 4 min late',
     },
+    {
+      travel: buildTravel({ legs: [{ ...buildTravel().legs[0], predictedLoadPercent: 25 }] }),
+      language: 'en' as const,
+      expected: '• 08:00 → 08:55 · 55 min · platform 3 · direct · 🟢 quiet',
+    },
+    {
+      travel: buildTravel({ legs: [{ ...buildTravel().legs[0], predictedLoadPercent: 82 }] }),
+      language: 'he' as const,
+      expected: '• 08:00 ← 08:55 · 55 דק׳ · רציף 3 · ישירה · 🔴 עומס גבוה',
+    },
+    {
+      travel: buildTravel({
+        transfers: 1,
+        legs: [
+          { ...buildTravel().legs[0], predictedLoadPercent: 20 },
+          { ...buildTravel().legs[0], predictedLoadPercent: 55 },
+        ],
+      }),
+      language: 'en' as const,
+      expected: '• 08:00 → 08:55 · 55 min · platform 3 · 1 transfer · 🟡 moderate',
+    },
   ])('should format $language line', ({ travel, language, expected }) => {
     expect(formatTrainLine(travel, language)).toEqual(expected);
   });

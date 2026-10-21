@@ -1,6 +1,7 @@
 import { addMinutes, format, parse } from 'date-fns';
 import type { InlineKeyboard } from 'grammy';
-import type { RailStation, TrainTravel } from '@services/israel-rail';
+import { CROWDING_EMOJI, getTravelCrowding } from '@services/israel-rail';
+import type { CrowdingLevel, RailStation, TrainTravel } from '@services/israel-rail';
 import { buildInlineKeyboard } from '@services/telegram';
 import type { ImageLanguage } from '@shared/image-card';
 
@@ -65,12 +66,28 @@ export function buildRouteKeyboard(context: RailRouteContext, language: ImageLan
   return buildInlineKeyboard(buttons, 2);
 }
 
+const CROWDING_LABELS: Record<ImageLanguage, Record<CrowdingLevel, string>> = {
+  he: { quiet: 'עומס נמוך', moderate: 'עומס בינוני', busy: 'עומס גבוה' },
+  en: { quiet: 'quiet', moderate: 'moderate', busy: 'busy' },
+};
+
+function formatCrowding(travel: TrainTravel, language: ImageLanguage): string | null {
+  const crowding = getTravelCrowding(travel);
+  return crowding ? `${CROWDING_EMOJI[crowding]} ${CROWDING_LABELS[language][crowding]}` : null;
+}
+
 export function formatTrainLine(travel: TrainTravel, language: ImageLanguage): string {
   const platform = travel.legs[0]?.originPlatform;
   const delay = travel.legs[0]?.delayMinutes ?? 0;
   const transfers = travel.transfers;
   if (language === 'he') {
-    const parts = [`${travel.departureTime} ← ${travel.arrivalTime}`, `${travel.durationMinutes} דק׳`, platform ? `רציף ${platform}` : null, transfers ? `${transfers} החלפות` : 'ישירה'];
+    const parts = [
+      `${travel.departureTime} ← ${travel.arrivalTime}`,
+      `${travel.durationMinutes} דק׳`,
+      platform ? `רציף ${platform}` : null,
+      transfers ? `${transfers} החלפות` : 'ישירה',
+      formatCrowding(travel, 'he'),
+    ];
     if (delay > 0) parts.push(`⚠️ איחור ${delay} דק׳`);
     return `• ${parts.filter(Boolean).join(' · ')}`;
   }
@@ -79,6 +96,7 @@ export function formatTrainLine(travel: TrainTravel, language: ImageLanguage): s
     `${travel.durationMinutes} min`,
     platform ? `platform ${platform}` : null,
     transfers ? `${transfers} transfer${transfers > 1 ? 's' : ''}` : 'direct',
+    formatCrowding(travel, 'en'),
   ];
   if (delay > 0) parts.push(`⚠️ ${delay} min late`);
   return `• ${parts.filter(Boolean).join(' · ')}`;
