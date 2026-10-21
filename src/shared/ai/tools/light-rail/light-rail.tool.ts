@@ -1,10 +1,12 @@
 import { tool } from '@langchain/core/tools';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import { env } from 'node:process';
 import { z } from 'zod';
 import { DEFAULT_TIMEZONE } from '@core/config';
 import { getServiceDate } from '@services/israel-rail';
 import {
+  buildLightRailNetwork,
   findLastLightRailDepartures,
   findLightRailDepartures,
   findLightRailStations,
@@ -19,10 +21,10 @@ const FAR_WALKING_MINUTES = 25;
 
 const schema = z.object({
   action: z
-    .enum(['departures', 'last_train', 'nearest_station'])
+    .enum(['departures', 'last_train', 'nearest_station', 'station_map'])
     .optional()
     .describe(
-      '"departures" (default): upcoming trips between two stations. "last_train": the final scheduled trips of the night between two stations. "nearest_station": the closest Red Line stations to a place or coordinates',
+      '"departures" (default): upcoming trips between two stations. "last_train": the final scheduled trips of the night between two stations. "nearest_station": the closest Red Line stations to a place or coordinates. "station_map": a map image of the whole line with all its stations',
     ),
   from: z.string().optional().describe('departures / last_train: origin Red Line station name as the user said it, in Hebrew or English (e.g. "ארלוזורוב", "Allenby", "קריית אריה")'),
   to: z.string().optional().describe('departures / last_train: destination Red Line station name as the user said it, in Hebrew or English (e.g. "אלנבי", "Petah Tikva Central Station", "הקוממיות")'),
@@ -80,6 +82,18 @@ async function nearestStation(timetable: LightRailTimetable, { place, lat, lon }
     origin: result.origin.label ?? `${result.origin.lat},${result.origin.lon}`,
     farFromLine: !stations.length || stations[0].walkingMinutes > FAR_WALKING_MINUTES,
     stations,
+  };
+}
+
+function stationMap(timetable: LightRailTimetable) {
+  const { stations, edges } = buildLightRailNetwork(timetable);
+  const onLine = [...new Set(edges.flat())].sort((a, b) => a - b).map((index) => stations[index]);
+  return {
+    line: 'Red Line (הקו האדום)',
+    stationMap: true,
+    mapImageAttached: Boolean(env.GOOGLE_MAPS_API_KEY),
+    stationCount: onLine.length,
+    stations: onLine.map(({ nameHe, nameEn }) => ({ nameHe, nameEn })),
   };
 }
 
@@ -164,12 +178,15 @@ async function runner(input: z.infer<typeof schema>) {
   if (input.action === 'nearest_station') {
     return nearestStation(timetable, input);
   }
+  if (input.action === 'station_map') {
+    return stationMap(timetable);
+  }
   return input.action === 'last_train' ? lastTrain(timetable, input) : departures(timetable, input);
 }
 
 export const lightRailTool = tool(runner, {
   name: 'light_rail',
-  description: `Tel Aviv light rail Red Line (הרכבת הקלה / הקו האדום, Petah Tikva ↔ Tel Aviv ↔ Bat Yam, incl. the Kiryat Arye branch): upcoming departures between two of its stations from the official Ministry of Transport timetable (action "departures"), or the closest stations to a place (action "nearest_station").
+  description: `Tel Aviv light rail Red Line (הרכבת הקלה / הקו האדום, Petah Tikva ↔ Tel Aviv ↔ Bat Yam, incl. the Kiryat Arye branch): upcoming departures between two of its stations from the official Ministry of Transport timetable (action "departures"), the closest stations to a place (action "nearest_station"), or a map of all its stations (action "station_map").
 Rules:
 - Use this (not israel_rail) whenever the user mentions the light rail / רכבת קלה / הקו האדום / רק"ל, or both stations are Red Line stops that are not Israel Railways stations (e.g. Allenby, Carlebach, Elifelet, Bialik, HaKomemiyut).
 - Pass station names exactly as the user wrote them (Hebrew or English); the tool resolves them. Convert relative times ("tomorrow at 8", "in an hour", "מחר בבוקר") to date + time in Israel time.
@@ -190,6 +207,10 @@ last_train rules:
 - departures is chronological and its LAST item is the final scheduled trip. Lead with it (departure → arrival, towards), then list the others briefly. Say it is the scheduled timetable.
 - If lastTrainAlreadyLeft is true, say tonight's last trip has already left.
 - If departures is empty, say there is no service that evening (the line does not run on Shabbat) and suggest another evening.
-- Same verifyUrl link rule as "departures".`,
+- Same verifyUrl link rule as "departures".
+station_map rules:
+- Use it when the user asks for a map, route or list of the light rail stations ("יש לך מפת תחנות של הרכבת הקלה?", "show me the Red Line map", "אילו תחנות יש בקו האדום?"). Never use web_search to find a map for this.
+- If mapImageAttached is true, a map image of the line is sent with your reply: say so in one short line ("הנה מפת הקו האדום 👇" / "Here's the Red Line map 👇") and add at most one line of context (e.g. the end stations and the Kiryat Arye branch). Do NOT list all the stations unless the user asked for the list.
+- If mapImageAttached is false, list the stations in line order instead.`,
   schema,
 });

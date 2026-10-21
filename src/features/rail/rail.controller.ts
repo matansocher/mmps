@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { DEFAULT_TIMEZONE, LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { createRateLimitCounter } from '@core/express';
 import { deleteFile, getErrorMessage, Logger } from '@core/utils';
-import { buildToolImages, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/tool-images';
+import { buildToolImages, LIGHT_RAIL_MAP_IMAGE_BUILDER, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/tool-images';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import {
@@ -315,7 +315,7 @@ export class RailController {
     const replyLanguage = isLanguageSaved ? language : detectLanguage(reply);
     const message = appendSourceFooter(reply, getAnswerSources(toolResults), format(getLocalNow(), 'HH:mm'), replyLanguage);
 
-    const images = await buildToolImages(toolResults, message, [RAIL_ROUTE_IMAGE_BUILDER]);
+    const images = await buildToolImages(toolResults, message, [RAIL_ROUTE_IMAGE_BUILDER, LIGHT_RAIL_MAP_IMAGE_BUILDER]);
     const context = getRouteContext(toolResults);
     const replyMarkup = context ? buildRouteKeyboard(context, replyLanguage) : undefined;
     await sendRichMessageWithPhotos(this.bot, chatId, message, images, replyMarkup ? { reply_markup: replyMarkup } : {});
