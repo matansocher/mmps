@@ -35,7 +35,7 @@ function travel(date: string, departureTime: string, arrivalTime: string, trainN
     durationMinutes: 0,
     transfers: 0,
     transferDetails: [],
-    legs: [{ trainNumber, from: SAVIDOR, to: HAIFA, departureTime, arrivalTime, originPlatform: 2, destinationPlatform: 1, delayMinutes: 0, intermediateStops: 3 }],
+    legs: [{ trainNumber, from: SAVIDOR, to: HAIFA, departureTime, arrivalTime, originPlatform: 2, destinationPlatform: 1, delayMinutes: 0, intermediateStops: 3, stops: [] }],
   };
 }
 
