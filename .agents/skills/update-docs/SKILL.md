@@ -1,6 +1,7 @@
 ---
 name: update-docs
 description: Periodic drift sweep — sync VitePress docs with code changes since the last docs update
+disable-model-invocation: true
 ---
 
 # /update-docs

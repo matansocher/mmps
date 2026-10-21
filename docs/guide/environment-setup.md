@@ -41,9 +41,11 @@ OPENAI_API_KEY=sk-...
 LOCAL_ACTIVE_BOT_ID=CHATBOT
 
 # Bot tokens for other bots
+CHILLI_TELEGRAM_BOT_TOKEN=...
 COACH_TELEGRAM_BOT_TOKEN=...
 WOLT_TELEGRAM_BOT_TOKEN=...
 WORLDLY_TELEGRAM_BOT_TOKEN=...
+LEARNER_TELEGRAM_BOT_TOKEN=...
 ```
 
 ## Environment Variables by Bot
@@ -59,11 +61,16 @@ GITHUB_APP_INSTALLATION_ID=optional, GitHub App installation ID
 WEATHERAPI_KEY=optional, for weather features
 ```
 
+### Chilli
+
+```bash
+CHILLI_TELEGRAM_BOT_TOKEN=required
+```
+
 ### Coach
 
 ```bash
 COACH_TELEGRAM_BOT_TOKEN=required
-SCORES_365_API_KEY=required for sports data
 ```
 
 ### Wolt
@@ -76,6 +83,12 @@ WOLT_TELEGRAM_BOT_TOKEN=required
 
 ```bash
 WORLDLY_TELEGRAM_BOT_TOKEN=required
+```
+
+### Learner
+
+```bash
+LEARNER_TELEGRAM_BOT_TOKEN=required
 ```
 
 ## Getting Telegram Bot Tokens

@@ -11,3 +11,5 @@ export type {
   MultiOutcomeEventSummary,
 } from './types';
 export { extractSlugFromUrl, formatMarketSummary, formatMarketForList, buildPolymarketUrl } from './utils';
+export { formatChange, formatPercent, generateOddsImage } from './odds-image';
+export type { OddsCard, OddsImageOptions, OddsRow, OddsRowTone } from './odds-image';

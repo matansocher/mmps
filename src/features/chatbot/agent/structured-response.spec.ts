@@ -1,9 +1,10 @@
-import { AIMessage, HumanMessage } from '@langchain/core/messages';
+import { AIMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
 import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import { createAgent, fakeModel, type ReactAgent, tool } from 'langchain';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { createDanglingToolCallsMiddleware } from './dangling-tool-calls';
 import { createStructuredResponseMiddleware, FINAL_REPLY_TOOL_NAME } from './structured-response';
 
 const matchesTool = tool(async () => 'Arsenal 2-1 Chelsea (FT)', { name: 'match_summary', description: 'Get matches', schema: z.object({}) });
@@ -11,8 +12,19 @@ const weatherTool = tool(async () => 'sunny', { name: 'weather', description: 'G
 const responseSchema = z.object({ hasMatches: z.boolean() });
 
 // Typed loosely: langchain's inferred invoke() input type collapses to `never` for this middleware.
-function createTestAgent(model: ReturnType<typeof fakeModel> | ChatOpenAI): ReactAgent {
-  return createAgent({ model, tools: [matchesTool, weatherTool], checkpointer: new MemorySaver(), middleware: [createStructuredResponseMiddleware()] });
+function createTestAgent(model: ReturnType<typeof fakeModel> | ChatOpenAI, middleware = [createStructuredResponseMiddleware()]): ReactAgent {
+  return createAgent({ model, tools: [matchesTool, weatherTool], checkpointer: new MemorySaver(), middleware });
+}
+
+// OpenAI rejects a request where an assistant tool call has no matching tool message.
+function getUnansweredToolCalls(model: ReturnType<typeof fakeModel>): string[] {
+  return model.calls.flatMap(({ messages }) => {
+    const answeredIds = new Set(messages.filter(ToolMessage.isInstance).map((m) => m.tool_call_id));
+    return messages
+      .flatMap((m) => (AIMessage.isInstance(m) ? (m.tool_calls ?? []) : []))
+      .filter((call) => !answeredIds.has(call.id))
+      .map((call) => call.id);
+  });
 }
 
 function chatCompletion(message: Record<string, unknown>) {
@@ -69,5 +81,52 @@ describe('createStructuredResponseMiddleware()', () => {
     expect(request.tools.map((t) => t.function.name)).toEqual(expect.arrayContaining(['weather', FINAL_REPLY_TOOL_NAME]));
     expect(request.tools.every((t) => t.function.strict !== true)).toEqual(true);
     expect((result as { structuredResponse?: unknown }).structuredResponse).toEqual({ hasMatches: false });
+  });
+
+  // Regression: final_reply in parallel with match_summary ended the turn without running match_summary,
+  // so the football update had no match cards for the image.
+  it('runs regular tools called in parallel with final_reply before finishing', async () => {
+    const finalReply = { name: FINAL_REPLY_TOOL_NAME, args: { message: '⚽ Results', data: { hasMatches: true } } };
+    const model = fakeModel()
+      .respondWithTools([{ name: 'match_summary', args: {} }, finalReply])
+      .respondWithTools([finalReply]);
+    const agent = createTestAgent(model);
+
+    const result = await agent.invoke({ messages: [new HumanMessage('football update')] }, { configurable: { thread_id: 't4' }, context: { responseSchema } } as never);
+
+    expect((result as { structuredResponse?: unknown }).structuredResponse).toEqual({ hasMatches: true });
+    expect(result.messages.some((m) => m.getType() === 'tool' && m.name === 'match_summary')).toEqual(true);
+    expect(model.calls).toHaveLength(2);
+    expect(getUnansweredToolCalls(model)).toEqual([]);
+  });
+
+  // Regression: langchain's structured-output retry answers only the first tool call, so the next
+  // request failed with "An assistant message with 'tool_calls' must be followed by tool messages".
+  it.each([
+    {
+      name: 'an invalid final_reply with a regular tool',
+      calls: [
+        { name: FINAL_REPLY_TOOL_NAME, args: { message: 'x', data: { hasMatches: 'yes' } } },
+        { name: 'match_summary', args: {} },
+      ],
+    },
+    {
+      name: 'two final_reply calls',
+      calls: [
+        { name: FINAL_REPLY_TOOL_NAME, args: { message: 'a', data: { hasMatches: true } } },
+        { name: FINAL_REPLY_TOOL_NAME, args: { message: 'b', data: { hasMatches: true } } },
+      ],
+    },
+  ])('answers every tool call before retrying after $name', async ({ calls }) => {
+    const model = fakeModel()
+      .respondWithTools(calls)
+      .respondWithTools([{ name: FINAL_REPLY_TOOL_NAME, args: { message: '⚽ Results', data: { hasMatches: true } } }]);
+    const agent = createTestAgent(model, [createDanglingToolCallsMiddleware(), createStructuredResponseMiddleware()]);
+
+    const result = await agent.invoke({ messages: [new HumanMessage('football update')] }, { configurable: { thread_id: 't5' }, context: { responseSchema } } as never);
+
+    expect((result as { structuredResponse?: unknown }).structuredResponse).toEqual({ hasMatches: true });
+    expect(model.calls).toHaveLength(2);
+    expect(getUnansweredToolCalls(model)).toEqual([]);
   });
 });

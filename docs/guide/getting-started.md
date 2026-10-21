@@ -74,7 +74,7 @@ npm start
 ### Debug Mode
 
 ```bash
-npm run start:debug
+npm run dev:debug
 ```
 
 This enables Node.js debugging on port 9229.

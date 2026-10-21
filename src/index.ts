@@ -14,6 +14,7 @@ import { initClaims } from '@features/claims';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
 import { initLearner, BOT_CONFIG as learnerConfig } from '@features/learner';
 import { registerPortfolioApiRoutes } from '@features/portfolio';
+import { initRail, BOT_CONFIG as railConfig } from '@features/rail';
 import { initSavings } from '@features/savings';
 import { initStickers } from '@features/stickers';
 import { initWolt, BOT_CONFIG as woltConfig } from '@features/wolt';
@@ -91,10 +92,11 @@ async function main() {
 
   await initBot(chatbotConfig, () => initChatbot(app));
   await initBot(chilliConfig, () => initChilli());
-  await initBot(coachConfig, () => initCoach());
+  await initBot(coachConfig, () => initCoach(app));
   await initBot(woltConfig, () => initWolt());
   await initBot(worldlyConfig, () => initWorldly(app));
   await initBot(learnerConfig, () => initLearner(app));
+  await initBot(railConfig, () => initRail());
 
   if (failedComponents.length) {
     logger.error(`Startup completed with unavailable components: ${failedComponents.join(', ')}`);

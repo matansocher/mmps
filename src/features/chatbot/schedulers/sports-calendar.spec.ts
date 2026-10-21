@@ -4,8 +4,12 @@ import { createEvent, deleteEvent, listEvents, updateEvent } from '@services/goo
 import type { CalendarEvent } from '@services/google-calendar';
 import { getCompetitionTable, getUpcomingMatches } from '@services/scores-365';
 import type { UpcomingMatch } from '@services/scores-365';
-import { sendShortenedMessage } from '@services/telegram';
+import { sendImageThenText, sendShortenedMessage } from '@services/telegram';
+import type { SendImageThenTextOptions } from '@services/telegram';
+import type { ChatbotService } from '../chatbot.service';
 import { sportsCalendar } from './sports-calendar';
+
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 
 vi.mock('@services/google-calendar', () => ({
   createEvent: vi.fn(),
@@ -20,6 +24,7 @@ vi.mock('@services/scores-365', async (importOriginal) => ({
 }));
 vi.mock('@services/telegram', () => ({
   sendShortenedMessage: vi.fn(),
+  sendImageThenText: vi.fn(),
 }));
 
 const bot = {} as Bot;
@@ -73,7 +78,14 @@ describe('sportsCalendar()', () => {
     vi.mocked(updateEvent).mockImplementation(async (_eventId, event) => event as CalendarEvent);
     vi.mocked(deleteEvent).mockResolvedValue();
     vi.mocked(sendShortenedMessage).mockResolvedValue({} as Message.TextMessage);
+    vi.mocked(sendImageThenText).mockImplementation(async (b, chatId, { text, sendText }) => {
+      await sendText(b, chatId, text);
+    });
   });
+
+  function getImageOptions(): SendImageThenTextOptions {
+    return vi.mocked(sendImageThenText).mock.calls.at(-1)?.[2];
+  }
 
   afterEach(() => {
     vi.useRealTimers();
@@ -82,7 +94,7 @@ describe('sportsCalendar()', () => {
   it('should create a provider-backed calendar event without invoking AI', async () => {
     vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(getUpcomingMatches).toHaveBeenCalledWith('2026-08-12', '2026-08-15');
     expect(createEvent).toHaveBeenCalledWith(
@@ -111,7 +123,7 @@ describe('sportsCalendar()', () => {
       }),
     ]);
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(updateEvent).toHaveBeenCalledWith('event-123', expect.objectContaining({ location: 'Bernabéu' }));
     expect(deleteEvent).toHaveBeenCalledWith('stale');
@@ -121,7 +133,7 @@ describe('sportsCalendar()', () => {
   it('should not mutate the calendar when fixture retrieval fails', async () => {
     vi.mocked(getUpcomingMatches).mockRejectedValue(new Error('provider unavailable'));
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(createEvent).not.toHaveBeenCalled();
     expect(updateEvent).not.toHaveBeenCalled();
@@ -129,11 +141,32 @@ describe('sportsCalendar()', () => {
     expect(sendShortenedMessage).not.toHaveBeenCalled();
   });
 
+  it('should send a match cards image before the summary when matches are selected', async () => {
+    vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
+
+    await sportsCalendar(bot, chatbotService);
+
+    const { image, fileName, sendText } = getImageOptions();
+    expect(fileName).toEqual('sports-calendar.png');
+    expect(sendText).toBe(sendShortenedMessage);
+    expect(typeof image === 'function' ? await image() : image).toBeInstanceOf(Buffer);
+    expect(sendShortenedMessage).toHaveBeenCalledWith(bot, expect.any(Number), expect.stringContaining('Real Madrid vs Opponent'));
+  });
+
+  it('should skip the image when no matches are selected', async () => {
+    vi.mocked(getUpcomingMatches).mockResolvedValue([]);
+
+    await sportsCalendar(bot, chatbotService);
+
+    const { image } = getImageOptions();
+    expect(typeof image === 'function' ? await image() : image).toBeNull();
+  });
+
   it('should still sync favorite-team matches when standings retrieval fails', async () => {
     vi.mocked(getUpcomingMatches).mockResolvedValue([createMatch()]);
     vi.mocked(getCompetitionTable).mockRejectedValue(new Error('standings unavailable'));
 
-    await sportsCalendar(bot);
+    await sportsCalendar(bot, chatbotService);
 
     expect(createEvent).toHaveBeenCalledTimes(1);
   });

@@ -4,3 +4,4 @@ libjpeg-dev
 libgif-dev
 librsvg2-dev
 build-essential
+ffmpeg

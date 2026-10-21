@@ -1,4 +1,4 @@
-name: '🚀 Deploy to Heroku'
+name: '🚀 Deploy'
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: 'Deploy to Heroku'
+    name: Deploy
     if: github.actor == 'matansocher' || contains(github.actor, 'mmps-companion')
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -76,7 +76,10 @@ jobs:
               ;;
           esac
 
-          git push --force "https://:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git" "${DEPLOY_SHA}:refs/heads/main"
+          # Credentials go through a helper, not the URL: git drops URL credentials when Heroku redirects.
+          export GIT_TERMINAL_PROMPT=0
+          git -c credential.helper= -c credential.helper='!f() { test "$1" = get && echo username=heroku && echo "password=${HEROKU_API_KEY}"; }; f' \
+            push --force "https://git.heroku.com/${HEROKU_APP_NAME}.git" "${DEPLOY_SHA}:refs/heads/main"
 
       - name: Record deployment
         if: always()

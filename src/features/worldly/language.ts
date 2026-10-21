@@ -1,0 +1,121 @@
+import type { WorldlyLanguage } from '@shared/worldly';
+
+const english = {
+  actions: 'How can I help? 👨‍🏫',
+  statistics: '📊 Statistics 📊',
+  subscribe: '🟢 Start daily games 🟢',
+  unsubscribe: '🛑 Stop daily games 🛑',
+  contact: '📬 Contact 📬',
+  language: '🌐 Language / שפה',
+  chooseLanguage: 'Choose your language / בחרו שפה',
+  languageSaved: 'Language set to English.',
+  back: 'Back',
+  globe: '🌍 Globe',
+  globePrompt: 'Spin the globe and find the country 🌍👇',
+  logicError: "Sorry, I couldn't prepare today's puzzle. Please try /logic again 😔",
+  fire: "Great! Let's play continuously 🔥",
+  welcome: [
+    'Hi 👋',
+    'I teach geography through fun games 😁',
+    "I'll send you games every day 🌎",
+    'You can also start a game anytime using the commands below 👇',
+    'Try the globe game: spin the Earth and find the country 🌍',
+    'Use /actions to stop daily games or change your language. English is the default; Hebrew is also available.',
+  ].join('\n\n'),
+  welcomeBack: "I'll send you games every day 🟢\n\nUse /actions to change your language (English or Hebrew) or stop daily games.",
+  stopped: "I'll stop sending daily games 🛑",
+  contactMessage: 'Happy to help!\nYou can contact my creator:',
+  noStatistics: "We haven't played any games together yet. Start one with /random or /map.",
+  correct: 'Correct!',
+  incorrect: 'Oops, the correct answer is:',
+  guessCountry: 'Guess the country',
+  guessState: 'Guess the US state',
+  guessCapital: 'Guess the capital of:',
+  capitalOf: (country: string, capital: string) => `The capital of ${country} is ${capital}`,
+  today: 'Today:',
+  currentCorrectStreak: 'Current correct-answer streak:',
+  longestCorrectStreak: 'Longest correct-answer streak:',
+  currentDayStreak: 'Current daily streak:',
+  longestDayStreak: 'Longest daily streak:',
+  logicIntro: 'There is one mystery country. Here is the first clue:',
+  logicInstructions: (guesses: number) => `Each wrong guess reveals another clue. You have ${guesses} guesses in total. Find it on the globe 👇`,
+  solveLogic: '🧩 Solve the puzzle',
+  commands: {
+    START: 'Start again',
+    FIRE_MODE: '🔥 Continuous games 🔥',
+    RANDOM: '🌎 Random game 🌎',
+    MAP: '🗺️ Map 🗺️',
+    FLAG: '🏁 Flag 🏁',
+    CAPITAL: '🏛️ Capital city 🏛️',
+    US_MAP: '🇺🇸 US map 🇺🇸',
+    GLOBE: '🌍 Globe game 🌍',
+    LOGIC: '🧩 Daily puzzle 🧩',
+    ACTIONS: '⚙️ Actions ⚙️',
+  },
+};
+
+const hebrew: typeof english = {
+  actions: 'איך אני יכול לעזור? 👨‍🏫',
+  statistics: '📊 סטטיסטיקות 📊',
+  subscribe: '🟢 רוצה להתחיל לקבל משחקים יומיים 🟢',
+  unsubscribe: '🛑 רוצה להפסיק לקבל משחקים יומיים 🛑',
+  contact: '📬 צור קשר 📬',
+  language: '🌐 שפה / Language',
+  chooseLanguage: 'בחרו שפה / Choose your language',
+  languageSaved: 'השפה שונתה לעברית.',
+  back: 'חזרה',
+  globe: '🌍 גלובוס',
+  globePrompt: 'סובבו את הגלובוס ומצאו את המדינה 🌍👇',
+  logicError: 'סליחה, לא הצלחתי להכין את חידת היום. נסו שוב עם /logic 😔',
+  fire: 'מצוין! עכשיו נשחק ברצף 🔥',
+  welcome: [
+    'היי 👋',
+    'אני בוט שיודע ללמד גיאוגרפיה בצורה הכי כיפית שיש 😁',
+    'כל יום אני אשלח לכם כמה משחקים 🌎',
+    'אפשר גם להתחיל משחק חדש מתי שרוצים בפקודות שלי, פה למטה 👇',
+    'ויש גם משחק גלובוס - סובבו את כדור הארץ ומצאו את המדינה 🌍',
+    'בפקודה /actions אפשר להפסיק משחקים יומיים או לשנות שפה. ברירת המחדל היא אנגלית, ואפשר לבחור גם עברית.',
+  ].join('\n\n'),
+  welcomeBack: 'אין בעיה, אני אשלח משחקים בכל יום 🟢\n\nבפקודה /actions אפשר לשנות שפה (אנגלית או עברית) או להפסיק משחקים יומיים.',
+  stopped: 'אין בעיה, אני אפסיק לשלוח משחקים בכל יום 🛑',
+  contactMessage: 'אשמח לעזור\nאפשר לדבר עם מי שיצר אותי, הוא בטח ידע לעזור:',
+  noStatistics: 'עדיין לא שיחקנו ביחד משחקים. אפשר להתחיל משחק חדש בפקודה /random או /map.',
+  correct: 'נכון!',
+  incorrect: 'אופס, טעות. התשובה הנכונה היא:',
+  guessCountry: 'נחשו את המדינה',
+  guessState: 'נחשו את המדינה בארצות הברית',
+  guessCapital: 'נחשו את עיר הבירה של:',
+  capitalOf: (country, capital) => `עיר הבירה של ${country} היא ${capital}`,
+  today: 'היום:',
+  currentCorrectStreak: 'רצף התשובות הנכונות הנוכחי:',
+  longestCorrectStreak: 'רצף התשובות הנכונות הכי ארוך:',
+  currentDayStreak: 'רצף הימים הנוכחי:',
+  longestDayStreak: 'רצף הימים הכי ארוך:',
+  logicIntro: 'יש מדינה אחת מסתורית. הנה הרמז הראשון:',
+  logicInstructions: (guesses) => `עוד רמז על כל ניחוש שגוי, ${guesses} ניחושים בסך הכל. מצאו אותה על הגלובוס 👇`,
+  solveLogic: '🧩 פתרו את החידה',
+  commands: {
+    START: 'התחל מהתחלה',
+    FIRE_MODE: '🔥 משחק רצוף 🔥',
+    RANDOM: '🌎 משחק אקראי 🌎',
+    MAP: '🗺️ מפה 🗺️',
+    FLAG: '🏁 דגל 🏁',
+    CAPITAL: '🏛️ עיר בירה 🏛️',
+    US_MAP: '🇺🇸 מפת ארצות הברית 🇺🇸',
+    GLOBE: '🌍 משחק גלובוס 🌍',
+    LOGIC: '🧩 חידת היום 🧩',
+    ACTIONS: '⚙️ פעולות ⚙️',
+  },
+};
+
+export function worldlyText(language: WorldlyLanguage = 'en'): typeof english {
+  return language === 'he' ? hebrew : english;
+}
+
+export function areaName(area: { readonly name: string; readonly hebrewName: string }, language: WorldlyLanguage): string {
+  return language === 'he' ? area.hebrewName || area.name : area.name;
+}
+
+export function capitalName(country: { readonly capital: string; readonly hebrewCapital: string }, language: WorldlyLanguage): string {
+  return language === 'he' ? country.hebrewCapital || country.capital : country.capital;
+}

@@ -1,3 +1,5 @@
+import type { ObjectId } from 'mongodb';
+
 export type LearnerRating = 'got_it' | 'fuzzy' | 'nope';
 
 export type GuideId = 'system-design' | 'ai-engineering';
@@ -61,4 +63,71 @@ export type LearnerDelivery = {
   readonly sentAt: Date;
   readonly answeredAt: Date | null;
   readonly expireAt: Date; // TTL anchor
+};
+
+export type PracticeDifficulty = 'easy' | 'medium' | 'hard';
+
+// One hand-written open question from a lesson's "Interview Q&A" block (see learner-questions.ts).
+export type LearnerQuestion = {
+  readonly id: string; // `${biteId}#q${n}`
+  readonly biteId: string;
+  readonly guide: GuideId;
+  readonly lessonTitle: string;
+  readonly question: string;
+  readonly referenceAnswer: string;
+  readonly difficulty: PracticeDifficulty; // Orders each lesson easy → hard (see learner-question-difficulty.ts).
+};
+
+export type PracticeScope =
+  | { readonly kind: 'all'; readonly readOnly?: boolean }
+  | { readonly kind: 'guides'; readonly guides: readonly GuideId[]; readonly readOnly?: boolean }
+  | { readonly kind: 'lessons'; readonly biteIds: readonly string[] };
+
+export type PracticeVerdict = 'correct' | 'partial' | 'incorrect';
+
+export type PracticeGrade = {
+  readonly score: number; // 0-100
+  readonly verdict: PracticeVerdict;
+  readonly coveredPoints: readonly string[];
+  readonly missedPoints: readonly string[];
+  readonly incorrectClaims: readonly string[];
+  readonly explanation: string;
+  readonly referenceAnswer: string;
+  readonly skipped: boolean;
+};
+
+export type PracticeAnswerSource = 'text' | 'voice';
+
+export type PracticeMessage = {
+  readonly role: 'user' | 'assistant';
+  readonly content: string;
+  readonly createdAt: Date;
+};
+
+export type PracticeAttempt = {
+  readonly _id?: ObjectId;
+  readonly telegramUserId: number;
+  readonly questionId: string;
+  readonly biteId: string;
+  readonly scope: PracticeScope;
+  readonly status: 'awaiting_answer' | 'graded';
+  readonly answer?: string;
+  readonly answerSource?: PracticeAnswerSource;
+  readonly grade?: PracticeGrade;
+  readonly messages: readonly PracticeMessage[];
+  readonly createdAt: Date;
+  readonly gradedAt?: Date;
+};
+
+export type PracticeQuestionStats = {
+  readonly _id: string; // `${telegramUserId}:${questionId}`
+  readonly telegramUserId: number;
+  readonly questionId: string;
+  readonly biteId: string;
+  readonly attempts: number;
+  readonly lastScore: number;
+  readonly bestScore: number;
+  readonly streak: number; // consecutive scores >= 80
+  readonly lastAttemptAt: Date;
+  readonly dueAt: Date;
 };

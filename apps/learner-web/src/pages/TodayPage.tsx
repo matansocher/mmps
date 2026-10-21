@@ -86,6 +86,18 @@ export function TodayPage() {
             →
           </span>
         </Link>
+        <Link className="home-action practice-action" to="/practice">
+          <span className="home-action-icon">
+            <AppIcon name="chat" size={22} />
+          </span>
+          <span className="home-action-text">
+            <b>Practice with AI</b>
+            <span>Answer open questions and get graded by a tutor</span>
+          </span>
+          <span className="home-action-arrow" aria-hidden>
+            →
+          </span>
+        </Link>
         <Link className={`home-action spark-action ${sparkReady ? '' : 'idle'}`} to="/spark">
           <span className="home-action-icon">
             <AppIcon name="brain" size={22} />

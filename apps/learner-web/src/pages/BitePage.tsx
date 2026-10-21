@@ -14,7 +14,7 @@ import { summarize } from '../lib/scheduler';
 export function BitePage() {
   const { biteId = '' } = useParams();
   const location = useLocation();
-  const { progress, rateBite, markRead } = useProgress();
+  const { progress, rateBite, markRead, remote } = useProgress();
   const [showMastery, setShowMastery] = useState(false);
   const bite = useMemo(() => getBite(biteId), [biteId]);
   const readingPercent = useReadingProgress([biteId]);
@@ -88,6 +88,21 @@ export function BitePage() {
             <AppIcon name="brain" size={19} /> Take the section quiz
           </Link>
         </div>
+      ) : null}
+
+      {!bite.isReference && remote ? (
+        <Link className="home-action practice-action practice-cta" to={`/practice?lessons=${encodeURIComponent(bite.id)}`}>
+          <span className="home-action-icon">
+            <AppIcon name="chat" size={22} />
+          </span>
+          <span className="home-action-text">
+            <b>Practice this lesson</b>
+            <span>Answer its open questions in your own words and get AI feedback</span>
+          </span>
+          <span className="home-action-arrow" aria-hidden>
+            →
+          </span>
+        </Link>
       ) : null}
 
       {!bite.isReference ? (

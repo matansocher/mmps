@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest';
-import type { Issue, IssueComment, PullRequest } from '../types';
+import type { CheckAnnotation, Issue, IssueComment, PullRequest, WorkflowJob, WorkflowRun } from '../types';
 
 type GitHubIssueResponse = Awaited<ReturnType<Octokit['issues']['get']>>['data'];
 type GitHubPullRequestResponse = Awaited<ReturnType<Octokit['pulls']['list']>>['data'][0];
@@ -41,5 +41,47 @@ export function mapComment(githubComment: GitHubCommentResponse): IssueComment {
     body: githubComment.body,
     createdAt: githubComment.created_at,
     url: githubComment.html_url,
+  };
+}
+
+type GitHubWorkflowRunResponse = Awaited<ReturnType<Octokit['actions']['getWorkflowRun']>>['data'];
+type GitHubWorkflowJobResponse = Awaited<ReturnType<Octokit['actions']['listJobsForWorkflowRun']>>['data']['jobs'][0];
+type GitHubAnnotationResponse = Awaited<ReturnType<Octokit['checks']['listAnnotations']>>['data'][0];
+
+export function mapWorkflowRun(run: GitHubWorkflowRunResponse): WorkflowRun {
+  return {
+    id: run.id,
+    runNumber: run.run_number,
+    name: run.name ?? null,
+    workflowPath: run.path,
+    event: run.event,
+    branch: run.head_branch ?? null,
+    headSha: run.head_sha,
+    status: run.status ?? null,
+    conclusion: run.conclusion ?? null,
+    createdAt: run.created_at,
+    url: run.html_url,
+  };
+}
+
+export function mapWorkflowJob(job: GitHubWorkflowJobResponse): WorkflowJob {
+  return {
+    id: job.id,
+    name: job.name,
+    status: job.status,
+    conclusion: job.conclusion ?? null,
+    failedSteps: (job.steps || []).filter((step) => step.conclusion === 'failure').map((step) => step.name),
+    url: job.html_url ?? null,
+  };
+}
+
+export function mapAnnotation(jobId: number, annotation: GitHubAnnotationResponse): CheckAnnotation {
+  return {
+    jobId,
+    path: annotation.path,
+    startLine: annotation.start_line,
+    level: annotation.annotation_level ?? null,
+    title: annotation.title ?? null,
+    message: annotation.message ?? null,
   };
 }

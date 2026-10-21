@@ -32,7 +32,7 @@ Guide to adding new features to MMPS.
 ## Adding Bot Commands
 
 ```typescript
-// features/chatbot/chatbot.controller.ts
+// src/features/chatbot/chatbot.controller.ts
 private async myCommandHandler(ctx: Context): Promise<void> {
   const { chatId, text } = getMessageData(ctx);
   const response = await this.chatbotService.myNewFeature(text, chatId);
@@ -46,7 +46,7 @@ init(): void {
 
 ## Adding AI Tools
 
-1. Create tool file: `shared/ai/tools/{name}/{name}.tool.ts`
+1. Create tool file: `src/shared/ai/tools/{name}/{name}.tool.ts`
 2. Define Zod schema
 3. Implement tool function
 4. Add to chatbot agent

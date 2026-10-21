@@ -6,3 +6,8 @@ export { getSportsCompetitionMatches } from './get-sports-competition-matches';
 export { getSportsCompetitionTable } from './get-sports-competition-table';
 export { getSportsCompetitions } from './get-sports-competitions';
 export { getSportsMatchesSummary } from './get-sports-matches-summary';
+export { toMatchCard, toMatchCardGroups, upcomingMatchesToCardGroups } from './match-cards';
+export type { MatchCard, MatchCardGroup } from './match-cards';
+export { generateMatchCardsImage, MAX_MATCHES_IN_IMAGE, toMatchCardSections } from './match-cards-image';
+export type { MatchCardSection } from './match-cards-image';
+export { loadLogos } from './sports-logos';

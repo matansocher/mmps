@@ -43,15 +43,35 @@ export function hasRemoteIdentity(): boolean {
   return authHeaders() !== null;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+  ) {
+    super(code);
+    this.name = 'ApiError';
+  }
+}
+
+export function requireAuthHeaders(): Record<string, string> {
   const headers = authHeaders();
-  if (!headers) throw new Error('no_identity');
+  if (!headers) throw new ApiError(0, 'no_identity');
+  return headers;
+}
+
+export function errorCodeFromBody(body: unknown, status: number): string {
+  if (body && typeof body === 'object' && typeof (body as { error?: unknown }).error === 'string') return (body as { error: string }).error;
+  return `request_failed_${status}`;
+}
+
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = requireAuthHeaders();
 
   const response = await fetch(path, {
     ...init,
     headers: {
       Accept: 'application/json',
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(typeof init?.body === 'string' ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
       ...(init?.headers ?? {}),
     },
@@ -66,7 +86,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       body = text;
     }
   }
-  if (!response.ok) throw new Error(`request_failed_${response.status}`);
+  if (!response.ok) throw new ApiError(response.status, errorCodeFromBody(body, response.status));
   return body as T;
 }
 

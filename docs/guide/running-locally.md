@@ -20,7 +20,7 @@ By default, all bots run in production mode. In development, run one bot at a ti
 LOCAL_ACTIVE_BOT_ID=CHATBOT npm run dev
 ```
 
-Available bot IDs: `chatbot`, `coach`, `wolt`, `worldly`
+Available bot IDs: `CHATBOT`, `CHILLI`, `COACH`, `WOLT`, `WORLDLY`, `LEARNER`
 
 ### Watch Mode for TypeScript Only
 
@@ -35,7 +35,7 @@ npm run dev:build
 Enable Node.js debugging on port 9229:
 
 ```bash
-npm run start:debug
+npm run dev:debug
 ```
 
 Then connect your debugger:
@@ -79,7 +79,7 @@ npm run lint:fix
 npm test
 
 # Watch tests
-npm test:watch
+npm run test:watch
 ```
 
 ## Testing Bots Locally

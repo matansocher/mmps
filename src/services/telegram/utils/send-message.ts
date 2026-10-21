@@ -21,6 +21,6 @@ export async function sendRichMessage(bot: Bot, chatId: number, markdown: string
   try {
     return await bot.api.sendRichMessage(chatId, { markdown }, form);
   } catch {
-    return await sendStyledMessage(bot, chatId, markdown);
+    return await sendStyledMessage(bot, chatId, markdown, 'Markdown', form);
   }
 }

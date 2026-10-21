@@ -4,15 +4,23 @@ export type AppIconName =
   | 'book'
   | 'brain'
   | 'browse'
+  | 'chat'
   | 'check'
   | 'complete'
   | 'fire'
   | 'fuzzy'
+  | 'history'
+  | 'mic'
   | 'moon'
   | 'map'
   | 'nope'
+  | 'refresh'
   | 'review'
   | 'scenario'
+  | 'send'
+  | 'skip'
+  | 'sparkle'
+  | 'stop'
   | 'sun'
   | 'system-design'
   | 'target'
@@ -154,6 +162,59 @@ export function AppIcon({ name, className, size = 24 }: AppIconProps) {
           <circle cx="11" cy="13" r="8" />
           <circle cx="11" cy="13" r="4" />
           <path d="m13.5 10.5 7-7M16.5 3.5h4v4" />
+        </svg>
+      );
+    case 'chat':
+      return (
+        <svg {...commonProps}>
+          <path d="M20 12.5a7.5 7.5 0 0 1-11 6.6L4 20l1-4.3A7.5 7.5 0 1 1 20 12.5Z" />
+          <path d="M9 11.5h6M9 14.5h3.5" />
+        </svg>
+      );
+    case 'history':
+      return (
+        <svg {...commonProps}>
+          <path d="M3.5 12a8.5 8.5 0 1 0 2.5-6" />
+          <path d="M3.5 4v4h4M12 8v4.5l3 2" />
+        </svg>
+      );
+    case 'mic':
+      return (
+        <svg {...commonProps}>
+          <rect x="9" y="3" width="6" height="11" rx="3" />
+          <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6" />
+        </svg>
+      );
+    case 'refresh':
+      return (
+        <svg {...commonProps}>
+          <path d="M20 12a8 8 0 0 1-14.3 4.9M4 12A8 8 0 0 1 18.3 7.1" />
+          <path d="M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2" />
+        </svg>
+      );
+    case 'send':
+      return (
+        <svg {...commonProps}>
+          <path d="M12 19V5M6 11l6-6 6 6" />
+        </svg>
+      );
+    case 'skip':
+      return (
+        <svg {...commonProps}>
+          <path d="m5 6 7 6-7 6V6ZM13 6l7 6-7 6" />
+        </svg>
+      );
+    case 'sparkle':
+      return (
+        <svg {...commonProps}>
+          <path d="M12 3.5 13.8 9a2 2 0 0 0 1.2 1.2l5.5 1.8-5.5 1.8a2 2 0 0 0-1.2 1.2L12 20.5 10.2 15A2 2 0 0 0 9 13.8L3.5 12 9 10.2A2 2 0 0 0 10.2 9L12 3.5Z" />
+          <path d="M19 3v3M17.5 4.5h3" />
+        </svg>
+      );
+    case 'stop':
+      return (
+        <svg {...commonProps}>
+          <rect x="6.5" y="6.5" width="11" height="11" rx="2.5" fill="currentColor" stroke="none" />
         </svg>
       );
     case 'unknown':

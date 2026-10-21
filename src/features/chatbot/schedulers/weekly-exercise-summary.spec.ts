@@ -1,7 +1,10 @@
 import type { Bot } from 'grammy';
 import { sendRichMessage } from '@services/telegram';
 import { getWeeklyExerciseStats, type WeeklyExerciseStats } from '@shared/trainer';
+import type { ChatbotService } from '../chatbot.service';
 import { weeklyExerciseSummary } from './weekly-exercise-summary';
+
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 
 vi.mock('@services/telegram', () => ({ sendRichMessage: vi.fn() }));
 vi.mock('@shared/trainer', () => ({ getWeeklyExerciseStats: vi.fn() }));
@@ -31,22 +34,22 @@ describe('weeklyExerciseSummary()', () => {
   });
 
   it('should send the summary as a rich message so tables render', async () => {
-    await weeklyExerciseSummary(bot);
+    await weeklyExerciseSummary(bot, chatbotService);
     expect(sendRichMessage).toHaveBeenCalledTimes(1);
   });
 
   it('should include the week date range in the header', async () => {
-    await weeklyExerciseSummary(bot);
+    await weeklyExerciseSummary(bot, chatbotService);
     expect(sentMessage()).toContain('(09/08 - 15/08)');
   });
 
   it('should mark exercised days and leave the rest empty', async () => {
-    await weeklyExerciseSummary(bot);
+    await weeklyExerciseSummary(bot, chatbotService);
     expect(sentMessage()).toContain('| — | ✅ | — | ✅ | — | ✅ | — |');
   });
 
   it('should render the stats as a table', async () => {
-    await weeklyExerciseSummary(bot);
+    await weeklyExerciseSummary(bot, chatbotService);
     const message = sentMessage();
     expect(message).toContain('| Workouts | 3 |');
     expect(message).toContain('| Current streak | 2 |');
@@ -54,13 +57,13 @@ describe('weeklyExerciseSummary()', () => {
   });
 
   it('should render the rating as stars', async () => {
-    await weeklyExerciseSummary(bot);
+    await weeklyExerciseSummary(bot, chatbotService);
     expect(sentMessage()).toContain('| Rating | ★★★☆☆ |');
   });
 
   it('should still send a summary for a week with no exercises', async () => {
     vi.mocked(getWeeklyExerciseStats).mockResolvedValue(createStats({ exerciseCount: 0, exercisedWeekdays: [], currentStreak: 0 }));
-    await weeklyExerciseSummary(bot);
+    await weeklyExerciseSummary(bot, chatbotService);
     const message = sentMessage();
     expect(message).toContain('| Workouts | 0 |');
     expect(message).not.toContain('✅');
@@ -68,7 +71,7 @@ describe('weeklyExerciseSummary()', () => {
 
   it('should not throw when fetching stats fails', async () => {
     vi.mocked(getWeeklyExerciseStats).mockRejectedValue(new Error('mongo down'));
-    await expect(weeklyExerciseSummary(bot)).resolves.toBeUndefined();
+    await expect(weeklyExerciseSummary(bot, chatbotService)).resolves.toBeUndefined();
     expect(sendRichMessage).not.toHaveBeenCalled();
   });
 });

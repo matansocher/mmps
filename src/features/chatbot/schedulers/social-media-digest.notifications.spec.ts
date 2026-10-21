@@ -5,6 +5,7 @@ import { sendShortenedMessage } from '@services/telegram';
 import { claimDigestDelivery, deletePendingPosts, getPendingPostChatIds, getPendingPostsForChat, markDigestTextDelivered } from '@shared/social-follower';
 import type { PendingPost } from '@shared/social-follower';
 import { BOT_CONFIG, CHATBOT_CONFIG } from '../chatbot.config';
+import type { ChatbotService } from '../chatbot.service';
 import { socialMediaDigest } from './social-media-digest';
 import { deliverDigestImages } from './social-media-image-delivery';
 
@@ -30,6 +31,7 @@ vi.mock('./social-media-video-delivery', () => ({ deliverDigestVideos: vi.fn() }
 vi.mock('./social-media-image-delivery', () => ({ deliverDigestImages: vi.fn() }));
 
 const bot = { api: {} } as Parameters<typeof socialMediaDigest>[0];
+const chatbotService = { recordProactiveMessage: vi.fn() } as unknown as ChatbotService;
 const mediaDefaults = { videos: CHATBOT_CONFIG.videoDigest.enabled, images: CHATBOT_CONFIG.imageDigest.enabled };
 
 function post(chatId = 1): PendingPost {
@@ -76,7 +78,7 @@ describe('socialMediaDigest() admin notification', () => {
     vi.mocked(getPendingPostChatIds).mockResolvedValue(chatIds);
     vi.mocked(getPendingPostsForChat).mockResolvedValue([]);
 
-    await expect(socialMediaDigest(bot)).resolves.toBeUndefined();
+    await expect(socialMediaDigest(bot, chatbotService)).resolves.toBeUndefined();
 
     expect(summary()).toEqual('Evening social media digest: Empty; no pending posts.');
     expect(sendShortenedMessage).not.toHaveBeenCalled();
@@ -85,7 +87,7 @@ describe('socialMediaDigest() admin notification', () => {
   it('sends one aggregate text success after processing every chat', async () => {
     vi.mocked(getPendingPostChatIds).mockResolvedValue([1, 2]);
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(summary()).toContain('Text delivered: 2 chats complete; 0 incomplete.');
     expect(sendShortenedMessage).toHaveBeenCalledTimes(2);
@@ -97,7 +99,7 @@ describe('socialMediaDigest() admin notification', () => {
     vi.mocked(getPendingPostChatIds).mockResolvedValue([1, 2]);
     vi.mocked(sendShortenedMessage).mockRejectedValueOnce(new Error('markdown failed')).mockRejectedValueOnce(new Error('plain text failed'));
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(summary()).toContain('Text incomplete: 1 chats complete; 1 incomplete.');
     expect(sendShortenedMessage).toHaveBeenCalledTimes(3);
@@ -111,7 +113,7 @@ describe('socialMediaDigest() admin notification', () => {
       .mockResolvedValueOnce(undefined as never)
       .mockRejectedValue(new Error('send failed'));
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(summary()).toContain('Text incomplete: 0 chats complete; 1 incomplete.');
     expect(vi.mocked(sendShortenedMessage).mock.calls.length).toBeGreaterThanOrEqual(3);
@@ -122,7 +124,7 @@ describe('socialMediaDigest() admin notification', () => {
   it('counts previously delivered text without sending a duplicate digest', async () => {
     vi.mocked(claimDigestDelivery).mockResolvedValue({ chatId: 1, digestDate: '2026-10-15', textDeliveredAt: new Date(), videos: [], createdAt: new Date() });
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(summary()).toContain('Text delivered: 1 chats complete; 0 incomplete.');
     expect(sendShortenedMessage).not.toHaveBeenCalled();
@@ -131,7 +133,7 @@ describe('socialMediaDigest() admin notification', () => {
   it('preserves the existing plain-text fallback as a successful text delivery', async () => {
     vi.mocked(sendShortenedMessage).mockRejectedValueOnce(new Error('markdown failed'));
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(summary()).toContain('Text delivered: 1 chats complete; 0 incomplete.');
     expect(sendShortenedMessage).toHaveBeenCalledTimes(2);
@@ -141,7 +143,7 @@ describe('socialMediaDigest() admin notification', () => {
     CHATBOT_CONFIG.imageDigest.enabled = true;
     vi.mocked(deliverDigestImages).mockResolvedValue(undefined);
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(summary()).toContain('Media delivery unverified.');
     expect(deliverDigestImages).toHaveBeenCalledTimes(1);
@@ -152,7 +154,7 @@ describe('socialMediaDigest() admin notification', () => {
     vi.mocked(getPendingPostChatIds).mockResolvedValue([1, 2]);
     vi.mocked(claimDigestDelivery).mockRejectedValue(error);
 
-    await expect(socialMediaDigest(bot)).rejects.toBe(error);
+    await expect(socialMediaDigest(bot, chatbotService)).rejects.toBe(error);
 
     expect(summary()).toContain('Failed; run aborted.');
     expect(summary()).toContain('database unavailable');
@@ -164,7 +166,7 @@ describe('socialMediaDigest() admin notification', () => {
     const error = new Error('cannot load chats');
     vi.mocked(getPendingPostChatIds).mockRejectedValue(error);
 
-    await expect(socialMediaDigest(bot)).rejects.toBe(error);
+    await expect(socialMediaDigest(bot, chatbotService)).rejects.toBe(error);
 
     expect(summary()).toContain('Failed; run aborted.');
   });
@@ -172,7 +174,7 @@ describe('socialMediaDigest() admin notification', () => {
   it.each([0, NaN, Infinity])('skips notifications when admin ID is %s', async (userId) => {
     admin.userId = userId;
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(notify).not.toHaveBeenCalled();
     expect(sendShortenedMessage).toHaveBeenCalledTimes(1);
@@ -181,7 +183,7 @@ describe('socialMediaDigest() admin notification', () => {
   it('skips notifications without a notifier token', async () => {
     vi.stubEnv('NOTIFIER_TELEGRAM_BOT_TOKEN', '');
 
-    await socialMediaDigest(bot);
+    await socialMediaDigest(bot, chatbotService);
 
     expect(notify).not.toHaveBeenCalled();
     expect(sendShortenedMessage).toHaveBeenCalledTimes(1);
@@ -194,9 +196,9 @@ describe('socialMediaDigest() admin notification', () => {
     });
     if (fails) {
       vi.mocked(getPendingPostChatIds).mockRejectedValue(error);
-      await expect(socialMediaDigest(bot)).rejects.toBe(error);
+      await expect(socialMediaDigest(bot, chatbotService)).rejects.toBe(error);
     } else {
-      await expect(socialMediaDigest(bot)).resolves.toBeUndefined();
+      await expect(socialMediaDigest(bot, chatbotService)).resolves.toBeUndefined();
       expect(sendShortenedMessage).toHaveBeenCalledTimes(1);
     }
     expect(notify).toHaveBeenCalledTimes(1);

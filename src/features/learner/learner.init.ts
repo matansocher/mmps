@@ -5,16 +5,17 @@ import { Logger } from '@core/utils';
 import { provideTelegramBot } from '@services/telegram';
 import { registerLearnerApiRoutes } from './api';
 import { LEARNER_DB_NAME } from './constants';
-import { ensureLearnerDeliveryIndexes } from './mongo';
+import { ensureLearnerDeliveryIndexes, ensurePracticeAttemptIndexes, ensurePracticeStatsIndexes } from './mongo';
 import { BOT_CONFIG } from './learner.config';
 import { LearnerController } from './learner.controller';
 import { LearnerSchedulerService } from './learner-scheduler.service';
+import { PracticeService, registerPracticeApiRoutes } from './practice';
 
 const logger = new Logger('learner:init');
 
 export async function initLearner(app: Express): Promise<void> {
   await createMongoConnection(LEARNER_DB_NAME);
-  await ensureLearnerDeliveryIndexes().catch((err) => logger.error(`Failed to ensure indexes: ${err}`));
+  await Promise.all([ensureLearnerDeliveryIndexes(), ensurePracticeAttemptIndexes(), ensurePracticeStatsIndexes()]).catch((err) => logger.error(`Failed to ensure indexes: ${err}`));
 
   const bot = provideTelegramBot(BOT_CONFIG);
   const scheduler = new LearnerSchedulerService();
@@ -23,6 +24,7 @@ export async function initLearner(app: Express): Promise<void> {
   scheduler.init();
 
   registerLearnerApiRoutes(app);
+  registerPracticeApiRoutes(app, new PracticeService());
 
   const spaDist = path.resolve('apps/learner-web/dist');
   app.use('/learner', express.static(spaDist));

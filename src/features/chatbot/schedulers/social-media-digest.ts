@@ -13,6 +13,7 @@ import { sendShortenedMessage, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/tel
 import { claimDigestDelivery, deletePendingPosts, getPendingPostBacklog, getPendingPostChatIds, getPendingPostsForChat, markDigestTextDelivered } from '@shared/social-follower';
 import type { DigestImageEntry, DigestVideoEntry, PendingPost, SocialPlatform } from '@shared/social-follower';
 import { BOT_CONFIG, CHATBOT_CONFIG } from '../chatbot.config';
+import type { ChatbotService } from '../chatbot.service';
 import { deliverDigestImages } from './social-media-image-delivery';
 import { deliverDigestVideos } from './social-media-video-delivery';
 
@@ -62,7 +63,7 @@ const shortenSchema = z.object({
 // then deletes exactly the posts that were sent (later arrivals roll into the next day).
 // Iterates one chat at a time with a bounded query so a runaway backlog can't pull the
 // whole collection into memory.
-export async function socialMediaDigest(bot: Bot): Promise<void> {
+export async function socialMediaDigest(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   let completedChats = 0;
   let failedChats = 0;
   let attemptedChats = 0;
@@ -79,7 +80,7 @@ export async function socialMediaDigest(bot: Bot): Promise<void> {
       }
       attemptedChats++;
       await logBacklog(chatId, posts.length);
-      const deliveredAll = await processDigestForChatWithOutcome(bot, chatId, posts, digestDate);
+      const deliveredAll = await processDigestForChatWithOutcome(bot, chatbotService, chatId, posts, digestDate);
       if (deliveredAll) {
         completedChats++;
       } else {
@@ -121,11 +122,11 @@ async function logBacklog(chatId: number, loadedCount: number): Promise<void> {
 
 // Runs one chat's digest keyed to a single `digestDate` supplied by the caller (computed once per
 // run) so a long run that crosses local midnight buckets every chat under the same day.
-export async function processDigestForChat(bot: Bot, chatId: number, posts: PendingPost[], digestDate: string): Promise<void> {
-  await processDigestForChatWithOutcome(bot, chatId, posts, digestDate);
+export async function processDigestForChat(bot: Bot, chatbotService: ChatbotService, chatId: number, posts: PendingPost[], digestDate: string): Promise<void> {
+  await processDigestForChatWithOutcome(bot, chatbotService, chatId, posts, digestDate);
 }
 
-async function processDigestForChatWithOutcome(bot: Bot, chatId: number, posts: PendingPost[], digestDate: string): Promise<boolean> {
+async function processDigestForChatWithOutcome(bot: Bot, chatbotService: ChatbotService, chatId: number, posts: PendingPost[], digestDate: string): Promise<boolean> {
   // Fix the video selection once per (chat, local date) so restarts/concurrent runs converge on
   // the same set, and snapshot each video's fields so deleting the pending posts is still safe.
   const videos = CHATBOT_CONFIG.videoDigest.enabled ? selectTikTokPendingPosts(posts, CHATBOT_CONFIG.videoDigest.maxVideosPerChat).map(toVideoEntry) : [];
@@ -135,7 +136,7 @@ async function processDigestForChatWithOutcome(bot: Bot, chatId: number, posts: 
   let deliveredAny = !!record.textDeliveredAt;
   let deliveredAll = !!record.textDeliveredAt;
   if (!record.textDeliveredAt) {
-    const outcome = await sendTextDigest(bot, chatId, posts);
+    const outcome = await sendTextDigest(bot, chatbotService, chatId, posts);
     deliveredAny = outcome.deliveredAny;
     deliveredAll = outcome.deliveredAll;
     if (outcome.deliveredAll) {
@@ -220,7 +221,7 @@ function toVideoEntry(post: PendingPost): DigestVideoEntry {
 // Builds and sends the text digest exactly as before: pack sections into length-capped messages,
 // send each, and delete only the posts whose message was delivered. Returns whether any/all
 // chunks were delivered so the caller can gate video delivery and the idempotency flag.
-async function sendTextDigest(bot: Bot, chatId: number, posts: PendingPost[]): Promise<{ readonly deliveredAny: boolean; readonly deliveredAll: boolean }> {
+async function sendTextDigest(bot: Bot, chatbotService: ChatbotService, chatId: number, posts: PendingPost[]): Promise<{ readonly deliveredAny: boolean; readonly deliveredAll: boolean }> {
   const sections: DigestSection[] = [];
 
   for (const userPosts of groupPostsByUser(posts)) {
@@ -237,6 +238,7 @@ async function sendTextDigest(bot: Bot, chatId: number, posts: PendingPost[]): P
   // This preserves undelivered posts across truncation, partial failures, and restarts.
   let deliveredAny = false;
   let deliveredAll = true;
+  const deliveredTexts: string[] = [];
   for (const chunk of chunkSections(sections)) {
     const delivered = await sendDigestMessage(bot, chatId, chunk.text);
     if (!delivered) {
@@ -245,10 +247,14 @@ async function sendTextDigest(bot: Bot, chatId: number, posts: PendingPost[]): P
       continue;
     }
     deliveredAny = true;
+    deliveredTexts.push(chunk.text);
     const ids = chunk.posts.map((post) => post._id).filter(Boolean) as ObjectId[];
     if (ids.length) {
       await deletePendingPosts(ids);
     }
+  }
+  if (deliveredTexts.length) {
+    await chatbotService.recordProactiveMessage(chatId, deliveredTexts.join(SECTION_SEPARATOR), 'social-media-digest');
   }
   return { deliveredAny, deliveredAll };
 }

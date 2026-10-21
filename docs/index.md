@@ -12,11 +12,11 @@ hero:
 features:
   - icon: 🤖
     title: AI-Powered Bots
-    details: 8 specialized Telegram bots powered by OpenAI, Anthropic, and LangChain
+    details: 6 specialized Telegram bots powered by OpenAI and LangChain
   
   - icon: 📚
     title: Chatbot Assistant
-    details: Advanced conversational AI with 27 tools including weather, reminders, and GitHub integration
+    details: Advanced conversational AI with 31 tools including weather, reminders, and GitHub integration
   
   - icon: ⚽
     title: Sports Analytics
@@ -51,7 +51,7 @@ features:
 - **MongoDB** - Data persistence
 - **grammY** - Telegram bot framework
 - **LangChain + LangGraph** - AI orchestration
-- **OpenAI & Anthropic** - Large language models
+- **OpenAI** - Large language models
 
 ## Project Overview
 

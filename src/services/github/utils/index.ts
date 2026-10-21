@@ -13,3 +13,7 @@ export { getPRReviews } from './get-pr-reviews';
 export { triggerWorkflow } from './trigger-workflow';
 export { mergePullRequest } from './merge-pull-request';
 export { initOctokit } from './octokit';
+export { listWorkflowRuns } from './list-workflow-runs';
+export { getWorkflowRun } from './get-workflow-run';
+export { getJobLog } from './get-job-log';
+export { extractLogExcerpt } from './extract-log-excerpt';

@@ -4,3 +4,4 @@ export * from './format-podcast-update';
 export * from './format-transfer-digest';
 export * from './find-match-event';
 export * from './select-sports-calendar-matches';
+export * from './polymarket-odds-cards';

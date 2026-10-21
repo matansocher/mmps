@@ -75,6 +75,6 @@ async function runner({ action, location, date }: z.infer<typeof schema>) {
 export const weatherTool = tool(runner, {
   name: 'weather',
   description:
-    'Get weather information. Supports three actions: "current" for current weather, "forecast" for a specific date (up to 14 days ahead), or "tomorrow_hourly" for detailed 24-hour forecast for tomorrow. When replying, include the temperature, conditions, location, and any relevant links.',
+    'Get weather information. Supports three actions: "current" for current weather, "forecast" for a specific date (up to 14 days ahead), or "tomorrow_hourly" for detailed 24-hour forecast for tomorrow. When replying, include the temperature, conditions, location, and any relevant links. For "tomorrow_hourly" or when calling "forecast" for several dates, a chart image (hourly temperature and rain chance, or a daily high/low strip) is sent to the user automatically, so keep the text short: summarize the trend, highs/lows and when rain is likely instead of listing every hour or day.',
   schema,
 });
