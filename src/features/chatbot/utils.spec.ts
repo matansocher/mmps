@@ -1,6 +1,6 @@
 import { AIMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
-import { describe, expect, it } from 'vitest';
-import { formatAgentResponse } from './utils';
+import { describe, expect, it, test } from 'vitest';
+import { formatAgentResponse, getReplyContextText, withReplyContext } from './utils';
 
 describe('formatAgentResponse()', () => {
   it('should pair a single tool call with its result by tool_call_id', () => {
@@ -104,5 +104,32 @@ describe('formatAgentResponse()', () => {
     const messages = [new HumanMessage('Hi'), new AIMessage({ content: '', tool_calls: [{ name: 'weather', args: {}, id: 'call-1' }] })];
 
     expect(() => formatAgentResponse({ messages })).toThrow('Agent did not produce a final assistant response');
+  });
+});
+
+describe('getReplyContextText()', () => {
+  test.each([
+    { name: 'no message', message: undefined, expected: null },
+    { name: 'not a reply', message: { text: 'hi' }, expected: null },
+    { name: 'reply to text', message: { reply_to_message: { text: ' original ' } }, expected: 'original' },
+    { name: 'reply to caption', message: { reply_to_message: { caption: 'photo caption' } }, expected: 'photo caption' },
+    { name: 'partial quote wins', message: { quote: { text: 'part' }, reply_to_message: { text: 'full original' } }, expected: 'part' },
+    { name: 'reply without text', message: { reply_to_message: { photo: [] } }, expected: null },
+  ])('should return $expected for $name', ({ message, expected }) => {
+    expect(getReplyContextText(message as any)).toEqual(expected);
+  });
+
+  it('should truncate long replied-to text', () => {
+    const result = getReplyContextText({ reply_to_message: { text: 'a'.repeat(1500) } } as any);
+    expect(result).toEqual(`${'a'.repeat(1000)}…`);
+  });
+});
+
+describe('withReplyContext()', () => {
+  test.each([
+    { replyText: null, expected: 'do it' },
+    { replyText: 'meeting at 5', expected: '[Replying to: "meeting at 5"]\n\ndo it' },
+  ])('should return $expected when replyText is $replyText', ({ replyText, expected }) => {
+    expect(withReplyContext('do it', replyText)).toEqual(expected);
   });
 });

@@ -1,4 +1,5 @@
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
+import type { Message } from 'grammy/types';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { ChatbotResponse, ToolResult } from './types';
@@ -10,6 +11,21 @@ const MIME_BY_EXTENSION: Record<string, string> = {
   '.webp': 'image/webp',
   '.gif': 'image/gif',
 };
+
+const REPLY_CONTEXT_MAX_CHARS = 1000;
+
+// A partial quote (user highlighted part of the message) wins over the full replied-to message.
+export function getReplyContextText(message: Message | undefined): string | null {
+  const text = message?.quote?.text ?? message?.reply_to_message?.text ?? message?.reply_to_message?.caption;
+  const trimmed = text?.trim();
+  if (!trimmed) return null;
+  return trimmed.length > REPLY_CONTEXT_MAX_CHARS ? `${trimmed.slice(0, REPLY_CONTEXT_MAX_CHARS)}…` : trimmed;
+}
+
+export function withReplyContext(prompt: string, replyContextText: string | null): string {
+  if (!replyContextText) return prompt;
+  return `[Replying to: "${replyContextText}"]\n\n${prompt}`;
+}
 
 export async function fileToDataUrl(filePath: string): Promise<string> {
   const buffer = await fs.readFile(filePath);
