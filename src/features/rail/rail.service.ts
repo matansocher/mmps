@@ -24,7 +24,7 @@ import {
 import { findLightRailDeparturesByDirection, findLightRailStationsNearPoint, findNearestLightRailStations, getLightRailTimetable } from '@services/light-rail';
 import type { GeoPoint, LightRailDirectionDepartures, LightRailTimetable } from '@services/light-rail';
 import { CHAT_MODEL, CHAT_MODEL_REASONING_EFFORT } from '@services/openai/constants';
-import { israelRailTool, lightRailTool, recordModelUsage, UsageCallbackHandler, webSearchTool } from '@shared/ai';
+import { israelRailTool, lightRailTool, railTripTool, recordModelUsage, UsageCallbackHandler, webSearchTool } from '@shared/ai';
 import type { ImageLanguage } from '@shared/image-card';
 import { MESSAGES, RAIL_AGENT_PROMPT, RAIL_LIMITS } from './rail.config';
 import { buildLocationMemoryNote, formatTrainMapCaption } from './rail.utils';
@@ -65,7 +65,7 @@ export class RailService {
       toolCallLimitMiddleware({ runLimit: RAIL_LIMITS.toolCallLimitPerRun, exitBehavior: 'continue' }),
       toolCallLimitMiddleware({ toolName: webSearchTool.name, runLimit: RAIL_LIMITS.webSearchCallLimitPerRun, exitBehavior: 'continue' }),
     ];
-    this.aiService = createAgentService({ name: 'RAIL', prompt: RAIL_AGENT_PROMPT, tools: [israelRailTool, lightRailTool, webSearchTool] }, { model, checkpointer: this.checkpointer, middleware });
+    this.aiService = createAgentService({ name: 'RAIL', prompt: RAIL_AGENT_PROMPT, tools: [israelRailTool, lightRailTool, railTripTool, webSearchTool] }, { model, checkpointer: this.checkpointer, middleware });
   }
 
   // The bot is public, so in-memory conversations are dropped after a period of inactivity to keep memory bounded.
