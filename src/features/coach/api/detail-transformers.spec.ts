@@ -1,5 +1,5 @@
-import type { ScoresAthleteDetails, ScoresBracket, ScoresGame, ScoresGameDetails, ScoresHeadToHead, ScoresStandings } from '@services/scores-365';
-import { toDashboardForm, toDashboardStandings, toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables } from './detail-transformers';
+import type { ScoresAthleteDetails, ScoresBracket, ScoresGame, ScoresGameDetails, ScoresHeadToHead, ScoresNews, ScoresStandings } from '@services/scores-365';
+import { toDashboardForm, toDashboardStandings, toGameDetail, toGameStatRows, toHeadToHead, toKnockoutStages, toMatchdays, toPlayerDetail, toStandingsTables, toNews } from './detail-transformers';
 import { toDashboardGame } from './transformers';
 
 const details: ScoresGameDetails = {
@@ -332,5 +332,26 @@ describe('toDashboardStandings()', () => {
     expect(toDashboardStandings(standings, 1, 3)).toBeUndefined();
     expect(toDashboardStandings(standings, 1, 99)).toBeUndefined();
     expect(toDashboardStandings(null, 1, 2)).toBeUndefined();
+  });
+});
+
+describe('toNews()', () => {
+  test('should return newest first with source names and drop items without a valid link', () => {
+    const news: ScoresNews = {
+      news: [
+        { id: 1, title: 'Older', url: 'https://a.com/1', publishDate: '2026-10-20T10:00:00+03:00', sourceId: 11 },
+        { id: 2, title: 'Newer', url: 'https://b.com/2', image: 'https://b.com/2.jpg', publishDate: '2026-10-21T10:00:00+03:00', sourceId: 99 },
+        { id: 3, title: 'Bad link', url: 'javascript:alert(1)', publishDate: '2026-10-21T11:00:00+03:00' },
+      ],
+      sources: [{ id: 11, name: 'BBC' }],
+    };
+    expect(toNews(news)).toEqual([
+      { id: 2, title: 'Newer', url: 'https://b.com/2', image: 'https://b.com/2.jpg', publishedAt: '2026-10-21T10:00:00+03:00' },
+      { id: 1, title: 'Older', url: 'https://a.com/1', source: 'BBC', publishedAt: '2026-10-20T10:00:00+03:00' },
+    ]);
+  });
+
+  test('should return an empty list when news failed to load', () => {
+    expect(toNews(undefined)).toEqual([]);
   });
 });

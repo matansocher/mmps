@@ -124,11 +124,23 @@ export function registerCoachApiRoutes(app: Express, dashboardService: CoachDash
     detailRoute('team', (id, req) => detailsService.getTeam(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
   );
   app.get(
+    '/api/coach/teams/:id/news',
+    detailRoute('team_news', (id, req) => detailsService.getTeamNews(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
+  );
+  app.get(
     '/api/coach/players/:id',
     detailRoute('player', (id, req) => detailsService.getPlayer(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
   );
   app.get(
+    '/api/coach/players/:id/news',
+    detailRoute('player_news', (id, req) => detailsService.getPlayerNews(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
+  );
+  app.get(
     '/api/coach/competitions/:id',
     detailRoute('competition', (id, req) => detailsService.getCompetition(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
+  );
+  app.get(
+    '/api/coach/competitions/:id/news',
+    detailRoute('competition_news', (id, req) => detailsService.getCompetitionNews(id, requestLanguage(req) ?? DEFAULT_LANGUAGE)),
   );
 }

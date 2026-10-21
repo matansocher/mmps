@@ -1,4 +1,4 @@
-import type { CompetitionDetail, CompetitionOption, DashboardResponse, GameDetail, PlayerDetail, Preferences, TeamDetail, TeamOption } from '../types';
+import type { CompetitionDetail, CompetitionOption, DashboardResponse, GameDetail, PlayerDetail, Preferences, TeamDetail, NewsItem, TeamOption } from '../types';
 import { getLanguage } from './i18n';
 import { getInitData } from './telegram';
 
@@ -70,6 +70,9 @@ export const api = {
   searchTeams: (query: string) => request<TeamOption[]>(`/api/coach/teams/search?q=${encodeURIComponent(query)}`),
   game: (id: number) => request<GameDetail>(`/api/coach/games/${id}`),
   team: (id: number) => request<TeamDetail>(`/api/coach/teams/${id}`),
+  teamNews: (id: number) => request<NewsItem[]>(`/api/coach/teams/${id}/news`),
   player: (id: number) => request<PlayerDetail>(`/api/coach/players/${id}`),
+  playerNews: (id: number) => request<NewsItem[]>(`/api/coach/players/${id}/news`),
   competition: (id: number) => request<CompetitionDetail>(`/api/coach/competitions/${id}`),
+  competitionNews: (id: number) => request<NewsItem[]>(`/api/coach/competitions/${id}/news`),
 };

@@ -165,6 +165,15 @@ export type TeamDetail = {
   readonly squad: SquadPlayer[];
 };
 
+export type NewsItem = {
+  readonly id: number;
+  readonly title: string;
+  readonly url: string;
+  readonly image?: string;
+  readonly source?: string;
+  readonly publishedAt: string;
+};
+
 export type PlayerDetail = {
   readonly id: number;
   readonly name: string;

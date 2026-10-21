@@ -1,15 +1,20 @@
 import { messages } from '../lib/i18n';
+import { useState } from 'react';
 import { GameSummaryRow } from '../components/GameSummaryRow';
+import { NewsFeed } from '../components/NewsList';
 import { PageHeader } from '../components/PageHeader';
 import { PlayerPhoto } from '../components/PlayerPhoto';
 import { TeamLogo } from '../components/TeamLogo';
-import { Card, ErrorState, ForwardArrow, Loading, Section } from '../components/ui';
+import { Card, ErrorState, ForwardArrow, Loading, Section, Tabs } from '../components/ui';
 import { useResource } from '../hooks/useResource';
 import { api } from '../lib/api';
 import { navigate } from '../lib/router';
 
+type PlayerTab = 'overview' | 'news';
+
 export function PlayerPage({ id }: { readonly id: number }) {
   const resource = useResource(() => api.player(id), `player:${id}`);
+  const [tab, setTab] = useState<PlayerTab>('overview');
   const player = resource.data;
 
   return (
@@ -35,7 +40,16 @@ export function PlayerPage({ id }: { readonly id: number }) {
             </div>
           </Card>
 
-          {player.details.length > 0 && (
+          <Tabs
+            tabs={[
+              { id: 'overview', label: messages().player.overview },
+              { id: 'news', label: messages().common.news },
+            ]}
+            active={tab}
+            onChange={setTab}
+          />
+          {tab === 'news' && <NewsFeed load={() => api.playerNews(player.id)} cacheKey={`player-news:${player.id}`} />}
+          {tab === 'overview' && player.details.length > 0 && (
             <Card className="flex flex-wrap gap-px bg-border-subtle">
               {player.details.map((d) => (
                 <div key={d.title} className="flex min-w-[40%] flex-1 basis-0 flex-col sm:min-w-[22%] gap-0.5 bg-bg-card px-4 py-3">
@@ -46,37 +60,39 @@ export function PlayerPage({ id }: { readonly id: number }) {
             </Card>
           )}
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            {player.seasonStats.length > 0 && (
-              <Section title={messages().player.thisSeason}>
-                <div className="flex flex-col gap-3">
-                  {player.seasonStats.map((s) => (
-                    <Card key={s.competitionName}>
-                      <h3 className="border-b border-border-subtle px-4 py-2 text-sm font-bold">{s.competitionName}</h3>
-                      <div className="grid grid-cols-3 gap-px bg-border-subtle">
-                        {s.stats.map((stat) => (
-                          <div key={stat.name} className="flex flex-col items-center gap-0.5 bg-bg-card px-2 py-3 text-center">
-                            <span className="score-font text-lg">{stat.value}</span>
-                            <span className="text-[11px] text-text-muted">{stat.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </Section>
-            )}
-            {player.recentGames.length > 0 && (
-              <Section title={messages().player.recentGames}>
-                <Card className="divide-y divide-border-subtle">
-                  {player.recentGames.map((g) => (
-                    <GameSummaryRow key={g.id} game={g} stats={g.stats} />
-                  ))}
-                </Card>
-              </Section>
-            )}
-          </div>
-          {player.bio && <p className="text-sm leading-relaxed text-text-secondary">{player.bio}</p>}
+          {tab === 'overview' && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {player.seasonStats.length > 0 && (
+                <Section title={messages().player.thisSeason}>
+                  <div className="flex flex-col gap-3">
+                    {player.seasonStats.map((s) => (
+                      <Card key={s.competitionName}>
+                        <h3 className="border-b border-border-subtle px-4 py-2 text-sm font-bold">{s.competitionName}</h3>
+                        <div className="grid grid-cols-3 gap-px bg-border-subtle">
+                          {s.stats.map((stat) => (
+                            <div key={stat.name} className="flex flex-col items-center gap-0.5 bg-bg-card px-2 py-3 text-center">
+                              <span className="score-font text-lg">{stat.value}</span>
+                              <span className="text-[11px] text-text-muted">{stat.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+              )}
+              {player.recentGames.length > 0 && (
+                <Section title={messages().player.recentGames}>
+                  <Card className="divide-y divide-border-subtle">
+                    {player.recentGames.map((g) => (
+                      <GameSummaryRow key={g.id} game={g} stats={g.stats} />
+                    ))}
+                  </Card>
+                </Section>
+              )}
+            </div>
+          )}
+          {tab === 'overview' && player.bio && <p className="text-sm leading-relaxed text-text-secondary">{player.bio}</p>}
         </main>
       )}
     </div>
