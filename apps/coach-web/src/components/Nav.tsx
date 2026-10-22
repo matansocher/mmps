@@ -69,7 +69,7 @@ export function BottomNav() {
             className={`flex flex-col items-center gap-0.5 py-2 transition ${active === tab.name ? 'text-accent-live' : 'text-text-muted'}`}
           >
             <Icon name={tab.icon} size={20} />
-            <span className="text-[11px] font-semibold">{t.nav[tab.name]}</span>
+            <span className="text-caption font-semibold">{t.nav[tab.name]}</span>
           </button>
         ))}
       </div>

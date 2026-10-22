@@ -57,10 +57,10 @@ function MatchdayGame({ game, favoriteIds }: { readonly game: GameSummary; reado
         ) : game.status === 'scheduled' ? (
           <span className="score-font text-sm text-text-primary">{formatKickoff(game.startTime)}</span>
         ) : (
-          <span className="text-[11px] font-semibold text-accent-red">{game.statusText || t.common.tbd}</span>
+          <span className="text-caption font-semibold text-accent-red">{game.statusText || t.common.tbd}</span>
         )}
         {live && (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-accent-live">
+          <span className="flex items-center gap-1 text-caption font-bold text-accent-live">
             <LiveDot />
             {game.statusText || t.common.live}
           </span>
@@ -99,7 +99,7 @@ export function MatchdayView({ matchdays, favoriteIds }: { readonly matchdays: r
                 isActive ? 'border-accent-live/50 bg-accent-live/10 text-text-primary' : 'border-transparent bg-bg-card text-text-secondary hover:text-text-primary'
               }`}
             >
-              <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+              <span className="flex items-center gap-1 text-caption font-semibold uppercase tracking-wide text-text-muted">
                 {m.games.some((g) => g.status === 'live') && <LiveDot />}
                 {t.matchdayKind[m.kind]}
               </span>

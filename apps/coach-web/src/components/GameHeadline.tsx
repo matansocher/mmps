@@ -46,7 +46,7 @@ export function GameHeadlineLine({ game, headline, compact }: { readonly game: G
   const style = TONE_STYLE[TONE[headline.type]];
   if (compact) {
     return (
-      <p className="flex min-w-0 items-center justify-center gap-1.5 text-[11px] text-text-secondary">
+      <p className="flex min-w-0 items-center justify-center gap-1.5 text-caption text-text-secondary">
         <Icon name={style.icon} size={12} className={`shrink-0 ${style.color}`} />
         <span className="truncate">{text}</span>
       </p>

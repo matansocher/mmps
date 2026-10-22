@@ -40,7 +40,7 @@ export function Scoreboard({ game, halftimeScore }: { readonly game: Game; reado
           ) : (
             <span className="text-xs text-text-secondary">{game.status === 'scheduled' ? formatLongDate(game.startTime) : game.statusText}</span>
           )}
-          {halftimeScore && <span className="score-font text-[11px] font-normal text-text-muted">{messages().game.halftime(halftimeScore[0], halftimeScore[1])}</span>}
+          {halftimeScore && <span className="score-font text-caption font-normal text-text-muted">{messages().game.halftime(halftimeScore[0], halftimeScore[1])}</span>}
         </div>
         <TeamColumn team={game.away} />
       </div>

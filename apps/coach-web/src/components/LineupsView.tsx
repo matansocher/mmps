@@ -43,14 +43,14 @@ function PlayerToken({ player }: { readonly player: LineupPlayer }) {
       <span className="relative">
         <PlayerPhoto athleteId={player.athleteId} name={player.name} size={40} className="border-2 border-white/80" />
         {player.jerseyNumber != null && (
-          <span className="score-font absolute -left-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] text-bg-base">{player.jerseyNumber}</span>
+          <span className="score-font absolute -left-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-caption text-bg-base">{player.jerseyNumber}</span>
         )}
         {player.rating != null && (
-          <span className={`score-font absolute -bottom-1 left-1/2 -translate-x-1/2 rounded px-1 text-[10px] text-white ${ratingClass(player.rating)}`}>{player.rating.toFixed(1)}</span>
+          <span className={`score-font absolute -bottom-1 left-1/2 -translate-x-1/2 rounded px-1 text-caption text-white ${ratingClass(player.rating)}`}>{player.rating.toFixed(1)}</span>
         )}
-        {player.subbedOffAt != null && <span className="absolute -right-1.5 -top-1 rounded-full bg-bg-base px-0.5 text-[10px] text-accent-red">▼{player.subbedOffAt}'</span>}
+        {player.subbedOffAt != null && <span className="absolute -right-1.5 -top-1 rounded-full bg-bg-base px-0.5 text-caption text-accent-red">▼{player.subbedOffAt}'</span>}
       </span>
-      <span className="mt-1 max-w-full truncate rounded bg-black/40 px-1 text-[10px] font-medium leading-tight text-white">{player.shortName || player.name}</span>
+      <span className="mt-1 max-w-full truncate rounded bg-black/40 px-1 text-caption font-medium leading-tight text-white">{player.shortName || player.name}</span>
     </button>
   );
 }
@@ -80,7 +80,7 @@ function PlayerListRow({ player, note }: { readonly player: LineupPlayer; readon
       </span>
       {player.subbedOnAt != null && <span className="score-font shrink-0 text-xs text-accent-live">▲ {player.subbedOnAt}'</span>}
       {player.subbedOffAt != null && <span className="score-font shrink-0 text-xs text-accent-red">▼ {player.subbedOffAt}'</span>}
-      {player.rating != null && <span className={`score-font shrink-0 rounded px-1.5 py-0.5 text-[11px] text-white ${ratingClass(player.rating)}`}>{player.rating.toFixed(1)}</span>}
+      {player.rating != null && <span className={`score-font shrink-0 rounded px-1.5 py-0.5 text-caption text-white ${ratingClass(player.rating)}`}>{player.rating.toFixed(1)}</span>}
     </button>
   );
 }

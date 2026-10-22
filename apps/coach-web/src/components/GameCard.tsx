@@ -37,7 +37,7 @@ export function WinProbability({ team, status }: { readonly team: Team; readonly
   const percent = Math.round(team.winProbability);
   const label = t.winProbability(team.name, percent);
   return (
-    <span className="score-font shrink-0 text-[11px] font-normal text-text-secondary" title={label} aria-label={label} dir="ltr">
+    <span className="score-font shrink-0 text-caption font-normal text-text-secondary" title={label} aria-label={label} dir="ltr">
       {t.winPercentage(percent)}
     </span>
   );
@@ -50,11 +50,11 @@ function TeamRow({ team, game, isWinner, form }: { readonly team: Team; readonly
     <div className="flex items-center gap-3">
       <TeamLogo teamId={team.id} name={team.name} size={24} />
       <span className="flex min-w-0 flex-1 items-baseline gap-1">
-        <span className={`min-w-0 truncate text-[15px] tracking-[-0.01em] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
+        <span className={`min-w-0 truncate text-team tracking-[-0.01em] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
         <WinProbability team={team} status={game.status} />
       </span>
       {form && form.length > 0 && <FormPills entries={form} />}
-      {showScore && <span className={`score-font min-w-6 text-end text-[22px] leading-none tracking-[-0.02em] ${dim ? 'text-text-muted' : 'text-text-primary'}`}>{team.score}</span>}
+      {showScore && <span className={`score-font min-w-6 text-end text-score leading-none tracking-[-0.02em] ${dim ? 'text-text-muted' : 'text-text-primary'}`}>{team.score}</span>}
     </div>
   );
 }
@@ -66,7 +66,7 @@ function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEve
   const shown = scorers.slice(0, MAX_SCORERS);
   const others = events.filter((e) => e.type !== 'goal' && CARD_EVENT_TYPES.has(e.type));
   return (
-    <div className="flex h-8 flex-col justify-start ps-9 text-[11px] leading-4 text-text-secondary">
+    <div className="flex h-8 flex-col justify-start ps-9 text-caption leading-4 text-text-secondary">
       {shown.length > 0 && (
         <p className="flex min-w-0 items-center gap-1.5" title={scorers.map((l) => `${l.name} ${l.minutes.join(', ')}`).join(' · ')}>
           <Icon name="ball" size={11} className="text-text-muted" />
@@ -203,8 +203,8 @@ export function StandingsSnippet({ game }: { readonly game: Game }) {
     { team: game.away, row: game.standings.away },
   ].sort((a, b) => a.row.position - b.row.position);
   return (
-    <div role="table" aria-label={t.title} className="grid grid-cols-[auto_minmax(0,1fr)_2rem_2.5rem_2rem] items-center gap-x-2 gap-y-1.5 border-t border-white/[0.06] pt-3 text-[12px]">
-      <span role="row" className="contents text-[10px] font-medium text-text-muted">
+    <div role="table" aria-label={t.title} className="grid grid-cols-[auto_minmax(0,1fr)_2rem_2.5rem_2rem] items-center gap-x-2 gap-y-1.5 border-t border-white/[0.06] pt-3 text-caption">
+      <span role="row" className="contents text-caption font-medium text-text-muted">
         <span role="columnheader" className="text-center">
           #
         </span>

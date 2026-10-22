@@ -11,7 +11,7 @@ export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; re
   const hasScore = game.status !== 'scheduled' && game.home.score !== null;
   return (
     <button onClick={() => navigate({ name: 'game', id: game.id })} className="flex w-full flex-col gap-1.5 px-3 py-2.5 text-start transition hover:bg-bg-elevated/60">
-      <span className="flex items-center justify-between gap-2 text-[11px] text-text-muted">
+      <span className="flex items-center justify-between gap-2 text-caption text-text-muted">
         <span className="flex min-w-0 items-center gap-1.5">
           <CompetitionLogo competitionId={game.competitionId} size={12} />
           <span className="truncate">{game.competitionName}</span>
@@ -40,7 +40,7 @@ export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; re
         <span className="flex w-5 shrink-0 justify-end">{game.result && <FormBadge result={game.result} />}</span>
       </span>
       {stats && stats.length > 0 && (
-        <span className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-[11px] text-text-secondary">
+        <span className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-caption text-text-secondary">
           {stats.map((s) => (
             <span key={s.name}>
               {s.name} <span className="score-font text-text-primary">{s.value}</span>

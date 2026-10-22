@@ -40,7 +40,7 @@ function scoreLine(meeting: GameSummary): string {
 function Block({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-text-secondary">{title}</h3>
+      <h3 className="text-caption font-bold uppercase tracking-wide text-text-secondary">{title}</h3>
       {children}
     </section>
   );
@@ -117,7 +117,7 @@ function Content({ game, detail }: { readonly game: Game; readonly detail: GameD
               ].map((c) => (
                 <div key={c.label} className="flex min-w-0 flex-col px-1">
                   <span className="score-font text-lg">{c.value}</span>
-                  <span className="truncate text-[11px] text-text-secondary">{c.label}</span>
+                  <span className="truncate text-caption text-text-secondary">{c.label}</span>
                 </div>
               ))}
             </div>
@@ -203,7 +203,7 @@ export function PreMatchModal({ game, trigger, onClose }: Props) {
         <span aria-hidden className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-white/15 md:hidden" />
         <header className="flex items-start gap-3 px-5 pb-3 pt-3 md:pt-5">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <p className="truncate text-[11px] text-text-secondary">{game.competitionName}</p>
+            <p className="truncate text-caption text-text-secondary">{game.competitionName}</p>
             <h2 id={titleId} className="flex items-center gap-2 text-base font-bold">
               <TeamLogo teamId={game.home.id} name={game.home.name} size={22} />
               <span className="truncate">{`${teamLabel(game.home)} - ${teamLabel(game.away)}`}</span>

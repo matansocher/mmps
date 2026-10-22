@@ -5,7 +5,7 @@ export function TeamLogo({ teamId, name, size = 24 }: { readonly teamId: number;
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-bg-elevated text-[10px] font-bold text-text-secondary" style={{ width: size, height: size }}>
+      <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-bg-elevated text-caption font-bold text-text-secondary" style={{ width: size, height: size }}>
         {name.slice(0, 2)}
       </span>
     );

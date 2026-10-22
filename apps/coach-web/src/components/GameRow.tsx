@@ -19,7 +19,7 @@ function TeamCell({ team, reds, align, dim, status }: { readonly team: Team; rea
     <div className={`flex min-w-0 flex-1 items-center gap-1.5 ${align === 'end' ? 'flex-row-reverse' : ''}`}>
       <TeamLogo teamId={team.id} name={team.name} size={18} />
       <span className="flex min-w-0 items-baseline gap-1">
-        <span className={`min-w-0 truncate text-[13px] ${dim ? 'text-text-secondary' : 'font-semibold'}`}>{team.shortName || team.name}</span>
+        <span className={`min-w-0 truncate text-label ${dim ? 'text-text-secondary' : 'font-semibold'}`}>{team.shortName || team.name}</span>
         <WinProbability team={team} status={status} />
       </span>
       {reds > 0 && <span className="h-3 w-2 shrink-0 rounded-[2px] bg-accent-red" title={t.card.redCards(reds)} />}
@@ -29,7 +29,7 @@ function TeamCell({ team, reds, align, dim, status }: { readonly team: Team; rea
 
 function Center({ game }: { readonly game: Game }) {
   if (game.status === 'scheduled') {
-    return <span className="score-font text-[13px] leading-5 text-text-secondary">{formatKickoff(game.startTime)}</span>;
+    return <span className="score-font text-label leading-5 text-text-secondary">{formatKickoff(game.startTime)}</span>;
   }
   return (
     <>
@@ -37,14 +37,14 @@ function Center({ game }: { readonly game: Game }) {
         <ScoreLine home={game.home.score ?? 0} away={game.away.score ?? 0} />
       </span>
       {game.status === 'live' ? (
-        <span className="score-font flex h-3.5 items-center gap-1 text-[11px] font-bold leading-none text-accent-live">
+        <span className="score-font flex h-3.5 items-center gap-1 text-caption font-bold leading-none text-accent-live">
           <LiveDot />
           <span className="live-minute ltr-num">{game.minuteDisplay || game.statusText}</span>
           <HotBadge game={game} compact />
         </span>
       ) : (
         <span className="flex h-3.5 max-w-16 items-center gap-1">
-          <span className="truncate text-[10px] leading-3.5 text-text-muted">{game.statusText}</span>
+          <span className="truncate text-caption leading-3.5 text-text-muted">{game.statusText}</span>
           <HotBadge game={game} compact />
         </span>
       )}
@@ -78,7 +78,7 @@ export function GameRow({ game }: { readonly game: Game }) {
         </span>
       </div>
       {lastEvent && (
-        <p className="flex min-w-0 items-center justify-center gap-1.5 text-[11px] text-text-muted">
+        <p className="flex min-w-0 items-center justify-center gap-1.5 text-caption text-text-muted">
           <span className="score-font ltr-num font-semibold text-text-secondary">{lastEvent.minuteDisplay}</span>
           <Icon name={EVENT_META[lastEvent.type].icon} size={11} />
           <span className="truncate text-text-secondary">{eventText(lastEvent)}</span>

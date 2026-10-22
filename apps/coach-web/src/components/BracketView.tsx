@@ -24,7 +24,7 @@ function TeamLine({ team, score, decided }: { readonly team?: MatchupTeam; reado
   return (
     <div className="flex items-center gap-2">
       {team ? <TeamLogo teamId={team.id} name={team.name} size={18} /> : <span className="size-[18px] shrink-0 rounded-full bg-bg-elevated" />}
-      <span className={`min-w-0 flex-1 truncate text-[13px] ${dim ? 'text-text-muted' : team?.isQualified ? 'font-bold' : ''}`} title={team?.name}>
+      <span className={`min-w-0 flex-1 truncate text-label ${dim ? 'text-text-muted' : team?.isQualified ? 'font-bold' : ''}`} title={team?.name}>
         {team?.name ?? messages().common.tbd}
       </span>
       {score != null && <span className={`score-font text-sm ${dim ? 'text-text-muted' : ''}`}>{score}</span>}
@@ -45,7 +45,7 @@ function MatchupCard({ matchup, onOpen, isFinal }: { readonly matchup: KnockoutM
       <TeamLine team={matchup.teams[0]} score={score?.[0]} decided={decided} />
       <TeamLine team={matchup.teams[1]} score={score?.[1]} decided={decided} />
       {(live || (!score && nextLeg?.startTime)) && (
-        <span className="flex items-center gap-1.5 text-[11px] text-text-muted">
+        <span className="flex items-center gap-1.5 text-caption text-text-muted">
           {live ? (
             <>
               <LiveDot />
@@ -66,7 +66,7 @@ function LegRow({ leg, matchup, index, total }: { readonly leg: KnockoutLeg; rea
   const hasScore = leg.homeScore != null && leg.awayScore != null;
   return (
     <button onClick={() => navigate({ name: 'game', id: leg.gameId })} className="flex w-full flex-col gap-1.5 px-4 py-3 text-start transition hover:bg-bg-elevated/60">
-      <span className="flex justify-between text-[11px] text-text-muted">
+      <span className="flex justify-between text-caption text-text-muted">
         <span>{total > 1 ? messages().bracket.leg(index + 1) : messages().bracket.match}</span>
         <span className="flex items-center gap-1.5">
           {leg.status === 'live' && <LiveDot />}

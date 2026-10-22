@@ -110,5 +110,5 @@ export function ScoreLine({ home, away, className = '' }: { readonly home: React
 
 export function FormBadge({ result }: { readonly result: 'W' | 'D' | 'L' }) {
   const color = result === 'W' ? 'bg-accent-win text-bg-base' : result === 'D' ? 'bg-text-muted text-white' : 'bg-accent-red text-white';
-  return <span className={`score-font inline-flex size-5 shrink-0 items-center justify-center rounded text-[10px] ${color}`}>{messages().form[result]}</span>;
+  return <span className={`score-font inline-flex size-5 shrink-0 items-center justify-center rounded text-caption ${color}`}>{messages().form[result]}</span>;
 }

@@ -180,7 +180,7 @@ function FilterChip({ active, tone, onClick, children }: { readonly active: bool
       aria-pressed={active}
       data-active={active || undefined}
       style={active ? ({ backgroundColor: tone.background, color: tone.color } as CSSProperties) : undefined}
-      className={`group/chip flex h-9 shrink-0 items-center gap-2 rounded-full border ps-2.5 pe-1.5 text-[13px] font-medium transition duration-150 ease-out active:scale-[0.97] ${
+      className={`group/chip flex h-9 shrink-0 items-center gap-2 rounded-full border ps-2.5 pe-1.5 text-label font-medium transition duration-150 ease-out active:scale-[0.97] ${
         active ? 'border-transparent font-semibold shadow-[0_2px_10px_-2px_rgba(0,0,0,0.5)]' : 'border-white/[0.07] bg-white/[0.03] text-text-secondary hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-text-primary'
       }`}
     >
@@ -192,7 +192,7 @@ function FilterChip({ active, tone, onClick, children }: { readonly active: bool
 function Count({ value, live, active }: { readonly value: number; readonly live?: boolean; readonly active: boolean }) {
   return (
     <span
-      className={`score-font flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-1.5 text-[11px] ${
+      className={`score-font flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-1.5 text-caption ${
         active ? 'bg-black/15' : live ? 'bg-accent-live/12 text-accent-live' : 'bg-white/[0.06] text-text-muted'
       }`}
     >
@@ -387,10 +387,10 @@ export function DashboardPage() {
           )}
           {sections.map((section) => (
             <section key={section.key} aria-labelledby={`section-${section.key}`} className="flex flex-col gap-3">
-              <h2 id={`section-${section.key}`} className="flex items-center gap-2 text-[15px] font-bold tracking-[-0.01em] text-text-primary">
+              <h2 id={`section-${section.key}`} className="flex items-center gap-2 text-team font-bold tracking-[-0.01em] text-text-primary">
                 {section.live && <LiveDot />}
                 {section.title}
-                <span className="score-font rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-text-secondary">{section.games.length}</span>
+                <span className="score-font rounded-full bg-white/[0.06] px-2 py-0.5 text-caption font-semibold text-text-secondary">{section.games.length}</span>
               </h2>
               {section.leagues && section.leagues.length > 1 ? (
                 <div className="flex flex-col gap-5">
@@ -399,7 +399,7 @@ export function DashboardPage() {
                       <h3 className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
                         {league.competitionId === undefined ? <Icon name="star" size={16} className="text-accent-draw" /> : <CompetitionLogo competitionId={league.competitionId} size={16} />}
                         {league.name}
-                        <span className="score-font text-[11px] font-medium text-text-muted">{league.games.length}</span>
+                        <span className="score-font text-caption font-medium text-text-muted">{league.games.length}</span>
                       </h3>
                       <GameGrid games={league.games} viewMode={viewMode} />
                     </div>
