@@ -36,9 +36,9 @@ describe('parseScope()', () => {
 });
 
 describe('toAttemptDto()', () => {
-  test('should hide the lesson while awaiting an answer', () => {
+  test('should show the lesson title but hide the lesson link while awaiting an answer', () => {
     const dto = toAttemptDto(attempt());
-    expect(dto.question).toEqual({ id: question.id, text: question.question, guide: question.guide, difficulty: question.difficulty, biteId: null, lessonTitle: null });
+    expect(dto.question).toEqual({ id: question.id, text: question.question, guide: question.guide, difficulty: question.difficulty, biteId: null, lessonTitle: question.lessonTitle });
     expect(dto.grade).toEqual(null);
   });
 
