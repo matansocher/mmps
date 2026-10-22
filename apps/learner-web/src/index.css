@@ -490,10 +490,17 @@ a { color: var(--accent-blue); }
 .bite-body th { background: var(--bg-alt); color: var(--accent-blue); font-weight: 600; }
 
 .bite-body .qa { border: 1px solid var(--border); border-radius: var(--radius); margin: 14px 0; overflow: hidden; }
-.bite-body .qa summary { cursor: pointer; padding: 14px 18px; background: var(--bg-alt); font-weight: 600; list-style: none; }
+.bite-body h2:has(+ .qa) { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.bite-body h2:has(+ .qa)::after { content: 'Tap a question to reveal the answer'; font-size: 13px; font-weight: 500; color: var(--text-faint); }
+.bite-body .qa summary { cursor: pointer; padding: 14px 18px; background: var(--bg-alt); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 12px; transition: background 0.2s var(--ease); }
 .bite-body .qa summary::-webkit-details-marker { display: none; }
+.bite-body .qa summary::before { content: '?'; flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--accent-blue); background: color-mix(in srgb, var(--accent-blue) 14%, transparent); }
+.bite-body .qa summary::after { content: ''; flex: none; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--text-dim); border-bottom: 2px solid var(--text-dim); transform: rotate(45deg) translate(-2px, -2px); transition: transform 0.25s var(--ease); }
+.bite-body .qa[open] summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+.bite-body .qa summary:hover { background: var(--bg-elevated); }
+.bite-body .qa summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .bite-body .qa[open] summary { border-bottom: 1px solid var(--border); }
-.bite-body .qa .answer { padding: 10px 18px 16px; }
+.bite-body .qa .answer { padding: 10px 18px 16px 54px; }
 .bite-body .pill { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 20px; background: color-mix(in srgb, var(--accent-blue) 14%, transparent); color: var(--accent-blue); margin: 2px 4px 2px 0; border: 1px solid color-mix(in srgb, var(--accent-blue) 28%, transparent); }
 .bite-body .pill.g { background: color-mix(in srgb, var(--accent-2) 14%, transparent); color: var(--accent-2); }
 .bite-body .pill.o { background: color-mix(in srgb, var(--accent-4) 14%, transparent); color: var(--accent-4); }
@@ -528,6 +535,7 @@ a { color: var(--accent-blue); }
 
 @media (max-width: 560px) {
   .reader-title { font-size: 22px; }
+  .bite-body .qa .answer { padding-left: 18px; }
 }
 
 /* ===== Reading progress (scroll spy) ===== */
