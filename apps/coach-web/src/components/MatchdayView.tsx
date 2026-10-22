@@ -45,13 +45,13 @@ function MatchdayGame({ game, favoriteIds }: { readonly game: GameSummary; reado
   return (
     <button
       onClick={() => navigate({ name: 'game', id: game.id })}
-      className="flex w-full items-center gap-2 px-3 py-3 text-start transition hover:bg-bg-elevated/60"
+      className="flex w-full items-center gap-2 px-3 py-3 text-start transition hover:bg-row-hover"
       aria-label={`${game.home.name} ${hasScore ? `${game.home.score}-${game.away.score}` : t.common.vs} ${game.away.name}${live ? `, ${t.common.live}` : ''}`}
     >
       {team('home')}
       <span className="flex w-16 shrink-0 flex-col items-center gap-0.5">
         {hasScore ? (
-          <span className={`score-font text-base ${live ? 'text-accent-live' : 'text-text-primary'}`}>
+          <span className={`score-font text-base ${live ? 'font-bold text-text-primary' : 'text-text-primary'}`}>
             <ScoreLine home={game.home.score} away={game.away.score} />
           </span>
         ) : game.status === 'scheduled' ? (
@@ -99,7 +99,7 @@ export function MatchdayView({ matchdays, favoriteIds }: { readonly matchdays: r
                 isActive ? 'border-accent-live/50 bg-accent-live/10 text-text-primary' : 'border-transparent bg-bg-card text-text-secondary hover:text-text-primary'
               }`}
             >
-              <span className="flex items-center gap-1 text-caption font-semibold uppercase tracking-wide text-text-muted">
+              <span className="flex items-center gap-1 text-caption font-semibold uppercase tracking-wide text-text-secondary">
                 {m.games.some((g) => g.status === 'live') && <LiveDot />}
                 {t.matchdayKind[m.kind]}
               </span>
@@ -109,7 +109,7 @@ export function MatchdayView({ matchdays, favoriteIds }: { readonly matchdays: r
         })}
       </div>
 
-      <p className="px-1 text-xs text-text-muted" aria-live="polite">
+      <p className="px-1 text-xs text-text-secondary" aria-live="polite">
         {t.matchday(active.roundNum)} · {active.kind === 'next' ? t.gamesCount(active.games.length) : t.playedOf(played, active.games.length)}
       </p>
 

@@ -38,7 +38,8 @@ export function initTelegram(): void {
   w.ready();
   w.expand();
   if (supports('6.1')) {
-    w.setHeaderColor?.('#0A0E14');
+    // Match Telegram's own header so the mini app blends into the chrome; the page itself stays dark.
+    w.setHeaderColor?.('secondary_bg_color');
     w.setBackgroundColor?.('#0A0E14');
   }
 }

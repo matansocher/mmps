@@ -32,7 +32,7 @@ export function StatsList({ stats }: { readonly stats: readonly GameStatRow[] })
   const [showAll, setShowAll] = useState(false);
   const major = stats.filter((s) => s.isMajor);
   const visible = showAll || major.length === 0 ? stats : major;
-  if (!stats.length) return <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().game.noStats}</p>;
+  if (!stats.length) return <p className="px-4 py-6 text-center text-sm text-text-secondary">{messages().game.noStats}</p>;
   return (
     <div className="flex flex-col py-2">
       {visible.map((stat) => (

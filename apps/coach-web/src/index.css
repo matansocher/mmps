@@ -23,8 +23,8 @@
   --color-bg-elevated: #1b2330;
   --color-border-subtle: #1f2937;
   --color-text-primary: #ffffff;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #8290a4;
+  --color-text-secondary: #a3b1c6;
+  --color-text-muted: #6b7a90;
 
   /* One role per hue: green = live, calmer green = win, gold = favourite, orange = warning. */
   --color-accent-live: #00d26a;
@@ -36,6 +36,14 @@
   --color-accent-hot: #ff7a1a;
   --color-accent-hot-text: #ff9a3d;
   --color-card-yellow: #facc15;
+
+  /* Translucent surfaces, lines and hover state over the dark base. */
+  --color-surface-1: rgb(255 255 255 / 0.03);
+  --color-surface-2: rgb(255 255 255 / 0.06);
+  --color-surface-3: rgb(255 255 255 / 0.1);
+  --color-line: rgb(255 255 255 / 0.06);
+  --color-line-strong: rgb(255 255 255 / 0.12);
+  --color-row-hover: rgb(255 255 255 / 0.04);
   --animate-live-pulse: live-pulse 1.4s ease-in-out infinite;
 
   @keyframes live-pulse {

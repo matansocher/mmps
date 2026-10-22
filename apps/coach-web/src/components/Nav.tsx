@@ -42,7 +42,7 @@ export function TopBar() {
                 key={tab.name}
                 onClick={() => go(tab.name)}
                 aria-current={on ? 'page' : undefined}
-                className={`relative flex items-center gap-2 px-3 text-sm font-semibold transition duration-150 ease-out focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent-brand ${on ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                className={`relative flex items-center gap-2 px-3 text-sm font-semibold transition duration-150 ease-out focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent-brand ${on ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
               >
                 <Icon name={tab.icon} size={16} className={on ? 'text-accent-live' : ''} />
                 {t.nav[tab.name]}
@@ -66,7 +66,7 @@ export function BottomNav() {
           <button
             key={tab.name}
             onClick={() => go(tab.name)}
-            className={`flex flex-col items-center gap-0.5 py-2 transition ${active === tab.name ? 'text-accent-live' : 'text-text-muted'}`}
+            className={`flex flex-col items-center gap-0.5 py-2 transition ${active === tab.name ? 'text-accent-live' : 'text-text-secondary'}`}
           >
             <Icon name={tab.icon} size={20} />
             <span className="text-caption font-semibold">{t.nav[tab.name]}</span>

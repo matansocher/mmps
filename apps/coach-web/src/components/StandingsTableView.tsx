@@ -66,7 +66,7 @@ export function StandingsTableView({ table, highlightIds = [], showForm = true }
       {table.name && <h3 className="border-b border-border-subtle px-3 py-2 text-sm font-bold">{table.name}</h3>}
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-caption text-text-muted">
+          <tr className="text-caption text-text-secondary">
             <th className="w-10 py-2 ps-3 text-start font-medium">#</th>
             <th className="py-2 text-start font-medium">{messages().standings.team}</th>
             <th className="w-8 py-2 text-center font-medium">{messages().standings.played}</th>
@@ -86,7 +86,7 @@ export function StandingsTableView({ table, highlightIds = [], showForm = true }
               <tr
                 key={row.team.id}
                 onClick={() => navigate({ name: 'team', id: row.team.id })}
-                className={`cursor-pointer border-t border-border-subtle transition hover:bg-bg-elevated/60 ${highlighted ? 'bg-accent-brand/10' : ''}`}
+                className={`cursor-pointer border-t border-border-subtle transition hover:bg-row-hover ${highlighted ? 'bg-accent-brand/10' : ''}`}
               >
                 <td className="relative py-2 ps-3">
                   {row.zoneColor && <span className="absolute inset-y-1 start-0 w-1 rounded-e" style={{ backgroundColor: row.zoneColor }} />}

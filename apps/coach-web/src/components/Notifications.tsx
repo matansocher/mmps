@@ -47,9 +47,9 @@ function NotificationCard({ notification, onDismiss }: { readonly notification: 
     navigate({ name: 'game', id: notification.gameId });
   };
   return (
-    <div className="notification-in pointer-events-auto relative flex overflow-hidden rounded-2xl border border-white/[0.08] bg-bg-elevated/95 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md">
+    <div className="notification-in pointer-events-auto relative flex overflow-hidden rounded-2xl border border-line bg-bg-elevated/95 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md">
       <button onClick={open} className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-start">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-text-primary">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-text-primary">
           <Icon name={notification.icon} size={16} />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -99,7 +99,7 @@ export function Notifications() {
           </button>
         )}
         {ordered.length > 1 && (
-          <button onClick={clearNotifications} className="rounded-full bg-bg-elevated/95 px-3 py-1 text-xs font-semibold text-text-muted shadow-lg backdrop-blur-md hover:text-text-primary">
+          <button onClick={clearNotifications} className="rounded-full bg-bg-elevated/95 px-3 py-1 text-xs font-semibold text-text-secondary shadow-lg backdrop-blur-md hover:text-text-primary">
             {t.notifications.clearAll}
           </button>
         )}

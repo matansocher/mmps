@@ -56,7 +56,7 @@ export function RefreshBanner({ failed, online, refreshing, lastSuccessAt, nextR
             type="button"
             onClick={onRetry}
             disabled={refreshing}
-            className="shrink-0 rounded-full bg-white/[0.08] px-4 py-2 text-sm font-semibold text-text-primary transition duration-150 ease-out hover:bg-white/[0.12] active:scale-95 disabled:opacity-60"
+            className="shrink-0 rounded-full bg-surface-3 px-4 py-2 text-sm font-semibold text-text-primary transition duration-150 ease-out hover:bg-surface-3 active:scale-95 disabled:opacity-60"
           >
             {refreshing ? t.retrying : t.retryNow}
           </button>

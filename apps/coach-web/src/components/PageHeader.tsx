@@ -30,7 +30,7 @@ export function PageHeader({ title, subtitle, back, actions, children, maxWidth 
         )}
         <div className="flex min-w-0 flex-1 flex-col">
           <h1 ref={headingRef} tabIndex={-1} className="flex min-w-0 items-center gap-2 truncate text-lg font-bold">{title}</h1>
-          {subtitle && <span className="line-clamp-2 text-xs text-text-muted">{subtitle}</span>}
+          {subtitle && <span className="line-clamp-2 text-xs text-text-secondary">{subtitle}</span>}
         </div>
         {actions}
       </div>

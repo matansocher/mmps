@@ -10,8 +10,8 @@ import { FormBadge, ScoreLine } from './ui';
 export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; readonly stats?: readonly NamedValue[] }) {
   const hasScore = game.status !== 'scheduled' && game.home.score !== null;
   return (
-    <button onClick={() => navigate({ name: 'game', id: game.id })} className="flex w-full flex-col gap-1.5 px-3 py-2.5 text-start transition hover:bg-bg-elevated/60">
-      <span className="flex items-center justify-between gap-2 text-caption text-text-muted">
+    <button onClick={() => navigate({ name: 'game', id: game.id })} className="flex w-full flex-col gap-1.5 px-3 py-2.5 text-start transition hover:bg-row-hover">
+      <span className="flex items-center justify-between gap-2 text-caption text-text-secondary">
         <span className="flex min-w-0 items-center gap-1.5">
           <CompetitionLogo competitionId={game.competitionId} size={12} />
           <span className="truncate">{game.competitionName}</span>
@@ -32,7 +32,7 @@ export function GameSummaryRow({ game, stats }: { readonly game: GameSummary; re
           <span className="truncate text-sm">{game.home.shortName || game.home.name}</span>
           <TeamLogo teamId={game.home.id} name={game.home.name} size={20} />
         </span>
-        <span className={`score-font w-14 shrink-0 text-center ${game.status === 'live' ? 'text-accent-live' : ''}`}>{hasScore ? <ScoreLine home={game.home.score} away={game.away.score} /> : messages().common.vs}</span>
+        <span className={`score-font w-14 shrink-0 text-center ${game.status === 'live' ? 'font-bold text-text-primary' : ''}`}>{hasScore ? <ScoreLine home={game.home.score} away={game.away.score} /> : messages().common.vs}</span>
         <span className="flex min-w-0 flex-1 items-center gap-2">
           <TeamLogo teamId={game.away.id} name={game.away.name} size={20} />
           <span className="truncate text-sm">{game.away.shortName || game.away.name}</span>

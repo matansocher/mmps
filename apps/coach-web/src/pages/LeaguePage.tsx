@@ -58,7 +58,7 @@ export function LeaguePage({ id }: { readonly id: number }) {
             </Section>
           )}
           {tabs.length > 1 && <Tabs tabs={tabs} active={activeTab!} onChange={setTab} />}
-          {!hasData && <p className="py-10 text-center text-sm text-text-muted">{messages().league.empty}</p>}
+          {!hasData && <p className="py-10 text-center text-sm text-text-secondary">{messages().league.empty}</p>}
           {activeTab === 'table' && (
             <div className={`grid gap-3 ${competition.tables.length > 1 ? 'lg:grid-cols-2' : ''}`}>
               <div className="lg:col-span-full">

@@ -53,7 +53,7 @@ export function GameHeadlineLine({ game, headline, compact }: { readonly game: G
     );
   }
   return (
-    <div className="flex min-w-0 items-center gap-2.5 border-t border-white/[0.06] pt-3">
+    <div className="flex min-w-0 items-center gap-2.5 border-t border-line pt-3">
       <span className={`flex size-6 shrink-0 items-center justify-center rounded-full ${style.chip} ${style.color}`}>
         <Icon name={style.icon} size={13} />
       </span>

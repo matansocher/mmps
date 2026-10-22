@@ -71,12 +71,12 @@ export function FormationPitch({ lineup }: { readonly lineup: TeamLineup }) {
 
 function PlayerListRow({ player, note }: { readonly player: LineupPlayer; readonly note?: string }) {
   return (
-    <button onClick={() => openPlayer(player)} disabled={!player.athleteId} className="flex w-full items-center gap-3 px-3 py-2 text-start transition enabled:hover:bg-bg-elevated/60">
-      <span className="score-font w-6 shrink-0 text-center text-xs text-text-muted">{player.jerseyNumber ?? ''}</span>
+    <button onClick={() => openPlayer(player)} disabled={!player.athleteId} className="flex w-full items-center gap-3 px-3 py-2 text-start transition enabled:hover:bg-row-hover">
+      <span className="score-font w-6 shrink-0 text-center text-xs text-text-secondary">{player.jerseyNumber ?? ''}</span>
       <PlayerPhoto athleteId={player.athleteId} name={player.name} size={32} />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm">{player.name}</span>
-        {(player.position || note) && <span className="truncate text-xs text-text-muted">{[player.position, note].filter(Boolean).join(' · ')}</span>}
+        {(player.position || note) && <span className="truncate text-xs text-text-secondary">{[player.position, note].filter(Boolean).join(' · ')}</span>}
       </span>
       {player.subbedOnAt != null && <span className="score-font shrink-0 text-xs text-accent-live">▲ {player.subbedOnAt}'</span>}
       {player.subbedOffAt != null && <span className="score-font shrink-0 text-xs text-accent-red">▼ {player.subbedOffAt}'</span>}
@@ -109,15 +109,15 @@ export function LineupsView({ home, away, lineups }: { readonly home: Team; read
           <button
             key={s}
             onClick={() => setSide(s)}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition ${side === s ? 'bg-bg-elevated text-text-primary' : 'text-text-muted'}`}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition ${side === s ? 'bg-bg-elevated text-text-primary' : 'text-text-secondary'}`}
           >
             <TeamLogo teamId={teams[s].id} name={teams[s].name} size={18} />
             <span className="truncate">{teams[s].shortName || teams[s].name}</span>
-            {lineups[s].formation && <span className="score-font text-xs text-text-muted">{lineups[s].formation}</span>}
+            {lineups[s].formation && <span className="score-font text-xs text-text-secondary">{lineups[s].formation}</span>}
           </button>
         ))}
       </div>
-      {lineup.status && <p className="text-center text-xs text-text-muted">{lineup.status}</p>}
+      {lineup.status && <p className="text-center text-xs text-text-secondary">{lineup.status}</p>}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,28rem)_1fr]">
         <FormationPitch lineup={lineup} />
         <div className="flex flex-col gap-4">

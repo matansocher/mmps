@@ -74,7 +74,7 @@ function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEve
             {shown.map((l, i) => (
               <span key={l.name}>
                 {i > 0 && <span className="text-text-muted"> · </span>}
-                <span className="text-text-primary/90">{l.name}</span> <span className="score-font ltr-num font-medium text-text-muted">{l.minutes.join(', ')}</span>
+                <span className="text-text-primary/90">{l.name}</span> <span className="score-font ltr-num font-medium text-text-secondary">{l.minutes.join(', ')}</span>
               </span>
             ))}
             {scorers.length > shown.length && <span className="text-text-muted"> +{scorers.length - shown.length}</span>}
@@ -93,7 +93,7 @@ function KeyEvents({ game, side }: { readonly game: Game; readonly side: GameEve
                     <Icon name={EVENT_META[e.type].icon} size={11} className="-mt-px me-1 align-middle text-text-muted" />
                   </>
                 )}
-                <span className="text-text-primary/90">{eventText(e)}</span> <span className="score-font ltr-num font-medium text-text-muted">{e.minuteDisplay}</span>
+                <span className="text-text-primary/90">{eventText(e)}</span> <span className="score-font ltr-num font-medium text-text-secondary">{e.minuteDisplay}</span>
               </span>
             ))}
           </span>
@@ -113,8 +113,8 @@ function StatusBadge({ game }: { readonly game: Game }) {
       </span>
     );
   }
-  if (game.status === 'scheduled') return <span className="score-font flex h-6 items-center rounded-full bg-white/[0.06] px-2.5 text-xs text-text-primary">{formatKickoff(game.startTime)}</span>;
-  return <span className="flex h-6 items-center rounded-full px-1 text-xs font-semibold tracking-wide text-text-muted">{game.statusText || t.card.fullTime}</span>;
+  if (game.status === 'scheduled') return <span className="score-font flex h-6 items-center rounded-full bg-surface-2 px-2.5 text-xs text-text-primary">{formatKickoff(game.startTime)}</span>;
+  return <span className="flex h-6 items-center rounded-full px-1 text-xs font-semibold tracking-wide text-text-secondary">{game.statusText || t.card.fullTime}</span>;
 }
 
 function liveMinute(game: Game): number {
@@ -149,11 +149,11 @@ function MatchTimeline({ game }: { readonly game: Game }) {
   const played = Math.min(100, (minute / scale) * 100);
   const t = useT();
   return (
-    <div className="grid grid-cols-[14px_1fr] items-center gap-x-2.5 border-t border-white/[0.06] pt-3" aria-label={t.card.timeline(game.minuteDisplay || game.statusText)}>
+    <div className="grid grid-cols-[14px_1fr] items-center gap-x-2.5 border-t border-line pt-3" aria-label={t.card.timeline(game.minuteDisplay || game.statusText)}>
       <TeamLogo teamId={game.home.id} name={game.home.name} size={14} />
       <TimelineLane events={events.filter((e) => e.side === 'home')} scale={scale} side="top" />
       <span />
-      <div className="relative my-1 h-[3px] rounded-full bg-white/[0.08]">
+      <div className="relative my-1 h-[3px] rounded-full bg-surface-3">
         <div className="live-progress h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
         <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ insetInlineStart: `${(45 / scale) * 100}%` }} aria-hidden />
       </div>
@@ -187,8 +187,8 @@ function StandingLine({ team, row }: { readonly team: Team; readonly row: Dashbo
         <TeamLogo teamId={team.id} name={team.name} size={14} />
         <span className="truncate text-text-secondary">{team.shortName || team.name}</span>
       </span>
-      <span role="cell" className="score-font text-center text-text-muted">{row.played}</span>
-      <span role="cell" className="score-font ltr-num text-center text-text-muted">{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</span>
+      <span role="cell" className="score-font text-center text-text-secondary">{row.played}</span>
+      <span role="cell" className="score-font ltr-num text-center text-text-secondary">{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</span>
       <span role="cell" className="score-font text-center text-text-primary">{row.points}</span>
     </>
   );
@@ -203,8 +203,8 @@ export function StandingsSnippet({ game }: { readonly game: Game }) {
     { team: game.away, row: game.standings.away },
   ].sort((a, b) => a.row.position - b.row.position);
   return (
-    <div role="table" aria-label={t.title} className="grid grid-cols-[auto_minmax(0,1fr)_2rem_2.5rem_2rem] items-center gap-x-2 gap-y-1.5 border-t border-white/[0.06] pt-3 text-caption">
-      <span role="row" className="contents text-caption font-medium text-text-muted">
+    <div role="table" aria-label={t.title} className="grid grid-cols-[auto_minmax(0,1fr)_2rem_2.5rem_2rem] items-center gap-x-2 gap-y-1.5 border-t border-line pt-3 text-caption">
+      <span role="row" className="contents text-caption font-medium text-text-secondary">
         <span role="columnheader" className="text-center">
           #
         </span>
@@ -235,7 +235,7 @@ export function openGame(id: number) {
 
 function GameFooter({ game }: { readonly game: Game }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
+    <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
       <div className="flex min-w-0 flex-1">
         <ChannelBadge channels={game.channels} />
       </div>
@@ -254,7 +254,7 @@ export function GameCard({ game }: { readonly game: Game }) {
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="game-card group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-white/[0.1] hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
+      className="game-card group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
     >
       <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
@@ -306,19 +306,19 @@ export function GameCard({ game }: { readonly game: Game }) {
 function SkeletonTeam() {
   return (
     <div className="flex items-center gap-3">
-      <div className="size-6 rounded-full bg-white/[0.06]" />
-      <div className="h-3.5 w-1/2 rounded-full bg-white/[0.06]" />
-      <div className="ms-auto h-5 w-4 rounded bg-white/[0.06]" />
+      <div className="size-6 rounded-full bg-surface-2" />
+      <div className="h-3.5 w-1/2 rounded-full bg-surface-2" />
+      <div className="ms-auto h-5 w-4 rounded bg-surface-2" />
     </div>
   );
 }
 
 export function GameCardSkeleton() {
   return (
-    <div className="flex animate-pulse flex-col gap-4 rounded-2xl border border-white/[0.06] bg-bg-card p-4" aria-hidden>
+    <div className="flex animate-pulse flex-col gap-4 rounded-2xl border border-line bg-bg-card p-4" aria-hidden>
       <div className="flex items-center justify-between">
-        <div className="h-3 w-1/3 rounded-full bg-white/[0.06]" />
-        <div className="h-6 w-12 rounded-full bg-white/[0.06]" />
+        <div className="h-3 w-1/3 rounded-full bg-surface-2" />
+        <div className="h-6 w-12 rounded-full bg-surface-2" />
       </div>
       <SkeletonTeam />
       <SkeletonTeam />

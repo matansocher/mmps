@@ -24,10 +24,10 @@ function TeamLine({ team, score, decided }: { readonly team?: MatchupTeam; reado
   return (
     <div className="flex items-center gap-2">
       {team ? <TeamLogo teamId={team.id} name={team.name} size={18} /> : <span className="size-[18px] shrink-0 rounded-full bg-bg-elevated" />}
-      <span className={`min-w-0 flex-1 truncate text-label ${dim ? 'text-text-muted' : team?.isQualified ? 'font-bold' : ''}`} title={team?.name}>
+      <span className={`min-w-0 flex-1 truncate text-label ${dim ? 'text-text-secondary' : team?.isQualified ? 'font-bold' : ''}`} title={team?.name}>
         {team?.name ?? messages().common.tbd}
       </span>
-      {score != null && <span className={`score-font text-sm ${dim ? 'text-text-muted' : ''}`}>{score}</span>}
+      {score != null && <span className={`score-font text-sm ${dim ? 'text-text-secondary' : ''}`}>{score}</span>}
     </div>
   );
 }
@@ -40,12 +40,12 @@ function MatchupCard({ matchup, onOpen, isFinal }: { readonly matchup: KnockoutM
   return (
     <button
       onClick={onOpen}
-      className={`flex w-full flex-col gap-1.5 rounded-xl border bg-bg-card px-3 py-2.5 text-start transition hover:bg-bg-elevated/60 ${isFinal ? 'border-accent-fav/50' : 'border-border-subtle'}`}
+      className={`flex w-full flex-col gap-1.5 rounded-xl border bg-bg-card px-3 py-2.5 text-start transition hover:bg-row-hover ${isFinal ? 'border-accent-fav/50' : 'border-border-subtle'}`}
     >
       <TeamLine team={matchup.teams[0]} score={score?.[0]} decided={decided} />
       <TeamLine team={matchup.teams[1]} score={score?.[1]} decided={decided} />
       {(live || (!score && nextLeg?.startTime)) && (
-        <span className="flex items-center gap-1.5 text-caption text-text-muted">
+        <span className="flex items-center gap-1.5 text-caption text-text-secondary">
           {live ? (
             <>
               <LiveDot />
@@ -65,8 +65,8 @@ function LegRow({ leg, matchup, index, total }: { readonly leg: KnockoutLeg; rea
   const away = matchup.teams.find((t) => t !== home) ?? matchup.teams[1];
   const hasScore = leg.homeScore != null && leg.awayScore != null;
   return (
-    <button onClick={() => navigate({ name: 'game', id: leg.gameId })} className="flex w-full flex-col gap-1.5 px-4 py-3 text-start transition hover:bg-bg-elevated/60">
-      <span className="flex justify-between text-caption text-text-muted">
+    <button onClick={() => navigate({ name: 'game', id: leg.gameId })} className="flex w-full flex-col gap-1.5 px-4 py-3 text-start transition hover:bg-row-hover">
+      <span className="flex justify-between text-caption text-text-secondary">
         <span>{total > 1 ? messages().bracket.leg(index + 1) : messages().bracket.match}</span>
         <span className="flex items-center gap-1.5">
           {leg.status === 'live' && <LiveDot />}
@@ -78,7 +78,7 @@ function LegRow({ leg, matchup, index, total }: { readonly leg: KnockoutLeg; rea
           {home && <TeamLogo teamId={home.id} name={home.name} size={24} />}
           <span className="truncate text-sm">{home?.name ?? messages().common.tbd}</span>
         </span>
-        <span className={`score-font text-base ${leg.status === 'live' ? 'text-accent-live' : ''}`}>{hasScore ? <ScoreLine home={leg.homeScore} away={leg.awayScore} /> : messages().common.vs}</span>
+        <span className={`score-font text-base ${leg.status === 'live' ? 'font-bold text-text-primary' : ''}`}>{hasScore ? <ScoreLine home={leg.homeScore} away={leg.awayScore} /> : messages().common.vs}</span>
         <span className="flex min-w-0 items-center justify-end gap-2">
           <span className="truncate text-sm">{away?.name ?? messages().common.tbd}</span>
           {away && <TeamLogo teamId={away.id} name={away.name} size={24} />}
@@ -137,7 +137,7 @@ function MatchupSheet({ matchup, stageName, nextStageName, onClose }: { readonly
         <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
           <h2 id={titleId} className="truncate text-sm font-semibold">
             {stageName}
-            {a && b && <span className="font-normal text-text-muted"> · {shortCode(a.name)} v {shortCode(b.name)}</span>}
+            {a && b && <span className="font-normal text-text-secondary"> · {shortCode(a.name)} v {shortCode(b.name)}</span>}
           </h2>
           <button onClick={onClose} aria-label={messages().common.close} className="flex size-7 items-center justify-center rounded-full text-text-secondary hover:bg-bg-elevated">
             <Icon name="close" size={14} />
@@ -145,7 +145,7 @@ function MatchupSheet({ matchup, stageName, nextStageName, onClose }: { readonly
         </div>
         <div className="divide-y divide-border-subtle">
           {matchup.legs.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().bracket.noGames}</p>
+            <p className="px-4 py-6 text-center text-sm text-text-secondary">{messages().bracket.noGames}</p>
           ) : (
             matchup.legs.map((leg, i) => <LegRow key={leg.gameId} leg={leg} matchup={matchup} index={i} total={matchup.legs.length} />)
           )}
@@ -176,7 +176,7 @@ type Selected = { readonly matchup: KnockoutMatchup; readonly stageName: string;
 
 export function BracketView({ stages }: { readonly stages: readonly KnockoutStage[] }) {
   const [selected, setSelected] = useState<Selected | null>(null);
-  if (!stages.length) return <p className="py-10 text-center text-sm text-text-muted">{messages().bracket.empty}</p>;
+  if (!stages.length) return <p className="py-10 text-center text-sm text-text-secondary">{messages().bracket.empty}</p>;
   const lastIndex = stages.length - 1;
 
   return (

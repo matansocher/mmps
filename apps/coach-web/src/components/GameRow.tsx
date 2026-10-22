@@ -44,7 +44,7 @@ function Center({ game }: { readonly game: Game }) {
         </span>
       ) : (
         <span className="flex h-3.5 max-w-16 items-center gap-1">
-          <span className="truncate text-caption leading-3.5 text-text-muted">{game.statusText}</span>
+          <span className="truncate text-caption leading-3.5 text-text-secondary">{game.statusText}</span>
           <HotBadge game={game} compact />
         </span>
       )}
@@ -64,7 +64,7 @@ export function GameRow({ game }: { readonly game: Game }) {
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="game-card relative flex cursor-pointer flex-col gap-1 rounded-xl border border-white/[0.06] bg-bg-card px-3 py-2 transition duration-150 ease-out hover:border-white/[0.1] hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand"
+      className="game-card relative flex cursor-pointer flex-col gap-1 rounded-xl border border-line bg-bg-card px-3 py-2 transition duration-150 ease-out hover:border-line-strong hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand"
     >
       {game.isFavorite && <Icon name="star" size={10} className="absolute start-1.5 top-1.5 text-accent-fav" title={t.common.favouriteTeam} />}
       <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export function GameRow({ game }: { readonly game: Game }) {
         </span>
       </div>
       {lastEvent && (
-        <p className="flex min-w-0 items-center justify-center gap-1.5 text-caption text-text-muted">
+        <p className="flex min-w-0 items-center justify-center gap-1.5 text-caption text-text-secondary">
           <span className="score-font ltr-num font-semibold text-text-secondary">{lastEvent.minuteDisplay}</span>
           <Icon name={EVENT_META[lastEvent.type].icon} size={11} />
           <span className="truncate text-text-secondary">{eventText(lastEvent)}</span>

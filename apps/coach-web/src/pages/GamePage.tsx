@@ -26,7 +26,7 @@ function InfoRow({ icon, label, children }: { readonly icon: ReactNode; readonly
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 text-sm">
       <span className="flex w-5 shrink-0 justify-center">{icon}</span>
-      <span className="w-20 shrink-0 text-text-muted">{label}</span>
+      <span className="w-20 shrink-0 text-text-secondary">{label}</span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );
@@ -44,7 +44,7 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         ) : (
           game.competitionName
         )}
-        {detail.round && <span className="text-text-muted"> · {detail.round}</span>}
+        {detail.round && <span className="text-text-secondary"> · {detail.round}</span>}
       </InfoRow>
       <InfoRow icon={<Icon name="calendar" size={16} className="text-text-muted" />} label={messages().game.kickoff}>
         {formatLongDate(game.startTime)} · {formatKickoff(game.startTime)}
@@ -77,7 +77,7 @@ function GameTable({ detail }: { readonly detail: GameDetail }) {
   if (!competition.data) return <Loading />;
   const teamIds = [game.home.id, game.away.id];
   const tables = competition.data.tables.filter((t) => t.rows.some((r) => teamIds.includes(r.team.id)));
-  if (!tables.length) return <p className="py-10 text-center text-sm text-text-muted">{messages().game.noTable}</p>;
+  if (!tables.length) return <p className="py-10 text-center text-sm text-text-secondary">{messages().game.noTable}</p>;
   return (
     <div className="flex flex-col gap-3">
       <LiveTableNote tables={tables} />

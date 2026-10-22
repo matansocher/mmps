@@ -24,7 +24,7 @@ function RecordBar({ headToHead, home, away }: { readonly headToHead: HeadToHead
         {columns.map((c) => (
           <div key={c.label} className="flex min-w-0 flex-col">
             <span className="score-font text-xl">{c.value}</span>
-            <span className="truncate text-caption text-text-muted">{c.label}</span>
+            <span className="truncate text-caption text-text-secondary">{c.label}</span>
           </div>
         ))}
       </div>
@@ -35,7 +35,7 @@ function RecordBar({ headToHead, home, away }: { readonly headToHead: HeadToHead
             <span key={c.label} className={c.color} style={{ flexGrow: c.value }} />
           ))}
       </div>
-      <p className="text-center text-caption text-text-muted">{t.lastMeetings(total)}</p>
+      <p className="text-center text-caption text-text-secondary">{t.lastMeetings(total)}</p>
     </div>
   );
 }
@@ -68,7 +68,7 @@ export function HeadToHeadView({ headToHead, home, away }: { readonly headToHead
   return (
     <>
       {hasForm && (
-        <Section title={messages().h2h.form} right={<span className="text-caption text-text-muted">{messages().h2h.formHint}</span>}>
+        <Section title={messages().h2h.form} right={<span className="text-caption text-text-secondary">{messages().h2h.formHint}</span>}>
           <Card className="divide-y divide-border-subtle">
             <FormRow team={home} games={headToHead.homeRecent} />
             <FormRow team={away} games={headToHead.awayRecent} />

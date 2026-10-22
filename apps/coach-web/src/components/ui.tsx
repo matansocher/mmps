@@ -46,7 +46,7 @@ export function Tabs<T extends string>({ tabs, active, onChange }: { readonly ta
           aria-selected={active === tab.id}
           tabIndex={active === tab.id ? 0 : -1}
           onClick={() => select(tab.id)}
-          className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${active === tab.id ? 'bg-bg-elevated text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+          className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${active === tab.id ? 'bg-bg-elevated text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
         >
           {tab.label}
         </button>
@@ -74,13 +74,13 @@ export function ErrorState({ status, onRetry }: { readonly status: number; reado
   const text = unauthorized ? t.unauthorizedText : notFound ? t.notFoundText : offline ? t.offlineText : t.failedText;
   return (
     <div className="mx-auto mt-16 flex max-w-sm flex-col items-center gap-3 px-6 text-center">
-      <span aria-hidden className="flex size-14 items-center justify-center rounded-full bg-white/[0.04] text-text-muted">
+      <span aria-hidden className="flex size-14 items-center justify-center rounded-full bg-surface-1 text-text-muted">
         <Icon name={icon} size={24} />
       </span>
       <p className="text-base font-semibold">{title}</p>
       <p className="text-sm text-text-secondary">{text}</p>
       {onRetry && !unauthorized && !notFound && (
-        <button onClick={onRetry} className="mt-2 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-semibold transition hover:bg-white/[0.1]">
+        <button onClick={onRetry} className="mt-2 rounded-full bg-surface-2 px-4 py-2 text-sm font-semibold transition hover:bg-surface-3">
           {messages().common.tryAgain}
         </button>
       )}
