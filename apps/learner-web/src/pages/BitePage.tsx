@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { AppIcon } from '../components/AppIcon';
 import { ReadingProgressBar } from '../components/ReadingProgressBar';
 import { ScrollToTopButton } from '../components/ScrollToTopButton';
+import { SectionQuiz } from '../components/SectionQuiz';
 import { useProgress } from '../hooks/useProgress';
 import { useReadingProgress } from '../hooks/useReadingProgress';
 import { GUIDES, bitesByGuide, getBite } from '../lib/bites';
@@ -81,14 +82,7 @@ export function BitePage() {
         </div>
       ) : null}
 
-      {hasQuiz(bite.id) ? (
-        <div className="quiz-cta">
-          <p className="quiz-cta-copy">Ready to check your understanding?</p>
-          <Link className="btn block" to={`/quiz/${encodeURIComponent(bite.id)}`} state={{ from: backDestination }}>
-            <AppIcon name="brain" size={19} /> Take the section quiz
-          </Link>
-        </div>
-      ) : null}
+      {hasQuiz(bite.id) ? <SectionQuiz key={bite.id} biteId={bite.id} /> : null}
 
       {!bite.isReference && remote ? (
         <Link className="home-action practice-action practice-cta" to={`/practice?lessons=${encodeURIComponent(bite.id)}`}>

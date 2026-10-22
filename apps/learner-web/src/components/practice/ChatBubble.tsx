@@ -6,11 +6,12 @@ type ChatBubbleProps = {
   readonly role: 'user' | 'assistant' | 'question';
   readonly text?: string;
   readonly meta?: ReactNode;
+  readonly header?: ReactNode;
   readonly children?: ReactNode;
   readonly streaming?: boolean;
 };
 
-export function ChatBubble({ role, text, meta, children, streaming }: ChatBubbleProps) {
+export function ChatBubble({ role, text, meta, header, children, streaming }: ChatBubbleProps) {
   return (
     <div className={`chat-row ${role}`}>
       {role !== 'user' && (
@@ -19,9 +20,19 @@ export function ChatBubble({ role, text, meta, children, streaming }: ChatBubble
         </div>
       )}
       <div className={`chat-bubble ${role}${streaming ? ' streaming' : ''}`}>
+        {header && <div className="chat-band">{header}</div>}
         {meta && <div className="chat-meta">{meta}</div>}
-        {text !== undefined && (role === 'user' ? <p className="chat-plain">{text}</p> : <RichText text={text} />)}
-        {children}
+        {header ? (
+          <div className="chat-band-body">
+            {text !== undefined && <RichText text={text} />}
+            {children}
+          </div>
+        ) : (
+          <>
+            {text !== undefined && (role === 'user' ? <p className="chat-plain">{text}</p> : <RichText text={text} />)}
+            {children}
+          </>
+        )}
       </div>
     </div>
   );

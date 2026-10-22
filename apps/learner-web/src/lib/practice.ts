@@ -175,3 +175,50 @@ export function saveLastScope(scope: PracticeScope): void {
     // ignore
   }
 }
+
+// Questions answered in a row from one setup, so the chat can show session progress.
+const SESSION_KEY = 'learner:practice-session';
+const SESSION_MAX = 12;
+
+export type PracticeTone = ReturnType<typeof verdictTone>;
+
+export type PracticeSessionEntry = {
+  readonly id: string;
+  readonly tone: PracticeTone | null;
+};
+
+function readSession(): PracticeSessionEntry[] {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeSession(entries: readonly PracticeSessionEntry[]): PracticeSessionEntry[] {
+  const trimmed = entries.slice(-SESSION_MAX);
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(trimmed));
+  } catch {
+    // ignore
+  }
+  return trimmed;
+}
+
+export function startPracticeSession(attemptId: string): void {
+  writeSession([{ id: attemptId, tone: null }]);
+}
+
+export function continuePracticeSession(attemptId: string): void {
+  const entries = readSession();
+  if (!entries.some((e) => e.id === attemptId)) writeSession([...entries, { id: attemptId, tone: null }]);
+}
+
+// Opening an attempt that isn't part of the stored session (e.g. from history) starts a fresh one.
+export function syncPracticeSession(attemptId: string, tone: PracticeTone | null): PracticeSessionEntry[] {
+  const entries = readSession();
+  if (!entries.some((e) => e.id === attemptId)) return writeSession([{ id: attemptId, tone }]);
+  return writeSession(entries.map((e) => (e.id === attemptId && tone ? { ...e, tone } : e)));
+}

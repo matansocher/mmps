@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { ApiError } from '../../lib/api';
 import { practiceErrorMessage } from '../../lib/practice';
 import { practiceApi } from '../../lib/practice-api';
@@ -16,6 +16,7 @@ type ChatComposerProps = {
   readonly onSubmit: (text: string, source: 'text' | 'voice') => Promise<boolean> | boolean;
   readonly onStop?: () => void;
   readonly prefill?: { readonly text: string; readonly nonce: number } | null;
+  readonly footerAction?: ReactNode;
 };
 
 function formatSeconds(total: number): string {
@@ -24,7 +25,7 @@ function formatSeconds(total: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function ChatComposer({ placeholder, maxChars, disabled, busy, allowVoice = true, autoFocus, onSubmit, onStop, prefill }: ChatComposerProps) {
+export function ChatComposer({ placeholder, maxChars, disabled, busy, allowVoice = true, autoFocus, onSubmit, onStop, prefill, footerAction }: ChatComposerProps) {
   const [value, setValue] = useState('');
   const [source, setSource] = useState<'text' | 'voice'>('text');
   const [transcribing, setTranscribing] = useState(false);
@@ -172,7 +173,12 @@ export function ChatComposer({ placeholder, maxChars, disabled, busy, allowVoice
       </div>
       <div className="composer-foot">
         <span>{source === 'voice' ? 'Transcribed from voice — edit before sending' : 'Enter to send · Shift+Enter for a new line'}</span>
-        {remaining < 400 && <span className={remaining < 0 ? 'over' : ''}>{remaining}</span>}
+        {(remaining < 400 || footerAction) && (
+          <span className="composer-foot-end">
+            {remaining < 400 && <span className={remaining < 0 ? 'over' : ''}>{remaining}</span>}
+            {footerAction}
+          </span>
+        )}
       </div>
     </form>
   );

@@ -74,7 +74,7 @@ export function toAttemptDto(attempt: PracticeAttempt): PracticeAttemptDto {
       guide: question?.guide ?? 'system-design',
       difficulty: question?.difficulty ?? 'medium',
       biteId: graded ? attempt.biteId : null,
-      lessonTitle: graded ? (question?.lessonTitle ?? null) : null,
+      lessonTitle: question?.lessonTitle ?? null,
     },
     answer: attempt.answer ?? null,
     answerSource: attempt.answerSource ?? null,
