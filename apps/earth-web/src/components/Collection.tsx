@@ -43,7 +43,7 @@ export function Collection({ countries, onShowCountry, onClose }: Props) {
           <h2 id="collection-title" className="text-[22px] leading-none font-bold">
             Collection
           </h2>
-          <div className="mt-1 text-[14px] text-white/55 tabular-nums">
+          <div className="mt-1 text-[14px] text-white/75 tabular-nums">
             Level {level.level} · {progress.miles.toLocaleString()} XP · {found} of {total} found
           </div>
         </div>
@@ -58,7 +58,7 @@ export function Collection({ countries, onShowCountry, onClose }: Props) {
           {ACHIEVEMENTS.map((a) => {
             const unlocked = progress.achievements.includes(a.id);
             return (
-              <li key={a.id} className={`flex items-center gap-3 rounded-lg px-3 py-2 ${unlocked ? 'bg-[var(--color-tile)]' : 'border border-dashed border-white/15 text-white/50'}`}>
+              <li key={a.id} className={`flex items-center gap-3 rounded-lg px-3 py-2 ${unlocked ? 'bg-[var(--color-tile)]' : 'border border-dashed border-white/15 text-white/75'}`}>
                 <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${unlocked ? 'bg-[var(--color-accent)] text-white' : 'bg-white/6'}`} aria-hidden="true">
                   {unlocked ? '★' : <Icon name="lock" size={16} />}
                 </span>
@@ -79,7 +79,7 @@ export function Collection({ countries, onShowCountry, onClose }: Props) {
             <section key={continent} className="mt-5">
               <h3 className="flex items-baseline justify-between text-[17px] font-bold">
                 {continent}
-                <span className="text-[14px] text-white/50 tabular-nums">
+                <span className="text-[14px] text-white/75 tabular-nums">
                   {got}/{list.length}
                 </span>
               </h3>

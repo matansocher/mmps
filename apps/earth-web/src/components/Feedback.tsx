@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { haptic } from '../lib/telegram';
 import { playCorrect, playMiss } from '../store/sound';
 
 const FEEDBACK_MS = 1200;
@@ -19,24 +20,30 @@ export function useFeedback() {
     const mark = { id: nextId++, x, y, ok, label };
     if (ok) playCorrect();
     else playMiss();
+    haptic(ok ? 'success' : 'error');
     setMarks((all) => [...all.slice(-3), mark]);
     window.setTimeout(() => setMarks((all) => all.filter((m) => m.id !== mark.id)), FEEDBACK_MS);
   }, []);
   return { marks, show };
 }
 
-// A small ✓/✗ pill where the player clicked.
+// A ✓/✗ pill lifted above the tap point, with a stem pointing at where the player tapped.
 export function Feedback({ marks }: { readonly marks: readonly FeedbackMark[] }) {
   return (
     <>
-      {marks.map(({ id, x, y, ok, label }) => (
-        <div key={id} className="feedback" style={{ left: x, top: y }} aria-hidden="true">
-          <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[15px] font-bold text-white shadow-lg ${ok ? 'bg-[#059669]' : 'bg-[#dc2626]'}`}>
-            <span>{ok ? '✓' : '✗'}</span>
-            <span className="max-w-[200px] truncate">{label}</span>
+      {marks.map(({ id, x, y, ok, label }) => {
+        const tone = ok ? 'var(--color-ok)' : 'var(--color-bad)';
+        return (
+          <div key={id} className="feedback" style={{ left: x, top: y }} aria-hidden="true">
+            <div className="flex items-center gap-2 rounded-full border-2 bg-[var(--color-ink)] px-3.5 py-1.5 text-[16px] font-bold text-white shadow-[0_10px_24px_rgb(0_0_0/0.55)]" style={{ borderColor: tone }}>
+              <span style={{ color: tone }}>{ok ? '✓' : '✗'}</span>
+              <span className="max-w-[220px] truncate">{label}</span>
+            </div>
+            <div className="feedback-stem" style={{ background: tone }} />
+            <div className="feedback-dot" style={{ background: tone }} />
           </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

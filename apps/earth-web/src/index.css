@@ -3,18 +3,25 @@
 
 @theme {
   --font-sans: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-bg: #060a12;
   --color-ink: #0b1220;
-  --color-tile: #1a2436;
-  --color-rule: rgb(255 255 255 / 0.08);
-  --color-accent: #3b82f6;
-  --color-accent-soft: #93c5fd;
-  --color-ok: #34d399;
-  --color-bad: #f87171;
+  --color-tile: #18233a;
+  --color-rule: rgb(148 178 255 / 0.14);
+  --color-accent: #6ea8ff;
+  --color-accent-soft: #a9c8ff;
+  --color-fg: #f3f6fb;
+  --color-muted: #a8b3c7;
+  --color-ok: #3ddc97;
+  --color-bad: #ff7a6b;
+  --color-warn: #ffc857;
 }
 
 @layer base {
   :root {
     color-scheme: dark;
+    /* Telegram sets --tg-* insets inside the mini app; env() covers plain browsers. */
+    --safe-top: max(env(safe-area-inset-top, 0px), calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px)));
+    --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
   }
 
   html,
@@ -23,9 +30,9 @@
     height: 100%;
     margin: 0;
     overflow: hidden;
-    background: #070b14;
+    background: var(--color-bg);
     font-family: var(--font-sans);
-    color: #e7ebf3;
+    color: var(--color-fg);
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
   }
@@ -39,17 +46,17 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent-soft);
+    outline: 3px solid var(--color-accent-soft);
     outline-offset: 2px;
   }
 }
 
 @layer components {
   .panel {
-    background: rgb(13 20 34 / 0.94);
+    background: rgb(12 19 33 / 0.94);
     border: 1px solid var(--color-rule);
-    box-shadow: 0 18px 40px rgb(0 0 0 / 0.45);
-    backdrop-filter: blur(8px);
+    box-shadow: 0 18px 44px rgb(0 0 0 / 0.5);
+    backdrop-filter: blur(10px);
   }
 
   .icon-btn {
@@ -59,8 +66,10 @@
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    color: #e7ebf3;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    color: var(--color-fg);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
   }
 
   .icon-btn:hover {
@@ -72,13 +81,15 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 16px;
     border-radius: 10px;
-    border: 1px solid rgb(255 255 255 / 0.16);
+    border: 1px solid rgb(148 178 255 / 0.22);
     font-size: 15px;
     font-weight: 700;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition:
+      background-color 0.15s ease,
+      transform 0.1s ease;
   }
 
   .btn:hover {
@@ -92,11 +103,72 @@
   .btn-primary {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-ink);
   }
 
   .btn-primary:hover {
-    background: #2f74e6;
+    background: var(--color-accent-soft);
+  }
+
+  .hud-top {
+    top: calc(10px + var(--safe-top));
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--color-tile);
+    border: 1px solid var(--color-rule);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-accent-soft);
+  }
+
+  /* One pill for camera + app controls; rises above any bottom sheet via --sheet-h. */
+  .dock {
+    bottom: var(--sheet-h, calc(14px + var(--safe-bottom)));
+    margin-bottom: 0;
+  }
+
+  .dock-btn {
+    position: relative;
+  }
+
+  .dock-btn[data-tip]:hover::after,
+  .dock-btn[data-tip]:focus-visible::after {
+    content: attr(data-tip);
+    position: absolute;
+    right: calc(100% + 10px);
+    top: 50%;
+    translate: 0 -50%;
+    padding: 5px 9px;
+    border-radius: 8px;
+    background: var(--color-ink);
+    border: 1px solid var(--color-rule);
+    color: var(--color-fg);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  @media (hover: none) {
+    .dock-btn[data-tip]:hover::after {
+      content: none;
+    }
   }
 
   .scroll-thin {
@@ -104,14 +176,94 @@
     scrollbar-color: rgb(255 255 255 / 0.2) transparent;
   }
 
-  /* Short ✓/✗ pill at the click point. */
+  /* ✓/✗ pill lifted above the tap point so the finger doesn't cover it. */
   .feedback {
     position: fixed;
     z-index: 25;
     pointer-events: none;
-    translate: -50% -50%;
+    translate: -50% -100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     animation: feedback-pop 1.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
   }
+
+  .feedback-stem {
+    width: 2px;
+    height: 34px;
+    border-radius: 2px;
+  }
+
+  .feedback-dot {
+    width: 10px;
+    height: 10px;
+    margin-bottom: -5px;
+    border-radius: 999px;
+    border: 2px solid var(--color-bg);
+  }
+
+  /* Labelled pin over the correct country after a miss. */
+  .answer-pin {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 15;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .answer-pin-ring {
+    position: absolute;
+    left: -14px;
+    top: -14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 2px solid var(--color-ok);
+    animation: pin-pulse 1.6s ease-out infinite;
+  }
+}
+
+@keyframes pin-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes splash-meridian {
+  0% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.02);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.splash-meridian {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: splash-meridian 4s linear infinite;
+}
+
+@keyframes splash-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.splash-bar {
+  animation: splash-bar 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes feedback-pop {

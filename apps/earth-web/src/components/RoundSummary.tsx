@@ -49,7 +49,7 @@ function useCountUp(target: number, ms = 900): number {
 function Stat({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
   return (
     <div className="rounded-xl bg-[var(--color-tile)] px-3 py-2">
-      <div className="text-[12px] font-semibold text-white/50">{label}</div>
+      <div className="text-[12px] font-bold text-white/75">{label}</div>
       <div className="text-[22px] leading-tight font-bold tabular-nums">{children}</div>
     </div>
   );
@@ -73,7 +73,7 @@ export function RoundSummary({ title, score, outOf, best, newBest, items, byCode
       aria-label="Round results"
     >
       <header className="flex items-center justify-between border-b border-[var(--color-rule)] px-5 py-3">
-        <span className="text-[15px] font-semibold text-white/60">Results · {title}</span>
+        <span className="text-[15px] font-bold text-white/75">Results · {title}</span>
       </header>
 
       <div className="scroll-thin flex-1 overflow-y-auto">
@@ -81,7 +81,7 @@ export function RoundSummary({ title, score, outOf, best, newBest, items, byCode
           <div className="grid grid-cols-3 gap-2">
             <Stat label="Score">
               {score}
-              <span className="text-[16px] text-white/45">{suffix}</span>
+              <span className="text-[16px] text-white/75">{suffix}</span>
             </Stat>
             <Stat label="XP">
               <span className="text-[var(--color-ok)]">+{earned.toLocaleString()}</span>
@@ -89,7 +89,7 @@ export function RoundSummary({ title, score, outOf, best, newBest, items, byCode
             <Stat label={newBest ? 'New best!' : 'Best'}>
               <span className={newBest ? 'text-[var(--color-accent-soft)]' : undefined}>
                 {newBest ? score : best}
-                <span className="text-[16px] text-white/45">{suffix}</span>
+                <span className="text-[16px] text-white/75">{suffix}</span>
               </span>
             </Stat>
           </div>
@@ -97,7 +97,7 @@ export function RoundSummary({ title, score, outOf, best, newBest, items, byCode
           <div className="mt-4">
             <div className="flex items-baseline justify-between text-[13px]">
               <span className="text-[16px] font-bold">{outcome?.levelUp ? `Level up! Level ${level.level}` : `Level ${level.level}`}</span>
-              <span className="text-white/55 tabular-nums">{next ? `${(next.xp - progress.miles).toLocaleString()} XP to level ${next.level}` : `${progress.miles.toLocaleString()} XP`}</span>
+              <span className="text-white/75 tabular-nums">{next ? `${(next.xp - progress.miles).toLocaleString()} XP to level ${next.level}` : `${progress.miles.toLocaleString()} XP`}</span>
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label={next ? `Progress to level ${next.level}` : 'Max level'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(toNext * 100)}>
               <div className="h-full rounded-full bg-[var(--color-accent)] transition-[width] duration-700" style={{ width: `${toNext * 100}%` }} />
@@ -135,7 +135,7 @@ export function RoundSummary({ title, score, outOf, best, newBest, items, byCode
                     <span className="min-w-0 flex-1 truncate">
                       {country?.flag} {country?.name}
                     </span>
-                    {note && <span className="shrink-0 truncate text-[12px] text-white/45">{note}</span>}
+                    {note && <span className="shrink-0 truncate text-[12px] text-white/75">{note}</span>}
                   </button>
                 </li>
               );

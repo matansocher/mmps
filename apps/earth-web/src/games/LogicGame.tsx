@@ -93,7 +93,7 @@ export function LogicGame({ engine, mode, onChangeMode }: GameProps<LogicMode>) 
     [engine],
   );
 
-  useKeyboard({ Enter: () => !playing && playAgain(), m: () => onChangeMode() });
+  useKeyboard({ Enter: () => !playing && playAgain(), m: () => !playing && onChangeMode() });
 
   const title = `Earth Logic #${puzzle.number} · ${LOGIC_DIFFICULTY_LABELS[mode.difficulty]}`;
   const clues = revealedClues(state);
@@ -131,7 +131,7 @@ export function LogicGame({ engine, mode, onChangeMode }: GameProps<LogicMode>) 
         }
       >
         <div className="mt-4 px-5">
-          <p className="mb-2 text-[14px] font-semibold text-white/60">
+          <p className="mb-2 text-[14px] font-bold text-white/75">
             {state.phase === 'won' ? `Solved in ${state.guesses.length}. ` : 'Not this time. '}
             The answer was {countries.byCode.get(puzzle.answer)?.flag} {nameOf(puzzle.answer)}.
           </p>
@@ -144,9 +144,22 @@ export function LogicGame({ engine, mode, onChangeMode }: GameProps<LogicMode>) 
   const left = LOGIC_MAX_GUESSES - state.guesses.length;
   return (
     <>
-      <GameCard title={title} status={`· ${left} guess${left === 1 ? '' : 'es'} left`} aside={`${clues.length}/${puzzle.clues.length} clues`} onChangeMode={onChangeMode}>
+      <GameCard
+        eyebrow={`${title} · Deduce`}
+        progress={
+          <ol className="flex gap-1" aria-label={`${state.guesses.length} of ${LOGIC_MAX_GUESSES} guesses used`}>
+            {Array.from({ length: LOGIC_MAX_GUESSES }, (_, i) => (
+              <li key={i} className={`h-1.5 flex-1 rounded-full ${i < state.guesses.length ? 'bg-[var(--color-bad)]' : 'bg-white/15'}`} />
+            ))}
+          </ol>
+        }
+        count={`${left} left`}
+        aside={`${clues.length}/${puzzle.clues.length} clues`}
+        leaveGuard={state.guesses.length > 0 ? { detail: `You’ve used ${state.guesses.length} of ${LOGIC_MAX_GUESSES} guesses.` } : null}
+        onChangeMode={onChangeMode}
+      >
         {clueList}
-        <div className="mt-2.5 min-h-5 text-[14px] text-white/60">{hint ?? (state.guesses.length ? `Not ${nameOf(state.guesses.at(-1) ?? '')}. Here’s another clue.` : 'Which country is it? Tap it on the globe.')}</div>
+        <div className="mt-2.5 min-h-5 text-[14px] text-white/75">{hint ?? (state.guesses.length ? `Not ${nameOf(state.guesses.at(-1) ?? '')}. Here’s another clue.` : 'Which country is it? Tap it on the globe.')}</div>
       </GameCard>
       <Feedback marks={marks} />
     </>

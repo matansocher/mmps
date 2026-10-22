@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnswerPin } from '../components/AnswerPin';
 import { QuizCard } from '../components/QuizCard';
 import { RoundSummary } from '../components/RoundSummary';
 import { Feedback, useFeedback } from '../components/Feedback';
 import { bestScoreKey, type Continent, CONTINENT_VIEWS, modeTitle, questionPool } from '../game/modes';
+import { countryFocus } from '../game/countries';
 import { dailyRandom } from '../game/progression';
 import { answer, createQuiz, currentTarget, lastAnswer, next, type QuizState, ROUND_SIZE, score, skip } from '../game/quiz';
 import { currentView, flyToView, HOME_VIEW } from '../globe/camera';
@@ -107,7 +109,7 @@ export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMod
   useKeyboard({
     Enter: () => (quiz.phase !== 'finished' ? goNext() : canReplay ? playAgain() : onChangeMode()),
     s: () => goSkip(),
-    m: () => onChangeMode(),
+    m: () => quiz.phase === 'finished' && onChangeMode(),
   });
 
   const title = modeTitle(mode);
@@ -130,9 +132,13 @@ export function ClassicGame({ engine, mode, onChangeMode }: GameProps<ClassicMod
       />
     );
   }
+  const missed = quiz.phase === 'answered' ? lastAnswer(quiz) : null;
+  const missedCountry = missed && !missed.correct ? countries.byCode.get(missed.target) : undefined;
+  const pinAt = missedCountry ? countryFocus(missedCountry) : null;
   return (
     <>
-      {currentTarget(quiz) && <QuizCard title={title} quiz={quiz} byCode={countries.byCode} hint={hint} onSkip={goSkip} onNext={goNext} onChangeMode={onChangeMode} />}
+      {missedCountry && pinAt && <AnswerPin key={missedCountry.code} viewer={viewer} lat={pinAt.lat} lon={pinAt.lon} label={missedCountry.name} />}
+      {currentTarget(quiz) && <QuizCard title={title} daily={mode.kind === 'daily'} quiz={quiz} byCode={countries.byCode} hint={hint} onSkip={goSkip} onNext={goNext} onChangeMode={onChangeMode} />}
       <Feedback marks={marks} />
     </>
   );

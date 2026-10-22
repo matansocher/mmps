@@ -6,13 +6,25 @@ import { EarthUi } from './EarthUi';
 
 type Boot =
   | { readonly status: 'loading' }
-  | { readonly status: 'error'; readonly title: string; readonly message: string; readonly retryable: boolean }
+  | { readonly status: 'error'; readonly title: string; readonly message: string; readonly detail?: string; readonly retryable: boolean }
   | { readonly status: 'ready'; readonly engine: EarthEngine };
 
 export function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [boot, setBoot] = useState<Boot>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
+  const loading = boot.status === 'loading';
+  const [splashMounted, setSplashMounted] = useState(true);
+
+  // Keep the splash in the DOM only for its fade-out, then drop it.
+  useEffect(() => {
+    if (loading) {
+      setSplashMounted(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setSplashMounted(false), 750);
+    return () => window.clearTimeout(timer);
+  }, [loading]);
 
   useEffect(() => {
     if (!isWebGLAvailable()) {
@@ -37,7 +49,13 @@ export function App() {
         if (cancelled) return;
         engine?.destroy();
         engine = null;
-        setBoot({ status: 'error', title: 'Couldn’t load the globe', message: err instanceof Error ? err.message : 'Something went wrong.', retryable: true });
+        setBoot({
+          status: 'error',
+          title: 'The globe didn’t load',
+          message: 'Usually a weak connection. Check you’re online and try again.',
+          detail: err instanceof Error ? err.message : undefined,
+          retryable: true,
+        });
       }
     })();
 
@@ -56,8 +74,8 @@ export function App() {
     <>
       <div ref={containerRef} className="fixed inset-0" />
       {boot.status === 'ready' && <EarthUi engine={boot.engine} />}
-      <Splash visible={boot.status === 'loading'} />
-      {boot.status === 'error' && <ErrorScreen title={boot.title} message={boot.message} onRetry={boot.retryable ? retry : undefined} />}
+      {splashMounted && <Splash visible={loading} />}
+      {boot.status === 'error' && <ErrorScreen title={boot.title} message={boot.message} detail={boot.detail} onRetry={boot.retryable ? retry : undefined} />}
     </>
   );
 }

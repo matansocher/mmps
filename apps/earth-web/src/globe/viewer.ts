@@ -38,7 +38,7 @@ export function createEarthViewer(container: HTMLElement): Viewer {
     scene.skyAtmosphere.saturationShift = -0.15;
     scene.skyAtmosphere.brightnessShift = 0.05;
   }
-  scene.backgroundColor = Color.fromCssColorString('#070b14');
+  scene.backgroundColor = Color.fromCssColorString('#060a12');
   if (scene.skyBox) scene.skyBox.show = true;
   if (scene.sun) scene.sun.show = false;
   if (scene.moon) scene.moon.show = false;
