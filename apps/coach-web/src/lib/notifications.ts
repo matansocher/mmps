@@ -9,6 +9,8 @@ export type GameNotification = {
   readonly competitionId: number;
   readonly icon: IconName;
   readonly eventType?: EventType;
+  // Team the event belongs to; the card shows its logo.
+  readonly side?: Side;
   readonly title: string;
   readonly text?: string;
   readonly minuteDisplay?: string;
@@ -163,6 +165,7 @@ export function diffGames(previous: readonly Game[], next: readonly Game[], even
         key: event.key,
         icon: meta.icon,
         eventType: event.type,
+        side: event.side,
         title: context?.title ?? messages().events[event.type].title,
         text: context?.text ?? eventText(event),
         minuteDisplay: event.minuteDisplay,

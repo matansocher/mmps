@@ -98,6 +98,15 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
   );
 }
 
+// Visual only; the parent button carries role="switch" and aria-checked.
+function Switch({ on }: { readonly on: boolean }) {
+  return (
+    <span aria-hidden className={`relative inline-flex h-6 w-10 shrink-0 rounded-full transition-colors ${on ? 'bg-accent-brand' : 'bg-surface-3'}`}>
+      <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-[inset-inline-start] ${on ? 'start-[18px]' : 'start-0.5'}`} />
+    </span>
+  );
+}
+
 export function SettingsPage() {
   const { refresh } = useDashboard();
   const { language, setLanguage } = useLanguage();
@@ -233,19 +242,20 @@ export function SettingsPage() {
           </Card>
 
           <Card title={t.settings.notifications} subtitle={t.settings.notificationsSubtitle}>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col divide-y divide-line overflow-hidden rounded-lg border border-border-subtle">
               {EVENT_TYPE_ORDER.map((type: EventType) => {
                 const on = prefs.eventTypes.includes(type);
                 return (
                   <button
                     key={type}
+                    role="switch"
+                    aria-checked={on}
                     onClick={() => update({ ...prefs, eventTypes: toggle(prefs.eventTypes, type) })}
-                    aria-pressed={on}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-secondary'}`}
+                    className="flex min-h-11 items-center gap-3 px-3 py-2 text-sm transition hover:bg-row-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-brand"
                   >
-                    <Icon name={EVENT_META[type].icon} size={16} />
-                    <span className="flex-1 text-start">{t.events[type].label}</span>
-                    <span className={`size-4 rounded border ${on ? 'border-accent-brand bg-accent-brand' : 'border-text-muted'}`} />
+                    <Icon name={EVENT_META[type].icon} size={16} className={on ? 'text-text-primary' : 'text-text-muted'} />
+                    <span className={`flex-1 text-start ${on ? 'text-text-primary' : 'text-text-secondary'}`}>{t.events[type].label}</span>
+                    <Switch on={on} />
                   </button>
                 );
               })}
