@@ -1006,6 +1006,14 @@ a { color: var(--accent-blue); }
   text-decoration: none;
 }
 .practice-history-link:hover { color: var(--text); border-color: var(--border-strong); }
+.session-dots { display: flex; align-items: center; gap: 6px; margin: 2px 0 16px; }
+.session-dot { width: 22px; height: 6px; border-radius: 3px; background: var(--border-strong); }
+.session-dot.good { background: var(--accent-2); }
+.session-dot.mid { background: var(--accent-4); }
+.session-dot.bad { background: var(--danger); }
+.session-dot.muted { background: var(--text-faint); }
+.session-dot.current { outline: 2px solid var(--accent); outline-offset: 2px; }
+.session-dots-label { margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--text-faint); }
 .practice-scope-chip { max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; line-height: 22px; }
 .practice-hero h1 { gap: 12px; }
 .practice-hero-icon {
@@ -1239,6 +1247,12 @@ a { color: var(--accent-blue); }
   font-weight: 600;
   line-height: 1.5;
 }
+.chat-bubble.question:has(> .chat-band) { padding: 0; overflow: hidden; background: var(--bg-alt); }
+.chat-band { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 9px 16px; background: color-mix(in srgb, var(--accent-blue) 14%, var(--bg-alt)); color: var(--accent-blue); font-size: 12.5px; font-weight: 650; line-height: 1.4; }
+.chat-band svg { flex-shrink: 0; }
+.question-band-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-band .difficulty-badge { margin-left: auto; }
+.chat-band-body { padding: 14px 16px 15px; }
 .chat-bubble.user { background: var(--accent-strong); color: #fff; border-top-right-radius: 6px; }
 .chat-bubble.user .chat-meta { color: color-mix(in srgb, #fff 75%, transparent); }
 .chat-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--text-faint); }
@@ -1498,6 +1512,8 @@ a { color: var(--accent-blue); }
 :root[data-theme='light'] .chat-dock { background: color-mix(in srgb, var(--bg) 88%, transparent); }
 :root[data-theme='light'] .switch::after { box-shadow: 0 1px 3px rgb(0 0 0 / 25%); }
 :root[data-theme='light'] .chat-bubble.question { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-blue) 8%, var(--bg-alt)), var(--bg-alt)); }
+:root[data-theme='light'] .chat-bubble.question:has(> .chat-band) { background: var(--bg-alt); }
+:root[data-theme='light'] .chat-band { background: color-mix(in srgb, var(--accent-blue) 9%, var(--bg-alt)); }
 
 @media (max-width: 560px) {
   .practice-stats { grid-template-columns: repeat(2, 1fr); }

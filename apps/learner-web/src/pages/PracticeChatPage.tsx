@@ -9,8 +9,8 @@ import { usePracticeAttempt } from '../hooks/usePracticeAttempt';
 import { useProgress } from '../hooks/useProgress';
 import { ApiError } from '../lib/api';
 import { BITES, GUIDES } from '../lib/bites';
-import type { PracticeAttempt } from '../lib/practice';
-import { ANSWER_MAX_CHARS, FOLLOWUP_MAX_CHARS, practiceErrorMessage, scopeLabel } from '../lib/practice';
+import type { PracticeAttempt, PracticeSessionEntry } from '../lib/practice';
+import { ANSWER_MAX_CHARS, FOLLOWUP_MAX_CHARS, continuePracticeSession, practiceErrorMessage, scopeLabel, syncPracticeSession, verdictTone } from '../lib/practice';
 import { practiceApi } from '../lib/practice-api';
 
 const GUIDE_LABELS = Object.fromEntries(Object.entries(GUIDES).map(([id, meta]) => [id, meta.label]));
@@ -39,6 +39,7 @@ export function PracticeChatPage() {
   const [prefill, setPrefill] = useState<{ text: string; nonce: number } | null>(null);
   const [nextLoading, setNextLoading] = useState(false);
   const [nextError, setNextError] = useState<string | null>(null);
+  const [session, setSession] = useState<readonly PracticeSessionEntry[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
@@ -58,6 +59,12 @@ export function PracticeChatPage() {
     stickToBottom.current = true;
   }, [attemptId]);
 
+  const loadedId = attempt?.id;
+  const tone = attempt?.grade ? verdictTone(attempt.grade) : null;
+  useEffect(() => {
+    if (loadedId) setSession(syncPracticeSession(loadedId, tone));
+  }, [loadedId, tone]);
+
   const messageCount = attempt?.messages.length ?? 0;
   useLayoutEffect(() => {
     if (!attempt) return;
@@ -74,6 +81,7 @@ export function PracticeChatPage() {
     setNextError(null);
     try {
       const res = await practiceApi.start(attempt.scope);
+      continuePracticeSession(res.attempt.id);
       navigate(`/practice/${res.attempt.id}`);
     } catch (err) {
       setNextError(err instanceof ApiError ? err.code : 'network_error');
@@ -133,6 +141,7 @@ export function PracticeChatPage() {
   const answerSource = attempt.answerSource ?? pendingAnswer?.source ?? null;
   const showSkipBubble = attempt.grade?.skipped && !attempt.answer;
   const errorCode = actionError ?? nextError;
+  const currentIndex = session.findIndex((e) => e.id === attempt.id);
 
   return (
     <div className="practice-chat">
@@ -144,15 +153,25 @@ export function PracticeChatPage() {
           {scopeLabel(attempt.scope, GUIDE_LABELS, LESSON_TITLES)}
         </span>
       </div>
+      {currentIndex >= 0 && (
+        <div className="session-dots" aria-label={`Question ${currentIndex + 1} in this session`}>
+          {session.map((entry, i) => (
+            <span key={entry.id} className={`session-dot ${entry.tone ?? 'pending'}${i === currentIndex ? ' current' : ''}`} aria-hidden="true" />
+          ))}
+          <span className="session-dots-label">Question {currentIndex + 1}</span>
+        </div>
+      )}
 
       <div className="chat-thread" aria-live="polite">
         <ChatBubble
           role="question"
-          meta={
+          header={
             <>
               <AppIcon name={attempt.question.guide} size={14} />
-              {GUIDE_LABELS[attempt.question.guide]}
-              {attempt.question.lessonTitle ? ` · ${attempt.question.lessonTitle}` : ''}
+              <span className="question-band-label">
+                {GUIDE_LABELS[attempt.question.guide]}
+                {attempt.question.lessonTitle ? ` · ${attempt.question.lessonTitle}` : ''}
+              </span>
               <DifficultyBadge difficulty={attempt.question.difficulty} />
             </>
           }

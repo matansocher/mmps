@@ -5,7 +5,7 @@ import { LessonPicker } from '../components/practice/LessonPicker';
 import { useProgress } from '../hooks/useProgress';
 import { ApiError } from '../lib/api';
 import type { PracticeScope, PracticeScopeInfo } from '../lib/practice';
-import { loadLastScope, parseLessonsParam, practiceErrorMessage, saveLastScope } from '../lib/practice';
+import { loadLastScope, parseLessonsParam, practiceErrorMessage, saveLastScope, startPracticeSession } from '../lib/practice';
 import { practiceApi } from '../lib/practice-api';
 import type { GuideId } from '../lib/types';
 
@@ -90,6 +90,7 @@ export function PracticeSetupPage() {
     try {
       const { attempt } = await practiceApi.start(scope);
       saveLastScope(scope);
+      startPracticeSession(attempt.id);
       navigate(`/practice/${attempt.id}`);
     } catch (err) {
       setStartError(err instanceof ApiError ? err.code : 'network_error');
