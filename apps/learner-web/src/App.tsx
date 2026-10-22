@@ -8,7 +8,6 @@ import { CURRICULUM } from './lib/bites';
 import { summarize } from './lib/scheduler';
 import { BitePage } from './pages/BitePage';
 import { BrowsePage } from './pages/BrowsePage';
-import { QuizPage } from './pages/QuizPage';
 import { ReviewPage } from './pages/ReviewPage';
 import { KnowledgeMapPage } from './pages/KnowledgeMapPage';
 import { PracticeChatPage } from './pages/PracticeChatPage';
@@ -85,7 +84,6 @@ function Shell() {
           <Route path="/practice/history" element={<PracticeHistoryPage />} />
           <Route path="/practice/:attemptId" element={<PracticeChatPage />} />
           <Route path="/bite/:biteId" element={<BitePage />} />
-          <Route path="/quiz/:biteId" element={<QuizPage />} />
           <Route path="/scenario/:biteId" element={<ScenarioPage />} />
         </Routes>
       </div>
