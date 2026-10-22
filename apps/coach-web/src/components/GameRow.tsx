@@ -66,7 +66,7 @@ export function GameRow({ game }: { readonly game: Game }) {
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
       className="game-card relative flex cursor-pointer flex-col gap-1 rounded-xl border border-white/[0.06] bg-bg-card px-3 py-2 transition duration-150 ease-out hover:border-white/[0.1] hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand"
     >
-      {game.isFavorite && <Icon name="star" size={10} className="absolute start-1.5 top-1.5 text-accent-draw" title={t.common.favouriteTeam} />}
+      {game.isFavorite && <Icon name="star" size={10} className="absolute start-1.5 top-1.5 text-accent-fav" title={t.common.favouriteTeam} />}
       <div className="flex items-center gap-2">
         <TeamCell team={game.home} reds={redCards(game, 'home')} align="start" dim={finished && homeScore < awayScore} status={game.status} />
         <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5">

@@ -44,7 +44,7 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   redCard: <rect x="7" y="4" width="10" height="16" rx="2" fill="#ff3b3b" stroke="none" transform="rotate(8 12 12)" />,
-  yellowCard: <rect x="7" y="4" width="10" height="16" rx="2" fill="#ffd600" stroke="none" transform="rotate(8 12 12)" />,
+  yellowCard: <rect x="7" y="4" width="10" height="16" rx="2" fill="var(--color-card-yellow)" stroke="none" transform="rotate(8 12 12)" />,
   missedPenalty: (
     <>
       <circle cx="12" cy="12" r="9" />

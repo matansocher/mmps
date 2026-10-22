@@ -18,7 +18,7 @@ const TONE: Readonly<Record<GameHeadlineType, Tone>> = {
 };
 
 const TONE_STYLE: Readonly<Record<Tone, { readonly icon: IconName; readonly color: string; readonly chip: string }>> = {
-  gold: { icon: 'trophy', color: 'text-accent-draw', chip: 'bg-accent-draw/12' },
+  gold: { icon: 'trophy', color: 'text-accent-fav', chip: 'bg-accent-fav/12' },
   up: { icon: 'trendUp', color: 'text-accent-live', chip: 'bg-accent-live/12' },
   down: { icon: 'trendDown', color: 'text-accent-red', chip: 'bg-accent-red/12' },
 };

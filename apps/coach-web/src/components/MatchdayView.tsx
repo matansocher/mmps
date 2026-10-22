@@ -37,7 +37,7 @@ function MatchdayGame({ game, favoriteIds }: { readonly game: GameSummary; reado
         <span className={`truncate text-sm ${favorite ? 'font-bold text-text-primary' : winner ? 'font-semibold text-text-primary' : 'text-text-secondary'}`}>
           {value.shortName || value.name}
         </span>
-        {favorite && <Icon name="star" size={10} className="shrink-0 text-accent-draw" title={t.common.favouriteTeam} />}
+        {favorite && <Icon name="star" size={10} className="shrink-0 text-accent-fav" title={t.common.favouriteTeam} />}
         {side === 'home' && <TeamLogo teamId={value.id} name={value.name} size={22} />}
       </span>
     );

@@ -260,7 +260,7 @@ export function GameCard({ game }: { readonly game: Game }) {
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
           <span className="truncate">{game.competitionName}</span>
-          {game.isFavorite && <Icon name="star" size={12} className="text-accent-draw" title={t.common.favouriteTeam} />}
+          {game.isFavorite && <Icon name="star" size={12} className="text-accent-fav" title={t.common.favouriteTeam} />}
         </span>
         <span className="flex min-w-0 items-center justify-end gap-2">
           {game.status === 'live' && <ChannelBadge channels={game.channels} />}

@@ -28,8 +28,8 @@ export function RefreshBanner({ failed, online, refreshing, lastSuccessAt, nextR
   return (
     <div role="status" aria-live="polite" className="mx-auto max-w-[1500px] px-4 [&:not(:empty)]:pt-5">
       {failed ? (
-        <div className="banner-in flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-accent-draw/25 bg-accent-draw/[0.07] px-4 py-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-draw/15 text-accent-draw">
+        <div className="banner-in flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-accent-warn/25 bg-accent-warn/[0.07] px-4 py-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-warn/15 text-accent-warn">
             <Icon name={offline ? 'wifiOff' : 'serverOff'} size={18} />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">

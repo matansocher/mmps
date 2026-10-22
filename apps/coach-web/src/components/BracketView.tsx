@@ -40,7 +40,7 @@ function MatchupCard({ matchup, onOpen, isFinal }: { readonly matchup: KnockoutM
   return (
     <button
       onClick={onOpen}
-      className={`flex w-full flex-col gap-1.5 rounded-xl border bg-bg-card px-3 py-2.5 text-start transition hover:bg-bg-elevated/60 ${isFinal ? 'border-accent-draw/50' : 'border-border-subtle'}`}
+      className={`flex w-full flex-col gap-1.5 rounded-xl border bg-bg-card px-3 py-2.5 text-start transition hover:bg-bg-elevated/60 ${isFinal ? 'border-accent-fav/50' : 'border-border-subtle'}`}
     >
       <TeamLine team={matchup.teams[0]} score={score?.[0]} decided={decided} />
       <TeamLine team={matchup.teams[1]} score={score?.[1]} decided={decided} />
@@ -185,7 +185,7 @@ export function BracketView({ stages }: { readonly stages: readonly KnockoutStag
         <div className="flex min-w-max gap-3">
           {stages.map((stage, stageIndex) => (
             <div key={`${stage.name}-${stageIndex}`} className="flex w-[200px] shrink-0 flex-col">
-              <h3 className={`mb-2 flex items-center justify-center gap-1 text-xs font-semibold ${stageIndex === lastIndex ? 'text-accent-draw' : 'text-text-secondary'}`}>
+              <h3 className={`mb-2 flex items-center justify-center gap-1 text-xs font-semibold ${stageIndex === lastIndex ? 'text-accent-fav' : 'text-text-secondary'}`}>
                 {stageIndex === lastIndex && <Icon name="trophy" size={13} />}
                 {stage.name}
               </h3>

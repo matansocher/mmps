@@ -23,7 +23,7 @@ function LeagueRow({ competition, todayCount, liveCount, favoriteCount }: RowPro
         <span className="truncate text-sm font-semibold">{competition.name}</span>
         {favoriteCount > 0 && (
           <span className="flex shrink-0 items-center gap-1 self-center text-xs text-text-muted">
-            <Icon name="star" size={11} className="text-accent-draw" />
+            <Icon name="star" size={11} className="text-accent-fav" />
             {messages().leagues.yourTeams(favoriteCount)}
           </span>
         )}

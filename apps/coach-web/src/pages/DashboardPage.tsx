@@ -171,7 +171,7 @@ function DayNavigator({ date, today, onChange }: { readonly date: string; readon
 type ChipTone = { readonly background: string; readonly color: string };
 
 const ALL_TONE: ChipTone = { background: 'var(--color-text-primary)', color: 'var(--color-bg-base)' };
-const FAVORITES_TONE: ChipTone = { background: 'var(--color-accent-draw)', color: '#0a0e14' };
+const FAVORITES_TONE: ChipTone = { background: 'var(--color-accent-fav)', color: '#0a0e14' };
 
 function FilterChip({ active, tone, onClick, children }: { readonly active: boolean; readonly tone: ChipTone; readonly onClick: () => void; readonly children: ReactNode }) {
   return (
@@ -331,7 +331,7 @@ export function DashboardPage() {
             </FilterChip>
             {favoriteGames.length > 0 && (
               <FilterChip active={activeFilter === FAVORITES_FILTER} tone={FAVORITES_TONE} onClick={() => setCompetitionFilter(activeFilter === FAVORITES_FILTER ? null : FAVORITES_FILTER)}>
-                <Icon name="star" size={15} className={activeFilter === FAVORITES_FILTER ? '' : 'text-accent-draw'} />
+                <Icon name="star" size={15} className={activeFilter === FAVORITES_FILTER ? '' : 'text-accent-fav'} />
                 {t.dashboard.myTeams}
                 <Count value={favoriteGames.length} live={favoriteGames.some((g) => g.status === 'live')} active={activeFilter === FAVORITES_FILTER} />
               </FilterChip>
@@ -397,7 +397,7 @@ export function DashboardPage() {
                   {section.leagues.map((league) => (
                     <div key={league.key} className="flex flex-col gap-2.5">
                       <h3 className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                        {league.competitionId === undefined ? <Icon name="star" size={16} className="text-accent-draw" /> : <CompetitionLogo competitionId={league.competitionId} size={16} />}
+                        {league.competitionId === undefined ? <Icon name="star" size={16} className="text-accent-fav" /> : <CompetitionLogo competitionId={league.competitionId} size={16} />}
                         {league.name}
                         <span className="score-font text-caption font-medium text-text-muted">{league.games.length}</span>
                       </h3>
