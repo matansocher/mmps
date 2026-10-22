@@ -2,8 +2,9 @@ import { CARD_EVENT_TYPES, EVENT_META, eventText, formatKickoff } from '../lib/f
 import { useT } from '../lib/i18n';
 import type { Game, Side, Team } from '../types';
 import { HotBadge, PreMatchButton } from './CardActions';
-import { openGame, WinProbability } from './GameCard';
+import { GoalPill, openGame, WinProbability } from './GameCard';
 import { Icon } from './Icon';
+import { LiveProgress, useGoalFlash } from './LiveEffects';
 import { LiveDot } from './LiveDot';
 import { GameHeadlineLine } from './GameHeadline';
 import { TeamLogo } from './TeamLogo';
@@ -19,7 +20,7 @@ function TeamCell({ team, reds, align, dim, status }: { readonly team: Team; rea
     <div className={`flex min-w-0 flex-1 items-center gap-1.5 ${align === 'end' ? 'flex-row-reverse' : ''}`}>
       <TeamLogo teamId={team.id} name={team.name} size={18} />
       <span className="flex min-w-0 items-baseline gap-1">
-        <span className={`min-w-0 truncate text-[13px] ${dim ? 'text-text-secondary' : 'font-semibold'}`}>{team.shortName || team.name}</span>
+        <span className={`min-w-0 truncate text-label ${dim ? 'text-text-secondary' : 'font-semibold'}`}>{team.shortName || team.name}</span>
         <WinProbability team={team} status={status} />
       </span>
       {reds > 0 && <span className="h-3 w-2 shrink-0 rounded-[2px] bg-accent-red" title={t.card.redCards(reds)} />}
@@ -27,24 +28,32 @@ function TeamCell({ team, reds, align, dim, status }: { readonly team: Team; rea
   );
 }
 
-function Center({ game }: { readonly game: Game }) {
+function Digit({ value, pop }: { readonly value: number; readonly pop: boolean }) {
+  return (
+    <span key={value} className={pop ? 'score-pop' : ''}>
+      {value}
+    </span>
+  );
+}
+
+function Center({ game, scored }: { readonly game: Game; readonly scored: Side | null }) {
   if (game.status === 'scheduled') {
-    return <span className="score-font text-[13px] leading-5 text-text-secondary">{formatKickoff(game.startTime)}</span>;
+    return <span className="score-font text-label leading-5 text-text-secondary">{formatKickoff(game.startTime)}</span>;
   }
   return (
     <>
       <span className={`score-font text-base leading-5 ${game.status === 'live' ? 'text-text-primary' : 'text-text-secondary'}`}>
-        <ScoreLine home={game.home.score ?? 0} away={game.away.score ?? 0} />
+        <ScoreLine home={<Digit value={game.home.score ?? 0} pop={scored === 'home'} />} away={<Digit value={game.away.score ?? 0} pop={scored === 'away'} />} />
       </span>
       {game.status === 'live' ? (
-        <span className="score-font flex h-3.5 items-center gap-1 text-[11px] font-bold leading-none text-accent-live">
+        <span className="score-font flex h-3.5 items-center gap-1 text-caption font-bold leading-none text-accent-live">
           <LiveDot />
           <span className="live-minute ltr-num">{game.minuteDisplay || game.statusText}</span>
           <HotBadge game={game} compact />
         </span>
       ) : (
         <span className="flex h-3.5 max-w-16 items-center gap-1">
-          <span className="truncate text-[10px] leading-3.5 text-text-muted">{game.statusText}</span>
+          <span className="truncate text-caption leading-3.5 text-text-secondary">{game.statusText}</span>
           <HotBadge game={game} compact />
         </span>
       )}
@@ -58,33 +67,52 @@ export function GameRow({ game }: { readonly game: Game }) {
   const finished = game.status === 'finished';
   const lastEvent = game.status === 'live' ? game.events.filter((e) => CARD_EVENT_TYPES.has(e.type)).at(-1) : undefined;
   const t = useT();
+  const scored = useGoalFlash(game);
   return (
     <div
       role="link"
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="game-card relative flex cursor-pointer flex-col gap-1 rounded-xl border border-white/[0.06] bg-bg-card px-3 py-2 transition duration-150 ease-out hover:border-white/[0.1] hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand"
+      className={`game-card relative flex cursor-pointer overflow-hidden ${game.status === 'live' ? 'live-ring' : ''} ${scored ? 'goal-flash' : ''} flex-col gap-1 rounded-xl border border-line bg-bg-card px-3 py-2 transition duration-150 ease-out hover:border-line-strong hover:bg-[#161d27] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand`}
     >
-      {game.isFavorite && <Icon name="star" size={10} className="absolute start-1.5 top-1.5 text-accent-draw" title={t.common.favouriteTeam} />}
+      <LiveProgress game={game} />
+      {game.isFavorite && <Icon name="star" size={10} className="absolute start-1.5 top-1.5 text-accent-fav" title={t.common.favouriteTeam} />}
       <div className="flex items-center gap-2">
         <TeamCell team={game.home} reds={redCards(game, 'home')} align="start" dim={finished && homeScore < awayScore} status={game.status} />
         <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5">
-          <Center game={game} />
+          <Center game={game} scored={scored} />
         </div>
         <TeamCell team={game.away} reds={redCards(game, 'away')} align="end" dim={finished && awayScore < homeScore} status={game.status} />
         <span className="-me-1.5 flex shrink-0 items-center empty:hidden">
           <PreMatchButton game={game} />
         </span>
       </div>
+      {scored && (
+        <span className="absolute end-2 top-1.5">
+          <GoalPill />
+        </span>
+      )}
       {lastEvent && (
-        <p className="flex min-w-0 items-center justify-center gap-1.5 text-[11px] text-text-muted">
+        <p className="flex min-w-0 items-center justify-center gap-1.5 text-caption text-text-secondary">
           <span className="score-font ltr-num font-semibold text-text-secondary">{lastEvent.minuteDisplay}</span>
           <Icon name={EVENT_META[lastEvent.type].icon} size={11} />
           <span className="truncate text-text-secondary">{eventText(lastEvent)}</span>
         </p>
       )}
       {finished && game.headline && <GameHeadlineLine game={game} headline={game.headline} compact />}
+    </div>
+  );
+}
+
+export function GameRowSkeleton() {
+  return (
+    <div className="flex h-[52px] items-center gap-2 rounded-xl border border-line bg-bg-card px-3" aria-hidden>
+      <div className="skeleton size-[18px] shrink-0 rounded-full" />
+      <div className="skeleton h-3 flex-1 rounded-full" />
+      <div className="skeleton h-4 w-10 shrink-0 rounded" />
+      <div className="skeleton h-3 flex-1 rounded-full" />
+      <div className="skeleton size-[18px] shrink-0 rounded-full" />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { useLiveCompetition } from '../hooks/useLiveCompetition';
 import { useResource } from '../hooks/useResource';
 import { api } from '../lib/api';
 import { formatLongDate, formatKickoff } from '../lib/format';
+import { teamColors } from '../lib/league-themes';
 import { LIVE_POLL_MS } from '../lib/polling';
 import { navigate } from '../lib/router';
 import type { GameDetail } from '../types';
@@ -25,8 +26,8 @@ type GameTab = 'overview' | 'lineups' | 'table';
 function InfoRow({ icon, label, children }: { readonly icon: ReactNode; readonly label: string; readonly children: ReactNode }) {
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 text-sm">
-      <span className="flex w-5 shrink-0 justify-center">{icon}</span>
-      <span className="w-20 shrink-0 text-text-muted">{label}</span>
+      <span className="flex size-4 shrink-0 items-center justify-center">{icon}</span>
+      <span className="w-20 shrink-0 text-text-secondary">{label}</span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );
@@ -36,7 +37,7 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
   const { game } = detail;
   return (
     <Card className="divide-y divide-border-subtle">
-      <InfoRow icon={<CompetitionLogo competitionId={game.competitionId} size={18} />} label={messages().game.competition}>
+      <InfoRow icon={<CompetitionLogo competitionId={game.competitionId} size={16} />} label={messages().game.competition}>
         {competitionLinked ? (
           <button onClick={() => navigate({ name: 'league', id: game.competitionId })} className="text-accent-brand hover:underline">
             {game.competitionName}
@@ -44,13 +45,13 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         ) : (
           game.competitionName
         )}
-        {detail.round && <span className="text-text-muted"> · {detail.round}</span>}
+        {detail.round && <span className="text-text-secondary"> · {detail.round}</span>}
       </InfoRow>
       <InfoRow icon={<Icon name="calendar" size={16} className="text-text-muted" />} label={messages().game.kickoff}>
         {formatLongDate(game.startTime)} · {formatKickoff(game.startTime)}
       </InfoRow>
       {game.channels.length > 0 && (
-        <InfoRow icon={null} label={messages().game.tv}>
+        <InfoRow icon={<Icon name="tv" size={16} className="text-text-muted" />} label={messages().game.tv}>
           <span className="flex min-w-0">
             <ChannelBadge channels={game.channels} />
           </span>
@@ -62,7 +63,7 @@ function GameInfo({ detail, competitionLinked }: { readonly detail: GameDetail; 
         </InfoRow>
       )}
       {detail.referee && (
-        <InfoRow icon="🧑‍⚖️" label={messages().game.referee}>
+        <InfoRow icon={<Icon name="whistle" size={16} className="text-text-muted" />} label={messages().game.referee}>
           {detail.referee}
         </InfoRow>
       )}
@@ -77,7 +78,7 @@ function GameTable({ detail }: { readonly detail: GameDetail }) {
   if (!competition.data) return <Loading />;
   const teamIds = [game.home.id, game.away.id];
   const tables = competition.data.tables.filter((t) => t.rows.some((r) => teamIds.includes(r.team.id)));
-  if (!tables.length) return <p className="py-10 text-center text-sm text-text-muted">{messages().game.noTable}</p>;
+  if (!tables.length) return <p className="py-10 text-center text-sm text-text-secondary">{messages().game.noTable}</p>;
   return (
     <div className="flex flex-col gap-3">
       <LiveTableNote tables={tables} />
@@ -140,7 +141,7 @@ export function GamePage({ id }: { readonly id: number }) {
                 {detail.game.status !== 'scheduled' && (
                   <Section title={messages().game.stats}>
                     <Card>
-                      <StatsList stats={detail.stats} />
+                      <StatsList stats={detail.stats} colors={teamColors(detail.game.home.color, detail.game.away.color)} />
                     </Card>
                   </Section>
                 )}

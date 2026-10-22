@@ -5,7 +5,7 @@ export function PlayerPhoto({ athleteId, name, size = 32, className = '' }: { re
   const [failed, setFailed] = useState(false);
   if (!athleteId || failed) {
     return (
-      <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-bg-elevated text-[10px] font-bold text-text-secondary ${className}`} style={{ width: size, height: size }}>
+      <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-bg-elevated text-caption font-bold text-text-secondary ${className}`} style={{ width: size, height: size }}>
         {name
           .split(' ')
           .map((p) => p[0])

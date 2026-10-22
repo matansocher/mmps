@@ -26,44 +26,43 @@ export function RefreshBanner({ failed, online, refreshing, lastSuccessAt, nextR
   const t = useT().dashboard.banner;
   const offline = !online;
   return (
-    <div role="status" aria-live="polite" className="mx-auto max-w-[1500px] px-4 [&:not(:empty)]:pt-5">
+    <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-30 flex justify-center px-4 md:bottom-6">
       {failed ? (
-        <div className="banner-in flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-accent-draw/25 bg-accent-draw/[0.07] px-4 py-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-draw/15 text-accent-draw">
-            <Icon name={offline ? 'wifiOff' : 'serverOff'} size={18} />
+        <div className="banner-in pointer-events-auto flex max-w-md items-center gap-3 rounded-full border border-line-strong bg-bg-elevated py-1.5 ps-3.5 pe-1.5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.7)]">
+          <span className="relative flex size-2 shrink-0" aria-hidden>
+            <span className="absolute inset-0 animate-ping rounded-full bg-accent-warn/60 motion-reduce:hidden" />
+            <span className="relative size-2 rounded-full bg-accent-warn" />
           </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p className="text-sm font-semibold text-text-primary">{offline ? t.offlineTitle : t.serverTitle}</p>
-            <p className="text-xs text-text-secondary">
-              {offline ? t.offlineText : t.serverText}
-              <span aria-live="off">
-                {lastSuccessAt !== null && (
-                  <>
-                    {' '}
-                    {t.lastUpdate}: <TimeAgo iso={new Date(lastSuccessAt).toISOString()} />
-                  </>
-                )}
-                {!offline && nextRetryAt !== null && (
-                  <>
-                    {' · '}
-                    <Countdown at={nextRetryAt} refreshing={refreshing} />
-                  </>
-                )}
-              </span>
-            </p>
-          </div>
+          <Icon name={offline ? 'wifiOff' : 'serverOff'} size={15} className="shrink-0 text-text-secondary" />
+          <p className="min-w-0 flex-1 text-xs leading-tight" title={offline ? t.offlineText : t.serverText}>
+            <span className="font-semibold text-text-primary">{offline ? t.offlineTitle : t.serverTitle}</span>
+            <span className="sr-only"> {offline ? t.offlineText : t.serverText}</span>
+            <span className="block truncate text-caption text-text-secondary" aria-live="off">
+              {lastSuccessAt !== null && (
+                <>
+                  {t.lastUpdate}: <TimeAgo iso={new Date(lastSuccessAt).toISOString()} />
+                </>
+              )}
+              {!offline && nextRetryAt !== null && (
+                <>
+                  {lastSuccessAt !== null && ' · '}
+                  <Countdown at={nextRetryAt} refreshing={refreshing} />
+                </>
+              )}
+            </span>
+          </p>
           <button
             type="button"
             onClick={onRetry}
             disabled={refreshing}
-            className="shrink-0 rounded-full bg-white/[0.08] px-4 py-2 text-sm font-semibold text-text-primary transition duration-150 ease-out hover:bg-white/[0.12] active:scale-95 disabled:opacity-60"
+            className="h-8 shrink-0 rounded-full bg-surface-2 px-3 text-xs font-semibold text-text-primary transition duration-150 ease-out hover:bg-surface-3 active:scale-95 disabled:opacity-60"
           >
             {refreshing ? t.retrying : t.retryNow}
           </button>
         </div>
       ) : recovered ? (
-        <div className="banner-in mx-auto flex w-fit items-center gap-2 rounded-full border border-accent-live/25 bg-accent-live/10 px-3.5 py-1.5 text-xs font-semibold text-accent-live">
-          <Icon name="check" size={14} />
+        <div className="banner-in pointer-events-auto flex items-center gap-2 rounded-full border border-line-strong bg-bg-elevated px-3.5 py-2 text-xs font-semibold text-text-primary shadow-[0_8px_24px_-8px_rgba(0,0,0,0.7)]">
+          <Icon name="check" size={14} className="text-accent-live" />
           {recovered === 'offline' ? t.backOnline : t.restored}
         </div>
       ) : null}

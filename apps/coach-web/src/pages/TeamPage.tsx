@@ -39,7 +39,7 @@ function TeamHeader({ team, competitionLinked }: { readonly team: TeamDetail; re
             ))}
           {form.length > 0 && (
             <span className="flex items-center gap-1">
-              <span className="me-1 text-xs text-text-muted">{messages().common.form}</span>
+              <span className="me-1 text-xs text-text-secondary">{messages().common.form}</span>
               {form.map((r, i) => (
                 <FormBadge key={i} result={r} />
               ))}
@@ -81,12 +81,12 @@ export function TeamPage({ id }: { readonly id: number }) {
             <div className="grid gap-4 lg:grid-cols-2">
               <Section title={messages().team.upcoming}>
                 <Card className="divide-y divide-border-subtle">
-                  {team.upcoming.length ? team.upcoming.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().team.noUpcoming}</p>}
+                  {team.upcoming.length ? team.upcoming.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-secondary">{messages().team.noUpcoming}</p>}
                 </Card>
               </Section>
               <Section title={messages().team.recent}>
                 <Card className="divide-y divide-border-subtle">
-                  {team.recent.length ? team.recent.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().team.noRecent}</p>}
+                  {team.recent.length ? team.recent.map((g) => <GameSummaryRow key={g.id} game={g} />) : <p className="px-4 py-6 text-center text-sm text-text-secondary">{messages().team.noRecent}</p>}
                 </Card>
               </Section>
             </div>
@@ -98,11 +98,11 @@ export function TeamPage({ id }: { readonly id: number }) {
                 <Section key={position} title={`${position} · ${players.length}`}>
                   <Card className="divide-y divide-border-subtle">
                     {players.map((p) => (
-                      <button key={p.athleteId} onClick={() => navigate({ name: 'player', id: p.athleteId })} className="flex w-full items-center gap-3 px-3 py-2 text-start transition hover:bg-bg-elevated/60">
-                        <span className="score-font w-6 shrink-0 text-center text-xs text-text-muted">{p.jerseyNumber ?? ''}</span>
+                      <button key={p.athleteId} onClick={() => navigate({ name: 'player', id: p.athleteId })} className="flex w-full items-center gap-3 px-3 py-2 text-start transition hover:bg-row-hover">
+                        <span className="score-font w-6 shrink-0 text-center text-xs text-text-secondary">{p.jerseyNumber ?? ''}</span>
                         <PlayerPhoto athleteId={p.athleteId} name={p.name} size={32} />
                         <span className="min-w-0 flex-1 truncate text-sm">{p.name}</span>
-                        {p.age != null && <span className="shrink-0 text-xs text-text-muted">{messages().common.years(p.age)}</span>}
+                        {p.age != null && <span className="shrink-0 text-xs text-text-secondary">{messages().common.years(p.age)}</span>}
                       </button>
                     ))}
                   </Card>

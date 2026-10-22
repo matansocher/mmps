@@ -38,7 +38,7 @@ function EventBody({ event }: { readonly event: GameEvent }) {
     <span className="flex min-w-0 flex-col">
       <span className="truncate">{event.playerName ? <PlayerLink name={event.playerName} athleteId={event.playerAthleteId} /> : (detail ?? messages().events[event.type].title)}</span>
       {(event.assistName || (detail && event.playerName)) && (
-        <span className="truncate text-xs text-text-muted">
+        <span className="truncate text-xs text-text-secondary">
           {event.assistName && (
             <>
               {messages().game.assist} <PlayerLink name={event.assistName} athleteId={event.assistAthleteId} muted />
@@ -53,7 +53,7 @@ function EventBody({ event }: { readonly event: GameEvent }) {
 }
 
 export function EventsTimeline({ events }: { readonly events: readonly GameEvent[] }) {
-  if (!events.length) return <p className="px-4 py-6 text-center text-sm text-text-muted">{messages().game.noEvents}</p>;
+  if (!events.length) return <p className="px-4 py-6 text-center text-sm text-text-secondary">{messages().game.noEvents}</p>;
   const ordered = [...events].reverse();
   return (
     <ul className="flex flex-col divide-y divide-border-subtle">

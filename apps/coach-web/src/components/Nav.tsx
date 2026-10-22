@@ -42,7 +42,7 @@ export function TopBar() {
                 key={tab.name}
                 onClick={() => go(tab.name)}
                 aria-current={on ? 'page' : undefined}
-                className={`relative flex items-center gap-2 px-3 text-sm font-semibold transition duration-150 ease-out focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent-brand ${on ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+                className={`relative flex items-center gap-2 px-3 text-sm font-semibold transition duration-150 ease-out focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent-brand ${on ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
               >
                 <Icon name={tab.icon} size={16} className={on ? 'text-accent-live' : ''} />
                 {t.nav[tab.name]}
@@ -60,18 +60,23 @@ export function BottomNav() {
   const active = activeTab(useRoute());
   const t = useT();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-bg-base/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
+    <nav aria-label={t.nav.label} className="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-bg-base/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
       <div className="grid grid-cols-3">
-        {TABS.map((tab) => (
-          <button
-            key={tab.name}
-            onClick={() => go(tab.name)}
-            className={`flex flex-col items-center gap-0.5 py-2 transition ${active === tab.name ? 'text-accent-live' : 'text-text-muted'}`}
-          >
-            <Icon name={tab.icon} size={20} />
-            <span className="text-[11px] font-semibold">{t.nav[tab.name]}</span>
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const on = active === tab.name;
+          return (
+            <button
+              key={tab.name}
+              onClick={() => go(tab.name)}
+              aria-current={on ? 'page' : undefined}
+              className={`relative flex flex-col items-center gap-0.5 py-2 transition focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent-brand ${on ? 'text-text-primary' : 'text-text-muted'}`}
+            >
+              <span className={`absolute inset-x-6 -top-px h-0.5 rounded-full transition duration-150 ${on ? 'bg-accent-live' : 'bg-transparent'}`} aria-hidden />
+              <Icon name={tab.icon} size={20} className={on ? 'text-accent-live' : ''} />
+              <span className={`text-caption ${on ? 'font-bold' : 'font-semibold'}`}>{t.nav[tab.name]}</span>
+            </button>
+          );
+        })}
       </div>
     </nav>
   );

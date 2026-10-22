@@ -32,7 +32,8 @@ export type IconName =
   | 'serverOff'
   | 'lock'
   | 'search'
-  | 'check';
+  | 'check'
+  | 'whistle';
 
 // 24×24 grid, 1.75 stroke, currentColor — one vocabulary across the app.
 const PATHS: Record<IconName, ReactNode> = {
@@ -44,7 +45,7 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   redCard: <rect x="7" y="4" width="10" height="16" rx="2" fill="#ff3b3b" stroke="none" transform="rotate(8 12 12)" />,
-  yellowCard: <rect x="7" y="4" width="10" height="16" rx="2" fill="#ffd600" stroke="none" transform="rotate(8 12 12)" />,
+  yellowCard: <rect x="7" y="4" width="10" height="16" rx="2" fill="var(--color-card-yellow)" stroke="none" transform="rotate(8 12 12)" />,
   missedPenalty: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -149,6 +150,13 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
   search: <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM16 16l4.5 4.5" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  whistle: (
+    <>
+      <path d="M11 9h10v3.5l-6 1.5a5 5 0 1 1-4-5z" />
+      <circle cx="9" cy="14" r="1.25" />
+      <path d="M11 9V6h3" />
+    </>
+  ),
 };
 
 type Props = { readonly name: IconName; readonly size?: number; readonly className?: string; readonly title?: string };

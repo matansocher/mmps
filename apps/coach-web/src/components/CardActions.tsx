@@ -19,7 +19,7 @@ function teams(game: Game): string {
   return `${game.home.shortName || game.home.name} - ${game.away.shortName || game.away.name}`;
 }
 
-const BUTTON = 'flex size-7 shrink-0 items-center justify-center rounded-full transition duration-150 ease-out hover:bg-white/[0.08] active:scale-90';
+const BUTTON = 'tap relative flex size-7 shrink-0 items-center justify-center rounded-full transition duration-150 ease-out hover:bg-surface-3 active:scale-90';
 
 export function PreMatchButton({ game }: { readonly game: Game }) {
   const actions = useContext(CardActionsContext);
@@ -55,7 +55,7 @@ export function HotBadge({ game, compact }: { readonly game: Game; readonly comp
       role="img"
       aria-label={label}
       title={label}
-      className={`hot-badge flex shrink-0 items-center justify-center rounded-full bg-[#ff7a1a]/15 text-[#ff9a3d] ${compact ? 'size-4' : 'size-6'}`}
+      className={`hot-badge flex shrink-0 items-center justify-center rounded-full bg-accent-hot/15 text-accent-hot-text ${compact ? 'size-4' : 'size-6'}`}
     >
       <Icon name="flame" size={compact ? 11 : 14} />
     </span>

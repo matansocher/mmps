@@ -1,7 +1,7 @@
 import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { type CardActions, CardActionsContext } from '../components/CardActions';
 import { GameCard, GameCardSkeleton } from '../components/GameCard';
-import { GameRow } from '../components/GameRow';
+import { GameRow, GameRowSkeleton } from '../components/GameRow';
 import { Icon, type IconName } from '../components/Icon';
 import { LiveDot } from '../components/LiveDot';
 import { CompetitionLogo } from '../components/CompetitionLogo';
@@ -11,9 +11,10 @@ import { RefreshBanner } from '../components/RefreshBanner';
 import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
+import { api } from '../lib/api';
 import { daysBetween, shiftDate } from '../lib/dates';
 import { formatDateTitle, formatDayLabel } from '../lib/format';
-import { leagueColor, leagueTextColor } from '../lib/league-themes';
+import { leagueColor, leagueFillColor, leagueTextColor } from '../lib/league-themes';
 import { type Messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
@@ -75,6 +76,69 @@ function buildSections(games: Game[], t: Messages['dashboard']['sections'], myTe
   ].filter((s) => s.games.length > 0);
 }
 
+type NextGamesSearch = 'idle' | 'searching' | 'none';
+
+// Remount per day (key) so the search state resets when the day changes.
+function EmptyState({ date, today, isToday, onJump }: { readonly date: string; readonly today: string; readonly isToday: boolean; readonly onJump: (date: string) => void }) {
+  const t = useT();
+  const [search, setSearch] = useState<NextGamesSearch>('idle');
+  const canSearch = daysBetween(today, date) < MAX_DAY_OFFSET;
+
+  // The API has no "next game day" lookup, so probe the following days until one has games.
+  const findNextGames = async () => {
+    setSearch('searching');
+    for (let day = shiftDate(date, 1); daysBetween(today, day) <= MAX_DAY_OFFSET; day = shiftDate(day, 1)) {
+      try {
+        const res = await api.dashboard(day);
+        if (res.games.length > 0) return onJump(day);
+      } catch {
+        break;
+      }
+    }
+    setSearch('none');
+  };
+
+  return (
+    <div className="mt-16 flex flex-col items-center gap-3 text-center">
+      <span className="flex size-14 items-center justify-center rounded-full bg-surface-2 text-text-secondary">
+        <Icon name="calendar" size={26} />
+      </span>
+      <p className="text-title font-semibold">{isToday ? t.dashboard.emptyTitle : t.dashboard.emptyTitleDay}</p>
+      <p className="max-w-xs text-sm text-text-secondary">{t.dashboard.emptyText}</p>
+      <div className="mt-2 flex flex-col items-center gap-2">
+        {canSearch && (
+          <button
+            onClick={findNextGames}
+            disabled={search !== 'idle'}
+            className="h-11 rounded-full bg-accent-brand px-5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.97] disabled:opacity-60"
+          >
+            {search === 'searching' ? t.dashboard.findingNextGames : search === 'none' ? t.dashboard.noUpcomingGames : t.dashboard.nextGames}
+          </button>
+        )}
+        <button onClick={() => navigate({ name: 'settings' })} className="h-11 rounded-full px-4 text-sm font-semibold text-accent-brand transition hover:bg-surface-1">
+          {t.dashboard.emptyAction}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardSkeleton({ viewMode }: { readonly viewMode: ViewMode }) {
+  return viewMode === 'cards' ? (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+      {Array.from({ length: 6 }, (_, i) => (
+        <GameCardSkeleton key={i} />
+      ))}
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-3">
+      {Array.from({ length: 8 }, (_, i) => (
+        <GameRowSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
 function GameGrid({ games, viewMode }: { readonly games: readonly Game[]; readonly viewMode: ViewMode }) {
   return viewMode === 'cards' ? (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
@@ -97,7 +161,7 @@ function IconButton({ onClick, label, icon, spinning }: { readonly onClick: () =
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.04] text-text-secondary transition duration-150 ease-out hover:bg-white/[0.08] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface-1 text-text-secondary transition duration-150 ease-out hover:bg-surface-3 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95"
     >
       <Icon name={icon} size={17} className={spinning ? 'animate-spin' : ''} />
     </button>
@@ -111,7 +175,7 @@ function ViewToggle({ value, onChange }: { readonly value: ViewMode; readonly on
     { id: 'list', icon: 'list', label: t.dashboard.listView },
   ];
   return (
-    <div role="group" aria-label={t.dashboard.viewMode} className="flex h-9 shrink-0 items-center rounded-full border border-white/[0.06] bg-white/[0.03] p-0.5">
+    <div role="group" aria-label={t.dashboard.viewMode} className="flex h-9 shrink-0 items-center rounded-full border border-line bg-surface-1 p-0.5">
       {options.map((o) => (
         <button
           key={o.id}
@@ -120,7 +184,7 @@ function ViewToggle({ value, onChange }: { readonly value: ViewMode; readonly on
           aria-label={o.label}
           title={o.label}
           className={`flex h-full w-9 items-center justify-center rounded-full transition duration-150 ease-out ${
-            value === o.id ? 'bg-white/[0.1] text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.4)]' : 'text-text-muted hover:text-text-primary'
+            value === o.id ? 'bg-surface-3 text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.4)]' : 'text-text-secondary hover:text-text-primary'
           }`}
         >
           <Icon name={o.icon} size={16} />
@@ -137,7 +201,7 @@ function DayButton({ onClick, label, disabled, flip }: { readonly onClick: () =>
       disabled={disabled}
       aria-label={label}
       title={label}
-      className="flex size-8 shrink-0 items-center justify-center rounded-full text-text-secondary transition duration-150 ease-out hover:bg-white/[0.06] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full text-text-secondary transition duration-150 ease-out hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95 disabled:pointer-events-none disabled:opacity-30"
     >
       <Icon name="back" size={18} className={flip ? '-scale-x-100 rtl:scale-x-100' : 'rtl:-scale-x-100'} />
     </button>
@@ -152,14 +216,14 @@ function DayNavigator({ date, today, onChange }: { readonly date: string; readon
     onChange(next);
   };
   return (
-    <div role="group" aria-label={t.dashboard.day.label} className="flex h-9 shrink-0 items-center gap-0.5 rounded-full border border-white/[0.06] bg-white/[0.03] p-0.5">
+    <div role="group" aria-label={t.dashboard.day.label} className="flex h-9 shrink-0 items-center gap-0.5 rounded-full border border-line bg-surface-1 p-0.5">
       <DayButton onClick={() => go(shiftDate(date, -1))} label={t.dashboard.day.previous} disabled={offset <= -MAX_DAY_OFFSET} />
       <button
         onClick={() => go(today)}
         disabled={offset === 0}
         aria-live="polite"
         title={offset === 0 ? undefined : t.dashboard.day.today}
-        className={`h-8 min-w-14 rounded-full px-1.5 text-center text-sm font-semibold transition duration-150 ease-out disabled:cursor-default ${offset === 0 ? 'text-text-primary' : 'text-accent-brand hover:bg-white/[0.06] active:scale-[0.97]'}`}
+        className={`h-8 min-w-14 rounded-full px-1.5 text-center text-sm font-semibold transition duration-150 ease-out disabled:cursor-default ${offset === 0 ? 'text-text-primary' : 'text-accent-brand hover:bg-surface-2 active:scale-[0.97]'}`}
       >
         {formatDayLabel(date, today)}
       </button>
@@ -168,10 +232,38 @@ function DayNavigator({ date, today, onChange }: { readonly date: string; readon
   );
 }
 
+function LeagueBar({ league }: { readonly league: LeagueGroup }) {
+  const t = useT();
+  const { competitionId } = league;
+  const content = (
+    <>
+      {competitionId === undefined ? <Icon name="star" size={16} className="text-accent-fav" /> : <CompetitionLogo competitionId={competitionId} size={18} />}
+      <span className="truncate">{league.name}</span>
+      <span className="score-font rounded-full bg-surface-2 px-1.5 text-caption font-medium text-text-secondary">{league.games.length}</span>
+      {competitionId !== undefined && <Icon name="back" size={14} className="shrink-0 -scale-x-100 text-text-muted transition group-hover:text-text-primary rtl:scale-x-100" />}
+    </>
+  );
+  const edge = { borderColor: competitionId === undefined ? 'var(--color-accent-fav)' : leagueColor(competitionId) };
+  const className = 'flex w-fit max-w-full min-w-0 items-center gap-2 border-s-[3px] py-1 ps-2.5 pe-2.5 text-start text-label font-semibold text-text-primary';
+  return (
+    <h3 className="sticky top-[var(--page-header-h,0px)] z-10 -mx-4 bg-bg-base/90 px-4 py-1.5 backdrop-blur-md md:top-[calc(var(--page-header-h,0px)+3.5rem)]">
+      {competitionId === undefined ? (
+        <span className={className} style={edge}>
+          {content}
+        </span>
+      ) : (
+        <button onClick={() => navigate({ name: 'league', id: competitionId })} aria-label={t.dashboard.openLeague(league.name)} className={`${className} group rounded-e-full transition hover:bg-surface-2`} style={edge}>
+          {content}
+        </button>
+      )}
+    </h3>
+  );
+}
+
 type ChipTone = { readonly background: string; readonly color: string };
 
 const ALL_TONE: ChipTone = { background: 'var(--color-text-primary)', color: 'var(--color-bg-base)' };
-const FAVORITES_TONE: ChipTone = { background: 'var(--color-accent-draw)', color: '#0a0e14' };
+const FAVORITES_TONE: ChipTone = { background: 'var(--color-accent-fav)', color: '#0a0e14' };
 
 function FilterChip({ active, tone, onClick, children }: { readonly active: boolean; readonly tone: ChipTone; readonly onClick: () => void; readonly children: ReactNode }) {
   return (
@@ -180,8 +272,8 @@ function FilterChip({ active, tone, onClick, children }: { readonly active: bool
       aria-pressed={active}
       data-active={active || undefined}
       style={active ? ({ backgroundColor: tone.background, color: tone.color } as CSSProperties) : undefined}
-      className={`group/chip flex h-9 shrink-0 items-center gap-2 rounded-full border ps-2.5 pe-1.5 text-[13px] font-medium transition duration-150 ease-out active:scale-[0.97] ${
-        active ? 'border-transparent font-semibold shadow-[0_2px_10px_-2px_rgba(0,0,0,0.5)]' : 'border-white/[0.07] bg-white/[0.03] text-text-secondary hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-text-primary'
+      className={`group/chip flex h-9 shrink-0 items-center gap-2 rounded-full border ps-2.5 pe-1.5 text-label font-medium transition duration-150 ease-out active:scale-[0.97] ${
+        active ? 'border-transparent font-semibold shadow-[0_2px_10px_-2px_rgba(0,0,0,0.5)]' : 'border-line bg-surface-1 text-text-secondary hover:border-line-strong hover:bg-surface-2 hover:text-text-primary'
       }`}
     >
       {children}
@@ -192,8 +284,8 @@ function FilterChip({ active, tone, onClick, children }: { readonly active: bool
 function Count({ value, live, active }: { readonly value: number; readonly live?: boolean; readonly active: boolean }) {
   return (
     <span
-      className={`score-font flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-1.5 text-[11px] ${
-        active ? 'bg-black/15' : live ? 'bg-accent-live/12 text-accent-live' : 'bg-white/[0.06] text-text-muted'
+      className={`score-font flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-1.5 text-caption ${
+        active ? 'bg-black/15' : live ? 'bg-accent-live/12 text-accent-live' : 'bg-surface-2 text-text-secondary'
       }`}
     >
       {live && <LiveDot />}
@@ -331,7 +423,7 @@ export function DashboardPage() {
             </FilterChip>
             {favoriteGames.length > 0 && (
               <FilterChip active={activeFilter === FAVORITES_FILTER} tone={FAVORITES_TONE} onClick={() => setCompetitionFilter(activeFilter === FAVORITES_FILTER ? null : FAVORITES_FILTER)}>
-                <Icon name="star" size={15} className={activeFilter === FAVORITES_FILTER ? '' : 'text-accent-draw'} />
+                <Icon name="star" size={15} className={activeFilter === FAVORITES_FILTER ? '' : 'text-accent-fav'} />
                 {t.dashboard.myTeams}
                 <Count value={favoriteGames.length} live={favoriteGames.some((g) => g.status === 'live')} active={activeFilter === FAVORITES_FILTER} />
               </FilterChip>
@@ -340,7 +432,7 @@ export function DashboardPage() {
               <FilterChip
                 key={c.id}
                 active={activeFilter === c.id}
-                tone={{ background: leagueColor(c.id), color: leagueTextColor(c.id) }}
+                tone={{ background: leagueFillColor(c.id), color: leagueTextColor(c.id) }}
                 onClick={() => setCompetitionFilter(activeFilter === c.id ? null : c.id)}
               >
                 <span className={`flex size-5 items-center justify-center rounded-full ${activeFilter === c.id ? 'bg-white' : ''}`}>
@@ -361,46 +453,27 @@ export function DashboardPage() {
         <RefreshBanner failed={stale} online={online} refreshing={refreshing} lastSuccessAt={lastSuccessAt} nextRetryAt={nextRetryAt} recovered={recovered} onRetry={refresh} />
         <main data-stale={stale || undefined} className="mx-auto flex max-w-[1500px] flex-col gap-8 px-4 pt-5">
           {data && !switchingDay && selectedDate === null && data.date !== data.today && (
-            <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5 text-sm text-text-secondary">
+            <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-1 px-3 py-2.5 text-sm text-text-secondary">
               <Icon name="moon" size={16} className="shrink-0 text-text-muted" />
               {t.dashboard.day.lastNight}
             </div>
           )}
-          {(loading || switchingDay) && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
-              {Array.from({ length: 6 }, (_, i) => (
-                <GameCardSkeleton key={i} />
-              ))}
-            </div>
-          )}
-          {!loading && !switchingDay && games.length === 0 && (
-            <div className="mt-16 flex flex-col items-center gap-3 text-center">
-              <span className="flex size-14 items-center justify-center rounded-full bg-white/[0.04] text-text-muted">
-                <Icon name="moon" size={26} />
-              </span>
-              <p className="text-base font-semibold">{isToday ? t.dashboard.emptyTitle : t.dashboard.emptyTitleDay}</p>
-              <p className="max-w-xs text-sm text-text-muted">{t.dashboard.emptyText}</p>
-              <button onClick={() => navigate({ name: 'settings' })} className="mt-1 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-white/[0.1]">
-                {t.dashboard.emptyAction}
-              </button>
-            </div>
+          {(loading || switchingDay) && <DashboardSkeleton viewMode={viewMode} />}
+          {!loading && !switchingDay && data && games.length === 0 && (
+            <EmptyState key={shownDate} date={shownDate ?? data.date} today={data.today} isToday={isToday} onJump={setDate} />
           )}
           {sections.map((section) => (
             <section key={section.key} aria-labelledby={`section-${section.key}`} className="flex flex-col gap-3">
-              <h2 id={`section-${section.key}`} className="flex items-center gap-2 text-[15px] font-bold tracking-[-0.01em] text-text-primary">
+              <h2 id={`section-${section.key}`} className="flex items-center gap-2 text-team font-bold tracking-[-0.01em] text-text-primary">
                 {section.live && <LiveDot />}
                 {section.title}
-                <span className="score-font rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-semibold text-text-secondary">{section.games.length}</span>
+                <span className="score-font rounded-full bg-surface-2 px-2 py-0.5 text-caption font-semibold text-text-secondary">{section.games.length}</span>
               </h2>
               {section.leagues && section.leagues.length > 1 ? (
                 <div className="flex flex-col gap-5">
                   {section.leagues.map((league) => (
-                    <div key={league.key} className="flex flex-col gap-2.5">
-                      <h3 className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                        {league.competitionId === undefined ? <Icon name="star" size={16} className="text-accent-draw" /> : <CompetitionLogo competitionId={league.competitionId} size={16} />}
-                        {league.name}
-                        <span className="score-font text-[11px] font-medium text-text-muted">{league.games.length}</span>
-                      </h3>
+                    <div key={league.key} className="flex flex-col gap-2">
+                      <LeagueBar league={league} />
                       <GameGrid games={league.games} viewMode={viewMode} />
                     </div>
                   ))}

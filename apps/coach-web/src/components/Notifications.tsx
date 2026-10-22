@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
 import { useT } from '../lib/i18n';
 import type { GameNotification } from '../lib/notifications';
+import type { EventType } from '../types';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import { TeamLogo } from './TeamLogo';
@@ -41,17 +42,39 @@ function Score({ notification }: { readonly notification: GameNotification }) {
   );
 }
 
+// Card icons carry their own fill, so only goals get a tinted badge.
+const BADGE_TONE: Partial<Record<EventType, string>> = { goal: 'bg-accent-live text-bg-base' };
+
+// Team events show the team's logo with a small event badge; game-level ones (kick-off, full-time) keep the plain icon.
+function NotificationIcon({ notification }: { readonly notification: GameNotification }) {
+  const team = notification.side ? notification.game[notification.side] : undefined;
+  if (!team) {
+    return (
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-text-primary">
+        <Icon name={notification.icon} size={16} />
+      </span>
+    );
+  }
+  const tone = (notification.eventType && BADGE_TONE[notification.eventType]) ?? 'bg-bg-base text-text-primary';
+  return (
+    <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2">
+      <TeamLogo teamId={team.id} name={team.name} size={24} />
+      <span className={`absolute -bottom-1 -end-1 flex size-4 items-center justify-center rounded-full ring-2 ring-bg-elevated ${tone}`}>
+        <Icon name={notification.icon} size={10} />
+      </span>
+    </span>
+  );
+}
+
 function NotificationCard({ notification, onDismiss }: { readonly notification: GameNotification; readonly onDismiss: () => void }) {
   const open = () => {
     hapticSelect();
     navigate({ name: 'game', id: notification.gameId });
   };
   return (
-    <div className="notification-in pointer-events-auto relative flex overflow-hidden rounded-2xl border border-white/[0.08] bg-bg-elevated/95 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md">
+    <div className="notification-in pointer-events-auto relative flex overflow-hidden rounded-2xl border border-line bg-bg-elevated/95 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md">
       <button onClick={open} className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-start">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-text-primary">
-          <Icon name={notification.icon} size={16} />
-        </span>
+        <NotificationIcon notification={notification} />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="flex min-w-0 items-baseline gap-1.5 text-sm">
             <span className="shrink-0 font-bold">{notification.title}</span>
@@ -61,7 +84,7 @@ function NotificationCard({ notification, onDismiss }: { readonly notification: 
           <Score notification={notification} />
         </span>
       </button>
-      <button onClick={onDismiss} aria-label={useT().common.dismiss} className="shrink-0 px-2.5 text-text-muted hover:text-text-primary">
+      <button onClick={onDismiss} aria-label={useT().common.dismiss} className="tap relative shrink-0 px-2.5 text-text-muted hover:text-text-primary">
         <Icon name="close" size={14} />
       </button>
     </div>
@@ -99,7 +122,7 @@ export function Notifications() {
           </button>
         )}
         {ordered.length > 1 && (
-          <button onClick={clearNotifications} className="rounded-full bg-bg-elevated/95 px-3 py-1 text-xs font-semibold text-text-muted shadow-lg backdrop-blur-md hover:text-text-primary">
+          <button onClick={clearNotifications} className="rounded-full bg-bg-elevated/95 px-3 py-1 text-xs font-semibold text-text-secondary shadow-lg backdrop-blur-md hover:text-text-primary">
             {t.notifications.clearAll}
           </button>
         )}

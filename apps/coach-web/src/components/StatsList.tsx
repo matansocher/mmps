@@ -2,33 +2,50 @@ import { useState } from 'react';
 import { messages } from '../lib/i18n';
 import type { GameStatRow } from '../types';
 
-function StatRow({ stat }: { readonly stat: GameStatRow }) {
+type Colors = { readonly home: string; readonly away: string };
+
+const POSSESSION_STAT_ID = 10;
+
+// Shares of a whole (possession) read best as one split bar rather than two.
+function isSplit(stat: GameStatRow, home: number, away: number): boolean {
+  return stat.id === POSSESSION_STAT_ID || (stat.home.endsWith('%') && stat.away.endsWith('%') && Math.abs(home + away - 100) <= 1);
+}
+
+function StatRow({ stat, colors }: { readonly stat: GameStatRow; readonly colors: Colors }) {
   const home = parseFloat(stat.home) || 0;
   const away = parseFloat(stat.away) || 0;
   const total = home + away;
   const homePct = total > 0 ? (home / total) * 100 : 50;
   const homeLeads = home > away;
   const awayLeads = away > home;
+  const valueClass = (leads: boolean, trails: boolean) => `score-font ${leads ? 'font-bold text-text-primary' : trails ? 'text-text-muted' : 'text-text-secondary'}`;
   return (
     <div className="flex flex-col gap-1.5 px-4 py-2">
       <div className="flex items-center justify-between text-sm">
-        <span className={`score-font ${homeLeads ? 'text-text-primary' : 'text-text-secondary'}`}>{stat.home}</span>
+        <span className={valueClass(homeLeads, awayLeads)}>{stat.home}</span>
         <span className="text-xs text-text-secondary">{stat.name}</span>
-        <span className={`score-font ${awayLeads ? 'text-text-primary' : 'text-text-secondary'}`}>{stat.away}</span>
+        <span className={valueClass(awayLeads, homeLeads)}>{stat.away}</span>
       </div>
-      <div className="flex h-1.5 gap-1">
-        <div className="flex flex-1 justify-end overflow-hidden rounded-full bg-bg-elevated">
-          <div className={`h-full rounded-full ${homeLeads ? 'bg-accent-brand' : 'bg-text-muted/60'}`} style={{ width: `${homePct}%` }} />
+      {isSplit(stat, home, away) ? (
+        <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
+          <div className="h-full" style={{ width: `${homePct}%`, backgroundColor: colors.home, opacity: awayLeads ? 0.55 : 1 }} />
+          <div className="h-full flex-1" style={{ backgroundColor: colors.away, opacity: homeLeads ? 0.55 : 1 }} />
         </div>
-        <div className="flex-1 overflow-hidden rounded-full bg-bg-elevated">
-          <div className={`h-full rounded-full ${awayLeads ? 'bg-accent-brand' : 'bg-text-muted/60'}`} style={{ width: `${100 - homePct}%` }} />
+      ) : (
+        <div className="flex h-1.5 gap-1">
+          <div className="flex flex-1 justify-end overflow-hidden rounded-full bg-bg-elevated">
+            <div className="h-full rounded-full" style={{ width: `${homePct}%`, backgroundColor: colors.home, opacity: awayLeads ? 0.55 : 1 }} />
+          </div>
+          <div className="flex-1 overflow-hidden rounded-full bg-bg-elevated">
+            <div className="h-full rounded-full" style={{ width: `${100 - homePct}%`, backgroundColor: colors.away, opacity: homeLeads ? 0.55 : 1 }} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-export function StatsList({ stats }: { readonly stats: readonly GameStatRow[] }) {
+export function StatsList({ stats, colors }: { readonly stats: readonly GameStatRow[]; readonly colors: Colors }) {
   const [showAll, setShowAll] = useState(false);
   const major = stats.filter((s) => s.isMajor);
   const visible = showAll || major.length === 0 ? stats : major;
@@ -36,7 +53,7 @@ export function StatsList({ stats }: { readonly stats: readonly GameStatRow[] })
   return (
     <div className="flex flex-col py-2">
       {visible.map((stat) => (
-        <StatRow key={stat.id} stat={stat} />
+        <StatRow key={stat.id} stat={stat} colors={colors} />
       ))}
       {major.length > 0 && major.length < stats.length && (
         <button onClick={() => setShowAll(!showAll)} className="mt-1 py-2 text-sm font-semibold text-accent-brand">

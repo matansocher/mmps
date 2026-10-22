@@ -16,26 +16,26 @@ type RowProps = { readonly competition: CompetitionOption; readonly todayCount: 
 
 function LeagueRow({ competition, todayCount, liveCount, favoriteCount }: RowProps) {
   return (
-    <button onClick={() => navigate({ name: 'league', id: competition.id })} className="relative flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-bg-elevated/60">
+    <button onClick={() => navigate({ name: 'league', id: competition.id })} className="relative flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-row-hover">
       <span className="absolute inset-y-2 start-0 w-1 rounded-e" style={{ backgroundColor: leagueColor(competition.id) }} />
       <CompetitionLogo competitionId={competition.id} size={24} />
       <span className="flex min-w-0 flex-1 items-baseline gap-2">
         <span className="truncate text-sm font-semibold">{competition.name}</span>
         {favoriteCount > 0 && (
-          <span className="flex shrink-0 items-center gap-1 self-center text-xs text-text-muted">
-            <Icon name="star" size={11} className="text-accent-draw" />
+          <span className="flex shrink-0 items-center gap-1 self-center text-xs text-text-secondary">
+            <Icon name="star" size={11} className="text-accent-fav" />
             {messages().leagues.yourTeams(favoriteCount)}
           </span>
         )}
       </span>
       {liveCount > 0 && (
-        <span className="flex items-center gap-1.5 text-xs font-bold text-accent-live">
+        <span className="score-font flex h-6 min-w-6 shrink-0 items-center justify-center gap-1.5 rounded-full bg-accent-live/12 px-2 text-caption text-accent-live">
           <LiveDot />
           {liveCount}
         </span>
       )}
-      {todayCount > 0 && <span className="text-xs text-text-muted">{messages().leagues.today(todayCount)}</span>}
-      <span aria-hidden className="inline-block text-text-muted rtl:-scale-x-100">›</span>
+      {todayCount > 0 && <span className="flex h-6 shrink-0 items-center rounded-full bg-surface-2 px-2 text-caption text-text-secondary">{messages().leagues.today(todayCount)}</span>}
+      <Icon name="back" size={16} className="shrink-0 -scale-x-100 text-text-muted rtl:scale-x-100" />
     </button>
   );
 }

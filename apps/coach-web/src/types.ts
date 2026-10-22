@@ -9,6 +9,7 @@ export type Team = {
   readonly id: number;
   readonly name: string;
   readonly shortName?: string;
+  readonly color?: string;
   readonly score: number | null;
 };
 

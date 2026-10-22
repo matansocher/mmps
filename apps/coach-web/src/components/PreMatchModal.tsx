@@ -40,7 +40,7 @@ function scoreLine(meeting: GameSummary): string {
 function Block({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-text-secondary">{title}</h3>
+      <h3 className="text-caption font-bold uppercase tracking-wide text-text-secondary">{title}</h3>
       {children}
     </section>
   );
@@ -67,9 +67,9 @@ function Skeleton() {
     <div aria-hidden className="flex animate-pulse flex-col gap-5">
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex flex-col gap-2">
-          <span className="h-3 w-24 rounded bg-white/[0.06]" />
-          <span className="h-5 w-full rounded bg-white/[0.04]" />
-          <span className="h-5 w-4/5 rounded bg-white/[0.04]" />
+          <span className="h-3 w-24 rounded bg-surface-2" />
+          <span className="h-5 w-full rounded bg-surface-1" />
+          <span className="h-5 w-4/5 rounded bg-surface-1" />
         </div>
       ))}
     </div>
@@ -109,7 +109,7 @@ function Content({ game, detail }: { readonly game: Game; readonly detail: GameD
       <Block title={p.h2h}>
         {total > 0 && h2h ? (
           <div className="flex flex-col gap-1.5">
-            <div className="grid grid-cols-3 rounded-xl bg-white/[0.03] py-2 text-center">
+            <div className="grid grid-cols-3 rounded-xl bg-surface-1 py-2 text-center">
               {[
                 { label: t.h2h.wins(teamLabel(game.home)), value: h2h.record.homeWins },
                 { label: t.h2h.draws, value: h2h.record.draws },
@@ -117,7 +117,7 @@ function Content({ game, detail }: { readonly game: Game; readonly detail: GameD
               ].map((c) => (
                 <div key={c.label} className="flex min-w-0 flex-col px-1">
                   <span className="score-font text-lg">{c.value}</span>
-                  <span className="truncate text-[11px] text-text-secondary">{c.label}</span>
+                  <span className="truncate text-caption text-text-secondary">{c.label}</span>
                 </div>
               ))}
             </div>
@@ -203,7 +203,7 @@ export function PreMatchModal({ game, trigger, onClose }: Props) {
         <span aria-hidden className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-white/15 md:hidden" />
         <header className="flex items-start gap-3 px-5 pb-3 pt-3 md:pt-5">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <p className="truncate text-[11px] text-text-secondary">{game.competitionName}</p>
+            <p className="truncate text-caption text-text-secondary">{game.competitionName}</p>
             <h2 id={titleId} className="flex items-center gap-2 text-base font-bold">
               <TeamLogo teamId={game.home.id} name={game.home.name} size={22} />
               <span className="truncate">{`${teamLabel(game.home)} - ${teamLabel(game.away)}`}</span>
@@ -215,13 +215,13 @@ export function PreMatchModal({ game, trigger, onClose }: Props) {
             data-autofocus
             onClick={onClose}
             aria-label={p.close}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-text-secondary transition hover:bg-white/[0.1] hover:text-text-primary"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-text-secondary transition hover:bg-surface-3 hover:text-text-primary"
           >
             <Icon name="close" size={16} />
           </button>
         </header>
         <div className="flex flex-col gap-5 overflow-y-auto px-5 pb-5">
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-2xl bg-white/[0.03] px-4 py-3 text-sm">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-2xl bg-surface-1 px-4 py-3 text-sm">
             <dt className="text-text-secondary">{t.game.kickoff}</dt>
             <dd className="min-w-0">
               <span className="ltr-num tabular-nums">{formatKickoff(game.startTime)}</span>
@@ -247,7 +247,7 @@ export function PreMatchModal({ game, trigger, onClose }: Props) {
           ) : errorStatus !== null ? (
             <div className="flex flex-col items-center gap-2 py-4 text-center">
               <p className="text-sm text-text-secondary">{p.loadFailed}</p>
-              <button type="button" onClick={reload} className="rounded-full bg-white/[0.06] px-4 py-2 text-sm font-semibold">
+              <button type="button" onClick={reload} className="rounded-full bg-surface-2 px-4 py-2 text-sm font-semibold">
                 {p.retry}
               </button>
             </div>

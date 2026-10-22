@@ -53,7 +53,7 @@ export function PlayerPage({ id }: { readonly id: number }) {
             <Card className="flex flex-wrap gap-px bg-border-subtle">
               {player.details.map((d) => (
                 <div key={d.title} className="flex min-w-[40%] flex-1 basis-0 flex-col sm:min-w-[22%] gap-0.5 bg-bg-card px-4 py-3">
-                  <span className="text-[11px] text-text-muted">{d.title}</span>
+                  <span className="text-caption text-text-secondary">{d.title}</span>
                   <span className="truncate text-sm font-semibold">{d.value}</span>
                 </div>
               ))}
@@ -72,7 +72,7 @@ export function PlayerPage({ id }: { readonly id: number }) {
                           {s.stats.map((stat) => (
                             <div key={stat.name} className="flex flex-col items-center gap-0.5 bg-bg-card px-2 py-3 text-center">
                               <span className="score-font text-lg">{stat.value}</span>
-                              <span className="text-[11px] text-text-muted">{stat.name}</span>
+                              <span className="text-caption text-text-secondary">{stat.name}</span>
                             </div>
                           ))}
                         </div>

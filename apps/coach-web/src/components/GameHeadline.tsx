@@ -18,7 +18,7 @@ const TONE: Readonly<Record<GameHeadlineType, Tone>> = {
 };
 
 const TONE_STYLE: Readonly<Record<Tone, { readonly icon: IconName; readonly color: string; readonly chip: string }>> = {
-  gold: { icon: 'trophy', color: 'text-accent-draw', chip: 'bg-accent-draw/12' },
+  gold: { icon: 'trophy', color: 'text-accent-fav', chip: 'bg-accent-fav/12' },
   up: { icon: 'trendUp', color: 'text-accent-live', chip: 'bg-accent-live/12' },
   down: { icon: 'trendDown', color: 'text-accent-red', chip: 'bg-accent-red/12' },
 };
@@ -46,14 +46,14 @@ export function GameHeadlineLine({ game, headline, compact }: { readonly game: G
   const style = TONE_STYLE[TONE[headline.type]];
   if (compact) {
     return (
-      <p className="flex min-w-0 items-center justify-center gap-1.5 text-[11px] text-text-secondary">
+      <p className="flex min-w-0 items-center justify-center gap-1.5 text-caption text-text-secondary">
         <Icon name={style.icon} size={12} className={`shrink-0 ${style.color}`} />
         <span className="truncate">{text}</span>
       </p>
     );
   }
   return (
-    <div className="flex min-w-0 items-center gap-2.5 border-t border-white/[0.06] pt-3">
+    <div className="flex min-w-0 items-center gap-2.5 border-t border-line pt-3">
       <span className={`flex size-6 shrink-0 items-center justify-center rounded-full ${style.chip} ${style.color}`}>
         <Icon name={style.icon} size={13} />
       </span>

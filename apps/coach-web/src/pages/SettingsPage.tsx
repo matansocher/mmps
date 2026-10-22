@@ -9,7 +9,7 @@ import { api } from '../lib/api';
 import { isGoalSoundEnabled, previewGoalSound, setGoalSoundEnabled } from '../lib/goal-sound';
 import { EVENT_META, EVENT_TYPE_ORDER } from '../lib/format';
 import { LANGUAGE_NAMES, useLanguage, useT } from '../lib/i18n';
-import { leagueColor, leagueTextColor } from '../lib/league-themes';
+import { leagueFillColor, leagueTextColor } from '../lib/league-themes';
 import { hapticSelect } from '../lib/telegram';
 import type { CompetitionOption, EventType, FavoriteTeam, Language, Preferences, TeamOption } from '../types';
 import { Icon } from '../components/Icon';
@@ -26,7 +26,7 @@ function Card({ title, subtitle, children }: { readonly title: string; readonly 
     <section className="flex flex-col gap-3 rounded-xl bg-bg-card p-4">
       <div>
         <h2 className="text-sm font-bold">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-text-muted">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 text-xs text-text-secondary">{subtitle}</p>}
       </div>
       {children}
     </section>
@@ -70,7 +70,7 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
         placeholder={t.settings.searchPlaceholder}
         className="w-full rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-sm outline-none placeholder:text-text-muted focus:border-accent-brand"
       />
-      {searching && <p className="text-xs text-text-muted">{t.settings.searching}</p>}
+      {searching && <p className="text-xs text-text-secondary">{t.settings.searching}</p>}
       {results.length > 0 && (
         <ul className="flex max-h-64 flex-col overflow-y-auto rounded-lg border border-border-subtle">
           {results.map((team) => {
@@ -95,6 +95,15 @@ function TeamSearch({ favorites, onAdd }: { readonly favorites: FavoriteTeam[]; 
         </ul>
       )}
     </div>
+  );
+}
+
+// Visual only; the parent button carries role="switch" and aria-checked.
+function Switch({ on }: { readonly on: boolean }) {
+  return (
+    <span aria-hidden className={`relative inline-flex h-6 w-10 shrink-0 rounded-full transition-colors ${on ? 'bg-accent-brand' : 'bg-surface-3'}`}>
+      <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-[inset-inline-start] ${on ? 'start-[18px]' : 'start-0.5'}`} />
+    </span>
   );
 }
 
@@ -167,7 +176,7 @@ export function SettingsPage() {
                     lang={lang}
                     onClick={() => update({ ...prefs, language: lang })}
                     aria-pressed={on}
-                    className={`flex items-center justify-center gap-2 rounded-lg border py-2 text-sm font-semibold transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                    className={`flex items-center justify-center gap-2 rounded-lg border py-2 text-sm font-semibold transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-secondary'}`}
                   >
                     <LanguageFlag language={lang} />
                     {LANGUAGE_NAMES[lang]}
@@ -187,7 +196,7 @@ export function SettingsPage() {
                     onClick={() => update({ ...prefs, competitionIds: toggle(prefs.competitionIds, c.id) })}
                     aria-pressed={on}
                     className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? 'border-transparent' : 'border-border-subtle text-text-secondary'}`}
-                    style={on ? { backgroundColor: leagueColor(c.id), color: leagueTextColor(c.id) } : undefined}
+                    style={on ? { backgroundColor: leagueFillColor(c.id), color: leagueTextColor(c.id) } : undefined}
                   >
                     <span className={`flex rounded-full ${on ? 'bg-bg-base/70 p-0.5' : ''}`}>
                       <CompetitionLogo competitionId={c.id} size={on ? 14 : 16} />
@@ -203,12 +212,12 @@ export function SettingsPage() {
             <TeamSearch favorites={prefs.favoriteTeams} onAdd={(team) => update({ ...prefs, favoriteTeams: [...prefs.favoriteTeams, team] })} />
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-text-secondary">{t.settings.favoritesTitle}</span>
-              <span className="score-font text-text-muted">
+              <span className="score-font text-text-secondary">
                 {prefs.favoriteTeams.length}/{MAX_FAVORITE_TEAMS}
               </span>
             </div>
             {prefs.favoriteTeams.length === 0 ? (
-              <p className="flex items-center gap-2 rounded-lg border border-dashed border-border-subtle px-3 py-3 text-xs text-text-muted">
+              <p className="flex items-center gap-2 rounded-lg border border-dashed border-border-subtle px-3 py-3 text-xs text-text-secondary">
                 <Icon name="star" size={14} />
                 {t.settings.noFavorites}
               </p>
@@ -222,7 +231,7 @@ export function SettingsPage() {
                       onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((f) => f.id !== team.id) })}
                       aria-label={t.settings.remove(team.name)}
                       title={t.settings.remove(team.name)}
-                      className="flex size-6 shrink-0 items-center justify-center rounded-full text-text-muted transition hover:bg-accent-red/15 hover:text-accent-red"
+                      className="tap relative flex size-6 shrink-0 items-center justify-center rounded-full text-text-muted transition hover:bg-accent-red/15 hover:text-accent-red"
                     >
                       <Icon name="close" size={12} />
                     </button>
@@ -233,19 +242,20 @@ export function SettingsPage() {
           </Card>
 
           <Card title={t.settings.notifications} subtitle={t.settings.notificationsSubtitle}>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col divide-y divide-line overflow-hidden rounded-lg border border-border-subtle">
               {EVENT_TYPE_ORDER.map((type: EventType) => {
                 const on = prefs.eventTypes.includes(type);
                 return (
                   <button
                     key={type}
+                    role="switch"
+                    aria-checked={on}
                     onClick={() => update({ ...prefs, eventTypes: toggle(prefs.eventTypes, type) })}
-                    aria-pressed={on}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${on ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                    className="flex min-h-11 items-center gap-3 px-3 py-2 text-sm transition hover:bg-row-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-brand"
                   >
-                    <Icon name={EVENT_META[type].icon} size={16} />
-                    <span className="flex-1 text-start">{t.events[type].label}</span>
-                    <span className={`size-4 rounded border ${on ? 'border-accent-brand bg-accent-brand' : 'border-text-muted'}`} />
+                    <Icon name={EVENT_META[type].icon} size={16} className={on ? 'text-text-primary' : 'text-text-muted'} />
+                    <span className={`flex-1 text-start ${on ? 'text-text-primary' : 'text-text-secondary'}`}>{t.events[type].label}</span>
+                    <Switch on={on} />
                   </button>
                 );
               })}
@@ -264,7 +274,7 @@ export function SettingsPage() {
                     if (value && !goalSound) void previewGoalSound().catch((error) => console.warn('Could not preview goal sound', error));
                   }}
                   aria-pressed={goalSound === value}
-                  className={`rounded-lg border px-3 py-2 text-sm transition ${goalSound === value ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-muted'}`}
+                  className={`rounded-lg border px-3 py-2 text-sm transition ${goalSound === value ? 'border-accent-brand bg-accent-brand/10 text-text-primary' : 'border-border-subtle text-text-secondary'}`}
                 >
                   {value ? t.settings.on : t.settings.off}
                 </button>

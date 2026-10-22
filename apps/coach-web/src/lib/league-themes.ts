@@ -23,8 +23,42 @@ const THEMES: Record<number, string> = {
   5096: '#1A237E', // Club World Cup
 };
 
-export function leagueColor(competitionId: number): string {
+const BASE = '#0a0e14';
+const MIN_CONTRAST = 3;
+
+// The league's brand colour as-is, for fills that pair it with leagueTextColor.
+export function leagueFillColor(competitionId: number): string {
   return THEMES[competitionId] ?? FALLBACK;
+}
+
+// Brand colour lifted toward white until it reaches 3:1 against the dark base, so dark leagues stay visible as accents.
+export function leagueColor(competitionId: number): string {
+  return liftColor(leagueFillColor(competitionId));
+}
+
+function contrastOnBase(hex: string): number {
+  return (luminance(hex) + 0.05) / (luminance(BASE) + 0.05);
+}
+
+function mixWithWhite(hex: string, amount: number): string {
+  const channels = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16);
+    return Math.round(c + (255 - c) * amount)
+      .toString(16)
+      .padStart(2, '0');
+  });
+  return `#${channels.join('')}`;
+}
+
+const lifted = new Map<string, string>();
+
+export function liftColor(hex: string): string {
+  const cached = lifted.get(hex);
+  if (cached) return cached;
+  let color = hex;
+  for (let amount = 0.05; contrastOnBase(color) < MIN_CONTRAST && amount <= 1; amount += 0.05) color = mixWithWhite(hex, amount);
+  lifted.set(hex, color);
+  return color;
 }
 
 function luminance(hex: string): number {
@@ -37,8 +71,27 @@ function luminance(hex: string): number {
 
 // White or near-black, whichever reads better on the league colour (WCAG contrast).
 export function leagueTextColor(competitionId: number): string {
-  const bg = luminance(leagueColor(competitionId));
+  const bg = luminance(leagueFillColor(competitionId));
   const onWhite = 1.05 / (bg + 0.05);
-  const onDark = (bg + 0.05) / (luminance('#0a0e14') + 0.05);
+  const onDark = (bg + 0.05) / (luminance(BASE) + 0.05);
   return onWhite >= onDark ? '#ffffff' : '#0a0e14';
+}
+
+const HOME_FALLBACK = '#3b82f6';
+const AWAY_FALLBACK = '#e2e8f0';
+const MIN_TEAM_DISTANCE = 120;
+
+function isHex(color: string | undefined): color is string {
+  return !!color && /^#[0-9a-f]{6}$/i.test(color);
+}
+
+function distance(a: string, b: string): number {
+  return Math.hypot(...[1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)));
+}
+
+// Home and away accent colours for one game: each team's own colour lifted for contrast; if they clash, away falls back to off-white.
+export function teamColors(home: string | undefined, away: string | undefined): { readonly home: string; readonly away: string } {
+  const homeColor = liftColor(isHex(home) ? home : HOME_FALLBACK);
+  const awayColor = isHex(away) ? liftColor(away) : AWAY_FALLBACK;
+  return { home: homeColor, away: distance(homeColor, awayColor) < MIN_TEAM_DISTANCE ? AWAY_FALLBACK : awayColor };
 }
