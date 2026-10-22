@@ -190,6 +190,41 @@
   }
 }
 
+/* Live cards: faint green ring; a goal makes the scoring row glow for a few seconds. */
+.live-ring {
+  box-shadow: inset 0 0 0 1px rgb(0 210 106 / 0.18);
+}
+.goal-flash {
+  animation: goal-flash 8s ease-out;
+}
+/* Inset shadow (not background) so it layers over the card's own background and keeps the live ring. */
+@keyframes goal-flash {
+  0%,
+  60% {
+    box-shadow:
+      inset 0 0 0 1px rgb(0 210 106 / 0.4),
+      inset 0 0 0 999px rgb(0 210 106 / 0.12);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 1px rgb(0 210 106 / 0.18),
+      inset 0 0 0 999px rgb(0 210 106 / 0);
+  }
+}
+.score-pop {
+  display: inline-block;
+  animation: score-pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes score-pop {
+  0% {
+    transform: scale(1.6);
+    color: var(--color-accent-live);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .banner-in,
   .sheet-in,
@@ -199,8 +234,15 @@
   /* Keep the live dot and refresh spinner as static state, and swap slides and lifts for instant changes. */
   .animate-live-pulse,
   .animate-spin,
-  .skeleton {
+  .skeleton,
+  .goal-flash,
+  .score-pop {
     animation: none;
+  }
+  .goal-flash {
+    box-shadow:
+      inset 0 0 0 1px rgb(0 210 106 / 0.4),
+      inset 0 0 0 999px rgb(0 210 106 / 0.1);
   }
   .notification-in {
     animation: notification-fade 0.15s linear;

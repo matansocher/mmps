@@ -15,6 +15,7 @@ import { useLiveCompetition } from '../hooks/useLiveCompetition';
 import { useResource } from '../hooks/useResource';
 import { api } from '../lib/api';
 import { formatLongDate, formatKickoff } from '../lib/format';
+import { teamColors } from '../lib/league-themes';
 import { LIVE_POLL_MS } from '../lib/polling';
 import { navigate } from '../lib/router';
 import type { GameDetail } from '../types';
@@ -140,7 +141,7 @@ export function GamePage({ id }: { readonly id: number }) {
                 {detail.game.status !== 'scheduled' && (
                   <Section title={messages().game.stats}>
                     <Card>
-                      <StatsList stats={detail.stats} />
+                      <StatsList stats={detail.stats} colors={teamColors(detail.game.home.color, detail.game.away.color)} />
                     </Card>
                   </Section>
                 )}

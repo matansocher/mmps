@@ -76,3 +76,22 @@ export function leagueTextColor(competitionId: number): string {
   const onDark = (bg + 0.05) / (luminance(BASE) + 0.05);
   return onWhite >= onDark ? '#ffffff' : '#0a0e14';
 }
+
+const HOME_FALLBACK = '#3b82f6';
+const AWAY_FALLBACK = '#e2e8f0';
+const MIN_TEAM_DISTANCE = 120;
+
+function isHex(color: string | undefined): color is string {
+  return !!color && /^#[0-9a-f]{6}$/i.test(color);
+}
+
+function distance(a: string, b: string): number {
+  return Math.hypot(...[1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)));
+}
+
+// Home and away accent colours for one game: each team's own colour lifted for contrast; if they clash, away falls back to off-white.
+export function teamColors(home: string | undefined, away: string | undefined): { readonly home: string; readonly away: string } {
+  const homeColor = liftColor(isHex(home) ? home : HOME_FALLBACK);
+  const awayColor = isHex(away) ? liftColor(away) : AWAY_FALLBACK;
+  return { home: homeColor, away: distance(homeColor, awayColor) < MIN_TEAM_DISTANCE ? AWAY_FALLBACK : awayColor };
+}

@@ -53,6 +53,7 @@ export function toTeam(competitor: ScoresCompetitorRef, status: DashboardGameSta
     id: competitor.id,
     name: competitor.name,
     ...(competitor.shortName ? { shortName: competitor.shortName } : {}),
+    ...(competitor.color ? { color: competitor.color } : {}),
     score: hasScore ? competitor.score : null,
   };
 }

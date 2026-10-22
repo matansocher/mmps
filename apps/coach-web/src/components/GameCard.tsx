@@ -8,6 +8,7 @@ import { ChannelBadge } from './ChannelBadge';
 import { CompetitionLogo } from './CompetitionLogo';
 import { GameHeadlineLine } from './GameHeadline';
 import { Icon } from './Icon';
+import { LiveProgress, useGoalFlash } from './LiveEffects';
 import { LiveDot } from './LiveDot';
 import { TeamLogo } from './TeamLogo';
 import { FormBadge } from './ui';
@@ -19,7 +20,7 @@ const EXTRA_TIME_MINUTES = 120;
 type ScorerLine = { readonly name: string; readonly minutes: string[] };
 
 // Goals grouped per player, in order of their first goal: "Saka 23', 67'".
-function scorerLines(events: readonly GameEvent[]): ScorerLine[] {
+export function scorerLines(events: readonly GameEvent[]): ScorerLine[] {
   const byPlayer = new Map<string, ScorerLine>();
   for (const goal of events.filter((e) => e.type === 'goal')) {
     const t = messages();
@@ -43,7 +44,7 @@ export function WinProbability({ team, status }: { readonly team: Team; readonly
   );
 }
 
-function TeamRow({ team, game, isWinner, form }: { readonly team: Team; readonly game: Game; readonly isWinner: boolean; readonly form?: readonly FormEntry[] }) {
+function TeamRow({ team, game, isWinner, scored }: { readonly team: Team; readonly game: Game; readonly isWinner: boolean; readonly scored?: boolean }) {
   const showScore = game.status !== 'scheduled' && team.score !== null;
   const dim = game.status === 'finished' && !isWinner;
   return (
@@ -53,8 +54,13 @@ function TeamRow({ team, game, isWinner, form }: { readonly team: Team; readonly
         <span className={`min-w-0 truncate text-team tracking-[-0.01em] ${dim ? 'text-text-secondary' : 'font-semibold text-text-primary'}`}>{team.name}</span>
         <WinProbability team={team} status={game.status} />
       </span>
-      {form && form.length > 0 && <FormPills entries={form} />}
-      {showScore && <span className={`score-font min-w-6 text-end text-score leading-none tracking-[-0.02em] ${dim ? 'text-text-muted' : 'text-text-primary'}`}>{team.score}</span>}
+      {showScore && (
+        <span className={`score-font min-w-6 text-end text-score leading-none tracking-[-0.02em] ${dim ? 'text-text-muted' : 'text-text-primary'}`}>
+          <span key={team.score} className={scored ? 'score-pop' : ''}>
+            {team.score}
+          </span>
+        </span>
+      )}
     </div>
   );
 }
@@ -113,8 +119,29 @@ function StatusBadge({ game }: { readonly game: Game }) {
       </span>
     );
   }
-  if (game.status === 'scheduled') return <span className="score-font flex h-6 items-center rounded-full bg-surface-2 px-2.5 text-xs text-text-primary">{formatKickoff(game.startTime)}</span>;
   return <span className="flex h-6 items-center rounded-full px-1 text-xs font-semibold tracking-wide text-text-secondary">{game.statusText || t.card.fullTime}</span>;
+}
+
+function ScheduledTeam({ team, form }: { readonly team: Team; readonly form?: readonly FormEntry[] }) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center">
+      <TeamLogo teamId={team.id} name={team.name} size={36} />
+      <span className="line-clamp-2 text-team leading-tight font-semibold tracking-[-0.01em] text-text-primary">{team.name}</span>
+      <WinProbability team={team} status="scheduled" />
+      {form && form.length > 0 && <FormPills entries={form} />}
+    </div>
+  );
+}
+
+// Head-to-head layout: kickoff time is the centre of attention before the game starts.
+function ScheduledMatchup({ game }: { readonly game: Game }) {
+  return (
+    <div className="flex items-start gap-2 py-1">
+      <ScheduledTeam team={game.home} form={game.form?.home} />
+      <span className="score-font mt-2 shrink-0 text-score leading-none font-bold tracking-[-0.02em] text-text-primary">{formatKickoff(game.startTime)}</span>
+      <ScheduledTeam team={game.away} form={game.form?.away} />
+    </div>
+  );
 }
 
 function liveMinute(game: Game): number {
@@ -228,18 +255,26 @@ export function StandingsSnippet({ game }: { readonly game: Game }) {
   );
 }
 
+export function GoalPill() {
+  const t = useT();
+  return (
+    <span role="status" className="flex h-6 items-center gap-1 rounded-full bg-accent-live px-2.5 text-xs font-bold tracking-wide text-bg-base">
+      <Icon name="ball" size={12} />
+      {t.dashboard.goal}
+    </span>
+  );
+}
+
 export function openGame(id: number) {
   hapticSelect();
   navigate({ name: 'game', id });
 }
 
 function GameFooter({ game }: { readonly game: Game }) {
+  if (game.channels.length === 0) return null;
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
-      <div className="flex min-w-0 flex-1">
-        <ChannelBadge channels={game.channels} />
-      </div>
-      <StatusBadge game={game} />
+    <div className="flex items-center gap-3 border-t border-line pt-3">
+      <ChannelBadge channels={game.channels} />
     </div>
   );
 }
@@ -248,14 +283,17 @@ export function GameCard({ game }: { readonly game: Game }) {
   const homeScore = game.home.score ?? 0;
   const awayScore = game.away.score ?? 0;
   const t = useT();
+  const scored = useGoalFlash(game);
+  const live = game.status === 'live';
   return (
     <div
       role="link"
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className="game-card group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0"
+      className={`game-card group relative ${live ? 'live-ring' : ''} ${scored ? 'goal-flash' : ''} flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0`}
     >
+      <LiveProgress game={game} />
       <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
@@ -263,7 +301,8 @@ export function GameCard({ game }: { readonly game: Game }) {
           {game.isFavorite && <Icon name="star" size={12} className="text-accent-fav" title={t.common.favouriteTeam} />}
         </span>
         <span className="flex min-w-0 items-center justify-end gap-2">
-          {game.status === 'live' && <ChannelBadge channels={game.channels} />}
+          {scored && <GoalPill />}
+          {!scored && live && <ChannelBadge channels={game.channels} />}
           <HotBadge game={game} />
           {game.status !== 'scheduled' && <StatusBadge game={game} />}
           <span className="-me-1.5 flex items-center empty:hidden">
@@ -272,15 +311,12 @@ export function GameCard({ game }: { readonly game: Game }) {
         </span>
       </div>
       {game.status === 'scheduled' ? (
-        <div className="flex flex-col gap-2.5 py-1">
-          <TeamRow team={game.home} game={game} isWinner form={game.form?.home} />
-          <TeamRow team={game.away} game={game} isWinner form={game.form?.away} />
-        </div>
+        <ScheduledMatchup game={game} />
       ) : (
         <div className="flex flex-col gap-1">
-          <TeamRow team={game.home} game={game} isWinner={homeScore >= awayScore} />
+          <TeamRow team={game.home} game={game} isWinner={homeScore >= awayScore} scored={scored === 'home'} />
           <KeyEvents game={game} side="home" />
-          <TeamRow team={game.away} game={game} isWinner={awayScore >= homeScore} />
+          <TeamRow team={game.away} game={game} isWinner={awayScore >= homeScore} scored={scored === 'away'} />
           <KeyEvents game={game} side="away" />
         </div>
       )}
