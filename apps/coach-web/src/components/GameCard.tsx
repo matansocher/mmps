@@ -306,19 +306,19 @@ export function GameCard({ game }: { readonly game: Game }) {
 function SkeletonTeam() {
   return (
     <div className="flex items-center gap-3">
-      <div className="size-6 rounded-full bg-surface-2" />
-      <div className="h-3.5 w-1/2 rounded-full bg-surface-2" />
-      <div className="ms-auto h-5 w-4 rounded bg-surface-2" />
+      <div className="size-6 rounded-full skeleton" />
+      <div className="h-3.5 w-1/2 rounded-full skeleton" />
+      <div className="ms-auto h-5 w-4 rounded skeleton" />
     </div>
   );
 }
 
 export function GameCardSkeleton() {
   return (
-    <div className="flex animate-pulse flex-col gap-4 rounded-2xl border border-line bg-bg-card p-4" aria-hidden>
+    <div className="flex flex-col gap-4 rounded-2xl border border-line bg-bg-card p-4" aria-hidden>
       <div className="flex items-center justify-between">
-        <div className="h-3 w-1/3 rounded-full bg-surface-2" />
-        <div className="h-6 w-12 rounded-full bg-surface-2" />
+        <div className="h-3 w-1/3 rounded-full skeleton" />
+        <div className="h-6 w-12 rounded-full skeleton" />
       </div>
       <SkeletonTeam />
       <SkeletonTeam />

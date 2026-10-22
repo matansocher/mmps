@@ -88,3 +88,15 @@ export function GameRow({ game }: { readonly game: Game }) {
     </div>
   );
 }
+
+export function GameRowSkeleton() {
+  return (
+    <div className="flex h-[52px] items-center gap-2 rounded-xl border border-line bg-bg-card px-3" aria-hidden>
+      <div className="skeleton size-[18px] shrink-0 rounded-full" />
+      <div className="skeleton h-3 flex-1 rounded-full" />
+      <div className="skeleton h-4 w-10 shrink-0 rounded" />
+      <div className="skeleton h-3 flex-1 rounded-full" />
+      <div className="skeleton size-[18px] shrink-0 rounded-full" />
+    </div>
+  );
+}

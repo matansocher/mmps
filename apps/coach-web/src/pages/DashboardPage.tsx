@@ -1,7 +1,7 @@
 import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { type CardActions, CardActionsContext } from '../components/CardActions';
 import { GameCard, GameCardSkeleton } from '../components/GameCard';
-import { GameRow } from '../components/GameRow';
+import { GameRow, GameRowSkeleton } from '../components/GameRow';
 import { Icon, type IconName } from '../components/Icon';
 import { LiveDot } from '../components/LiveDot';
 import { CompetitionLogo } from '../components/CompetitionLogo';
@@ -11,9 +11,10 @@ import { RefreshBanner } from '../components/RefreshBanner';
 import { TimeAgo } from '../components/TimeAgo';
 import { ErrorState } from '../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
+import { api } from '../lib/api';
 import { daysBetween, shiftDate } from '../lib/dates';
 import { formatDateTitle, formatDayLabel } from '../lib/format';
-import { leagueFillColor, leagueTextColor } from '../lib/league-themes';
+import { leagueColor, leagueFillColor, leagueTextColor } from '../lib/league-themes';
 import { type Messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
@@ -73,6 +74,69 @@ function buildSections(games: Game[], t: Messages['dashboard']['sections'], myTe
     { key: 'other', title: t.other, games: rest.filter((g) => g.status === 'other') },
     { key: 'finished', title: t.finished, games: finished, leagues: groupByLeague(finished) },
   ].filter((s) => s.games.length > 0);
+}
+
+type NextGamesSearch = 'idle' | 'searching' | 'none';
+
+// Remount per day (key) so the search state resets when the day changes.
+function EmptyState({ date, today, isToday, onJump }: { readonly date: string; readonly today: string; readonly isToday: boolean; readonly onJump: (date: string) => void }) {
+  const t = useT();
+  const [search, setSearch] = useState<NextGamesSearch>('idle');
+  const canSearch = daysBetween(today, date) < MAX_DAY_OFFSET;
+
+  // The API has no "next game day" lookup, so probe the following days until one has games.
+  const findNextGames = async () => {
+    setSearch('searching');
+    for (let day = shiftDate(date, 1); daysBetween(today, day) <= MAX_DAY_OFFSET; day = shiftDate(day, 1)) {
+      try {
+        const res = await api.dashboard(day);
+        if (res.games.length > 0) return onJump(day);
+      } catch {
+        break;
+      }
+    }
+    setSearch('none');
+  };
+
+  return (
+    <div className="mt-16 flex flex-col items-center gap-3 text-center">
+      <span className="flex size-14 items-center justify-center rounded-full bg-surface-2 text-text-secondary">
+        <Icon name="calendar" size={26} />
+      </span>
+      <p className="text-title font-semibold">{isToday ? t.dashboard.emptyTitle : t.dashboard.emptyTitleDay}</p>
+      <p className="max-w-xs text-sm text-text-secondary">{t.dashboard.emptyText}</p>
+      <div className="mt-2 flex flex-col items-center gap-2">
+        {canSearch && (
+          <button
+            onClick={findNextGames}
+            disabled={search !== 'idle'}
+            className="h-11 rounded-full bg-accent-brand px-5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.97] disabled:opacity-60"
+          >
+            {search === 'searching' ? t.dashboard.findingNextGames : search === 'none' ? t.dashboard.noUpcomingGames : t.dashboard.nextGames}
+          </button>
+        )}
+        <button onClick={() => navigate({ name: 'settings' })} className="h-11 rounded-full px-4 text-sm font-semibold text-accent-brand transition hover:bg-surface-1">
+          {t.dashboard.emptyAction}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardSkeleton({ viewMode }: { readonly viewMode: ViewMode }) {
+  return viewMode === 'cards' ? (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+      {Array.from({ length: 6 }, (_, i) => (
+        <GameCardSkeleton key={i} />
+      ))}
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-3">
+      {Array.from({ length: 8 }, (_, i) => (
+        <GameRowSkeleton key={i} />
+      ))}
+    </div>
+  );
 }
 
 function GameGrid({ games, viewMode }: { readonly games: readonly Game[]; readonly viewMode: ViewMode }) {
@@ -165,6 +229,34 @@ function DayNavigator({ date, today, onChange }: { readonly date: string; readon
       </button>
       <DayButton onClick={() => go(shiftDate(date, 1))} label={t.dashboard.day.next} disabled={offset >= MAX_DAY_OFFSET} flip />
     </div>
+  );
+}
+
+function LeagueBar({ league }: { readonly league: LeagueGroup }) {
+  const t = useT();
+  const { competitionId } = league;
+  const content = (
+    <>
+      {competitionId === undefined ? <Icon name="star" size={16} className="text-accent-fav" /> : <CompetitionLogo competitionId={competitionId} size={18} />}
+      <span className="truncate">{league.name}</span>
+      <span className="score-font rounded-full bg-surface-2 px-1.5 text-caption font-medium text-text-secondary">{league.games.length}</span>
+      {competitionId !== undefined && <Icon name="back" size={14} className="shrink-0 -scale-x-100 text-text-muted transition group-hover:text-text-primary rtl:scale-x-100" />}
+    </>
+  );
+  const edge = { borderColor: competitionId === undefined ? 'var(--color-accent-fav)' : leagueColor(competitionId) };
+  const className = 'flex w-fit max-w-full min-w-0 items-center gap-2 border-s-[3px] py-1 ps-2.5 pe-2.5 text-start text-label font-semibold text-text-primary';
+  return (
+    <h3 className="sticky top-[var(--page-header-h,0px)] z-10 -mx-4 bg-bg-base/90 px-4 py-1.5 backdrop-blur-md md:top-[calc(var(--page-header-h,0px)+3.5rem)]">
+      {competitionId === undefined ? (
+        <span className={className} style={edge}>
+          {content}
+        </span>
+      ) : (
+        <button onClick={() => navigate({ name: 'league', id: competitionId })} aria-label={t.dashboard.openLeague(league.name)} className={`${className} group rounded-e-full transition hover:bg-surface-2`} style={edge}>
+          {content}
+        </button>
+      )}
+    </h3>
   );
 }
 
@@ -366,24 +458,9 @@ export function DashboardPage() {
               {t.dashboard.day.lastNight}
             </div>
           )}
-          {(loading || switchingDay) && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
-              {Array.from({ length: 6 }, (_, i) => (
-                <GameCardSkeleton key={i} />
-              ))}
-            </div>
-          )}
-          {!loading && !switchingDay && games.length === 0 && (
-            <div className="mt-16 flex flex-col items-center gap-3 text-center">
-              <span className="flex size-14 items-center justify-center rounded-full bg-surface-1 text-text-muted">
-                <Icon name="moon" size={26} />
-              </span>
-              <p className="text-base font-semibold">{isToday ? t.dashboard.emptyTitle : t.dashboard.emptyTitleDay}</p>
-              <p className="max-w-xs text-sm text-text-secondary">{t.dashboard.emptyText}</p>
-              <button onClick={() => navigate({ name: 'settings' })} className="mt-1 rounded-full bg-surface-2 px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-3">
-                {t.dashboard.emptyAction}
-              </button>
-            </div>
+          {(loading || switchingDay) && <DashboardSkeleton viewMode={viewMode} />}
+          {!loading && !switchingDay && data && games.length === 0 && (
+            <EmptyState key={shownDate} date={shownDate ?? data.date} today={data.today} isToday={isToday} onJump={setDate} />
           )}
           {sections.map((section) => (
             <section key={section.key} aria-labelledby={`section-${section.key}`} className="flex flex-col gap-3">
@@ -395,12 +472,8 @@ export function DashboardPage() {
               {section.leagues && section.leagues.length > 1 ? (
                 <div className="flex flex-col gap-5">
                   {section.leagues.map((league) => (
-                    <div key={league.key} className="flex flex-col gap-2.5">
-                      <h3 className="flex items-center gap-2 text-xs font-semibold text-text-secondary">
-                        {league.competitionId === undefined ? <Icon name="star" size={16} className="text-accent-fav" /> : <CompetitionLogo competitionId={league.competitionId} size={16} />}
-                        {league.name}
-                        <span className="score-font text-caption font-medium text-text-secondary">{league.games.length}</span>
-                      </h3>
+                    <div key={league.key} className="flex flex-col gap-2">
+                      <LeagueBar league={league} />
                       <GameGrid games={league.games} viewMode={viewMode} />
                     </div>
                   ))}

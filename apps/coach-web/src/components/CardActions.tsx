@@ -19,7 +19,7 @@ function teams(game: Game): string {
   return `${game.home.shortName || game.home.name} - ${game.away.shortName || game.away.name}`;
 }
 
-const BUTTON = 'flex size-7 shrink-0 items-center justify-center rounded-full transition duration-150 ease-out hover:bg-surface-3 active:scale-90';
+const BUTTON = 'tap relative flex size-7 shrink-0 items-center justify-center rounded-full transition duration-150 ease-out hover:bg-surface-3 active:scale-90';
 
 export function PreMatchButton({ game }: { readonly game: Game }) {
   const actions = useContext(CardActionsContext);

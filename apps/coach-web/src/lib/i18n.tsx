@@ -103,6 +103,10 @@ const en = {
     emptyTitleDay: 'No games on this day in your leagues',
     emptyText: 'Add more leagues or teams to follow and their games will show up here.',
     emptyAction: 'Choose leagues and teams',
+    openLeague: (name: string) => `Open ${name}`,
+    nextGames: 'Jump to the next games',
+    findingNextGames: 'Looking for games…',
+    noUpcomingGames: 'No games in the coming week',
     sections: { live: 'Live now', scheduled: 'Later today', upcoming: 'Upcoming', other: 'Other', finished: 'Finished' },
   },
   card: {
@@ -367,6 +371,10 @@ const he: Messages = {
     emptyTitleDay: 'אין משחקים ביום הזה בליגות שלך',
     emptyText: 'הוסיפו ליגות או קבוצות למעקב והמשחקים שלהן יופיעו כאן.',
     emptyAction: 'בחירת ליגות וקבוצות',
+    openLeague: (name) => `לעמוד ${name}`,
+    nextGames: 'למשחקים הבאים',
+    findingNextGames: 'מחפש משחקים…',
+    noUpcomingGames: 'אין משחקים בשבוע הקרוב',
     sections: { live: 'משחקים עכשיו', scheduled: 'בהמשך היום', upcoming: 'בקרוב', other: 'אחר', finished: 'הסתיימו' },
   },
   card: {

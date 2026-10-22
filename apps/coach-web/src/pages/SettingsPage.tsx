@@ -222,7 +222,7 @@ export function SettingsPage() {
                       onClick={() => update({ ...prefs, favoriteTeams: prefs.favoriteTeams.filter((f) => f.id !== team.id) })}
                       aria-label={t.settings.remove(team.name)}
                       title={t.settings.remove(team.name)}
-                      className="flex size-6 shrink-0 items-center justify-center rounded-full text-text-muted transition hover:bg-accent-red/15 hover:text-accent-red"
+                      className="tap relative flex size-6 shrink-0 items-center justify-center rounded-full text-text-muted transition hover:bg-accent-red/15 hover:text-accent-red"
                     >
                       <Icon name="close" size={12} />
                     </button>

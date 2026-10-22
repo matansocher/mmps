@@ -176,6 +176,20 @@
   }
 }
 
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface-2) 0%, var(--color-surface-3) 50%, var(--color-surface-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .banner-in,
   .sheet-in,
@@ -184,7 +198,8 @@
   }
   /* Keep the live dot and refresh spinner as static state, and swap slides and lifts for instant changes. */
   .animate-live-pulse,
-  .animate-spin {
+  .animate-spin,
+  .skeleton {
     animation: none;
   }
   .notification-in {
@@ -211,4 +226,18 @@
 .ltr-num {
   direction: ltr;
   unicode-bidi: isolate;
+}
+
+/* Expands the hit area to at least 44px without changing the visual size. */
+.tap {
+  position: relative;
+}
+.tap::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }

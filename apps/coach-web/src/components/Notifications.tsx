@@ -61,7 +61,7 @@ function NotificationCard({ notification, onDismiss }: { readonly notification: 
           <Score notification={notification} />
         </span>
       </button>
-      <button onClick={onDismiss} aria-label={useT().common.dismiss} className="shrink-0 px-2.5 text-text-muted hover:text-text-primary">
+      <button onClick={onDismiss} aria-label={useT().common.dismiss} className="tap relative shrink-0 px-2.5 text-text-muted hover:text-text-primary">
         <Icon name="close" size={14} />
       </button>
     </div>
