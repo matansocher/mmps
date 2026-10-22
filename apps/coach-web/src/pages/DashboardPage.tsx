@@ -137,7 +137,7 @@ function DayButton({ onClick, label, disabled, flip }: { readonly onClick: () =>
       disabled={disabled}
       aria-label={label}
       title={label}
-      className="flex size-9 shrink-0 items-center justify-center rounded-full text-text-secondary transition duration-150 ease-out hover:bg-white/[0.06] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full text-text-secondary transition duration-150 ease-out hover:bg-white/[0.06] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:scale-95 disabled:pointer-events-none disabled:opacity-30"
     >
       <Icon name="back" size={18} className={flip ? '-scale-x-100 rtl:scale-x-100' : 'rtl:-scale-x-100'} />
     </button>
@@ -152,21 +152,18 @@ function DayNavigator({ date, today, onChange }: { readonly date: string; readon
     onChange(next);
   };
   return (
-    <div role="group" aria-label={t.dashboard.day.label} className="mx-auto flex max-w-[1500px] items-center gap-1 px-3 pb-2">
+    <div role="group" aria-label={t.dashboard.day.label} className="flex h-9 shrink-0 items-center gap-0.5 rounded-full border border-white/[0.06] bg-white/[0.03] p-0.5">
       <DayButton onClick={() => go(shiftDate(date, -1))} label={t.dashboard.day.previous} disabled={offset <= -MAX_DAY_OFFSET} />
-      <span aria-live="polite" className={`min-w-24 text-center text-sm font-semibold ${offset === 0 ? 'text-text-primary' : 'text-accent-brand'}`}>
+      <button
+        onClick={() => go(today)}
+        disabled={offset === 0}
+        aria-live="polite"
+        title={offset === 0 ? undefined : t.dashboard.day.today}
+        className={`h-8 min-w-14 rounded-full px-1.5 text-center text-sm font-semibold transition duration-150 ease-out disabled:cursor-default ${offset === 0 ? 'text-text-primary' : 'text-accent-brand hover:bg-white/[0.06] active:scale-[0.97]'}`}
+      >
         {formatDayLabel(date, today)}
-      </span>
+      </button>
       <DayButton onClick={() => go(shiftDate(date, 1))} label={t.dashboard.day.next} disabled={offset >= MAX_DAY_OFFSET} flip />
-      {offset !== 0 && (
-        <button
-          onClick={() => go(today)}
-          className="ms-auto flex h-8 items-center gap-1.5 rounded-full bg-white/[0.06] px-3 text-[13px] font-semibold text-text-primary transition duration-150 ease-out hover:bg-white/[0.1] active:scale-[0.97]"
-        >
-          {t.dashboard.day.today}
-          <Icon name="back" size={14} className={offset < 0 ? '-scale-x-100 rtl:scale-x-100' : 'rtl:-scale-x-100'} />
-        </button>
-      )}
     </div>
   );
 }
@@ -320,12 +317,12 @@ export function DashboardPage() {
         }
         actions={
           <>
+            {data && <DayNavigator date={shownDate ?? data.date} today={data.today} onChange={setDate} />}
             <ViewToggle value={viewMode} onChange={changeViewMode} />
             <IconButton onClick={refresh} label={t.dashboard.refresh} icon="refresh" spinning={refreshing} />
           </>
         }
       >
-        {data && <DayNavigator date={shownDate ?? data.date} today={data.today} onChange={setDate} />}
         {(competitions.length > 1 || favoriteGames.length > 0) && (
           <ChipStrip label={t.dashboard.filterByLeague} activeKey={String(activeFilter)}>
             <FilterChip active={activeFilter === null} tone={ALL_TONE} onClick={() => setCompetitionFilter(null)}>

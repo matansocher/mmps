@@ -48,7 +48,7 @@ export function formatDayLabel(date: string, today: string): string {
     const label = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' }).format(offset, 'day');
     return label.charAt(0).toLocaleUpperCase(getLocale()) + label.slice(1);
   }
-  return new Date(`${date}T12:00:00`).toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+  return new Date(`${date}T12:00:00`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'numeric' });
 }
 
 export function formatShortDate(iso: string): string {
