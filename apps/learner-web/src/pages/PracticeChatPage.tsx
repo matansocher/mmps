@@ -236,12 +236,19 @@ export function PracticeChatPage() {
           </>
         ) : (
           <>
-            <ChatComposer key={`answer-${attempt.id}`} placeholder="Type your answer, or tap the mic to say it…" maxChars={ANSWER_MAX_CHARS} busy={busy} autoFocus onSubmit={submitAnswer} />
-            <div className="next-bar compact">
-              <button type="button" className="btn subtle" disabled={busy} onClick={skip}>
-                <AppIcon name="skip" size={16} /> I don't know — show me the answer
-              </button>
-            </div>
+            <ChatComposer
+              key={`answer-${attempt.id}`}
+              placeholder="Type your answer, or tap the mic to say it…"
+              maxChars={ANSWER_MAX_CHARS}
+              busy={busy}
+              autoFocus
+              onSubmit={submitAnswer}
+              footerAction={
+                <button type="button" className="composer-skip" disabled={busy} onClick={skip} title="Show me the answer">
+                  <AppIcon name="skip" size={15} /> I don't know
+                </button>
+              }
+            />
           </>
         )}
       </div>
