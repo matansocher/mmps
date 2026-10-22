@@ -108,7 +108,7 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
   useKeyboard({
     Enter: () => done && playAgain(),
     s: () => goGiveUp(),
-    m: () => onChangeMode(),
+    m: () => done && onChangeMode(),
   });
 
   const title = modeTitle(mode);
@@ -137,9 +137,15 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
 
   return (
     <>
-      <GameCard title={title} status={`· ${state.index + 1}/${state.order.length}`} aside={`Found ${state.found.length}`} onChangeMode={onChangeMode}>
-        <Coverage state={state} />
-        <div className="mt-3 flex items-center gap-3">
+      <GameCard
+        eyebrow={`${title} · Find them all`}
+        progress={<Coverage state={state} />}
+        count={`${state.index + 1}/${state.order.length}`}
+        aside={`✓ ${state.found.length}`}
+        leaveGuard={state.index > 0 ? { detail: `You’ve placed ${state.found.length} of ${state.order.length}.` } : null}
+        onChangeMode={onChangeMode}
+      >
+        <div className="mt-1.5 flex items-center gap-3">
           <Target key={state.index} country={target ? countries.byCode.get(target) : undefined} />
           <button type="button" className="btn shrink-0" onClick={goGiveUp} title="Give up on this one (S)">
             Give up
@@ -147,15 +153,15 @@ export function CleanupGame({ engine, mode, onChangeMode }: GameProps<{ readonly
         </div>
         <div className="mt-2 min-h-5 text-[15px]">
           {hint ? (
-            <span className="text-white/60">{hint}</span>
+            <span className="text-white/75">{hint}</span>
           ) : last?.kind === 'found' ? (
             <span className="flex items-center gap-1.5 font-bold text-[var(--color-ok)]">
               <Icon name="check" size={18} /> {name(last.code)} is on the map
             </span>
           ) : last?.kind === 'revealed' ? (
-            <span className="text-white/75">{name(last.code)} was here, marked in red.</span>
+            <span className="text-white/75">✗ {name(last.code)} was here. It stays marked as missed.</span>
           ) : (
-            <span className="text-white/60">Find them all. One miss marks the country, and every find stays on the map.</span>
+            <span className="text-white/75">Find them all. One miss marks the country, and every find stays on the map.</span>
           )}
         </div>
       </GameCard>
