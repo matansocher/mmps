@@ -21,7 +21,7 @@ export function Card({ children, className = '' }: { readonly children: ReactNod
   return <div className={`overflow-hidden rounded-xl bg-bg-card ${className}`}>{children}</div>;
 }
 
-export function Tabs<T extends string>({ tabs, active, onChange }: { readonly tabs: readonly { readonly id: T; readonly label: string }[]; readonly active: T; readonly onChange: (id: T) => void }) {
+export function Tabs<T extends string>({ tabs, active, onChange }: { readonly tabs: readonly { readonly id: T; readonly label: ReactNode }[]; readonly active: T; readonly onChange: (id: T) => void }) {
   const select = (id: T) => {
     hapticSelect();
     onChange(id);
@@ -46,7 +46,7 @@ export function Tabs<T extends string>({ tabs, active, onChange }: { readonly ta
           aria-selected={active === tab.id}
           tabIndex={active === tab.id ? 0 : -1}
           onClick={() => select(tab.id)}
-          className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${active === tab.id ? 'bg-bg-elevated text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition ${active === tab.id ? 'bg-bg-elevated text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
         >
           {tab.label}
         </button>
@@ -109,6 +109,6 @@ export function ScoreLine({ home, away, className = '' }: { readonly home: React
 }
 
 export function FormBadge({ result }: { readonly result: 'W' | 'D' | 'L' }) {
-  const color = result === 'W' ? 'bg-accent-win text-bg-base' : result === 'D' ? 'bg-text-muted text-white' : 'bg-accent-red text-white';
+  const color = result === 'W' ? 'bg-accent-win text-bg-base' : result === 'D' ? 'bg-accent-draw text-white' : 'bg-accent-red text-white';
   return <span className={`score-font inline-flex size-5 shrink-0 items-center justify-center rounded text-caption ${color}`}>{messages().form[result]}</span>;
 }

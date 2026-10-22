@@ -86,12 +86,12 @@ export function StandingsTableView({ table, highlightIds = [], showForm = true }
               <tr
                 key={row.team.id}
                 onClick={() => navigate({ name: 'team', id: row.team.id })}
-                className={`cursor-pointer border-t border-border-subtle transition hover:bg-row-hover ${highlighted ? 'bg-accent-brand/10' : ''}`}
+                className={`cursor-pointer border-t border-border-subtle transition hover:bg-row-hover ${highlighted ? 'bg-accent-brand/20 font-semibold' : ''}`}
               >
                 <td className="relative py-2 ps-3">
-                  {row.zoneColor && <span className="absolute inset-y-1 start-0 w-1 rounded-e" style={{ backgroundColor: row.zoneColor }} />}
+                  {row.zoneColor && <span aria-hidden className="absolute inset-y-0 start-0 w-[3px]" style={{ backgroundColor: row.zoneColor }} />}
                   <span className="flex items-center gap-0.5">
-                    <span className="score-font text-xs text-text-secondary">{row.position}</span>
+                    <span className={`score-font text-xs ${highlighted ? 'text-text-primary' : 'text-text-secondary'}`}>{row.position}</span>
                     <TrendArrow trend={row.trend} />
                   </span>
                 </td>
@@ -107,7 +107,7 @@ export function StandingsTableView({ table, highlightIds = [], showForm = true }
                 <td className="score-font hidden py-2 text-center text-xs font-normal text-text-secondary sm:table-cell">{row.drawn}</td>
                 <td className="score-font hidden py-2 text-center text-xs font-normal text-text-secondary sm:table-cell">{row.lost}</td>
                 <td className="score-font py-2 text-center text-xs font-normal text-text-secondary">{gd > 0 ? `+${gd}` : gd}</td>
-                <td className="score-font py-2 text-center">{row.points}</td>
+                <td className={`score-font py-2 text-center ${highlighted ? 'font-bold text-text-primary' : ''}`}>{row.points}</td>
                 {showForm && (
                   <td className="hidden py-2 pe-3 md:table-cell">
                     <span className="flex justify-center gap-0.5">
@@ -132,7 +132,7 @@ export function ZonesLegend({ zones }: { readonly zones: readonly { readonly nam
     <ul className="flex flex-wrap gap-x-4 gap-y-1.5 px-1 text-xs text-text-secondary">
       {zones.map((z) => (
         <li key={z.name} className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm" style={{ backgroundColor: z.color }} />
+          <span aria-hidden className="h-3 w-[3px] rounded-full" style={{ backgroundColor: z.color }} />
           {z.name}
         </li>
       ))}

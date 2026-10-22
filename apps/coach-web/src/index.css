@@ -26,10 +26,11 @@
   --color-text-secondary: #a3b1c6;
   --color-text-muted: #6b7a90;
 
-  /* One role per hue: green = live, calmer green = win, gold = favourite, orange = warning. */
+  /* One role per hue: green = live, calmer green = win, slate = draw, gold = favourite, orange = warning. */
   --color-accent-live: #00d26a;
   --color-accent-red: #ff3b3b;
   --color-accent-win: #22c55e;
+  --color-accent-draw: #475569;
   --color-accent-fav: #f5b301;
   --color-accent-warn: #fb923c;
   --color-accent-brand: #3b82f6;
@@ -44,6 +45,13 @@
   --color-line: rgb(255 255 255 / 0.06);
   --color-line-strong: rgb(255 255 255 / 0.12);
   --color-row-hover: rgb(255 255 255 / 0.04);
+
+  --color-rating-top: #2563eb;
+  --color-rating-good: #16a34a;
+  --color-rating-avg: #d97706;
+  --color-rating-poor: #dc2626;
+  --color-pitch: #2e7d32;
+  --color-pitch-dark: #1b5e20;
   --animate-live-pulse: live-pulse 1.4s ease-in-out infinite;
 
   @keyframes live-pulse {
