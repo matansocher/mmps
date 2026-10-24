@@ -1,4 +1,4 @@
-import { findLastLightRailDepartures, findLightRailDepartures, findLightRailDeparturesByDirection } from './departures';
+import { findLastLightRailDepartures, findLightRailDepartures, findLightRailDeparturesByDirection, findLightRailInterchange, hasDirectLightRailTrip } from './departures';
 import { buildTimetable, parseGtfsTime } from './gtfs-parser';
 import type { GtfsLineReader } from './gtfs-parser';
 import { findLightRailStations } from './station-search';
@@ -123,7 +123,7 @@ describe('findLightRailDeparturesByDirection()', () => {
       directions.map(({ towards, departures }) => ({ towards: towards.id, departures: departures.map(({ date, departureTime, terminus }) => `${date} ${departureTime} ${terminus.id}`) })),
     ).toEqual([
       { towards: 'PA', departures: ['2026-03-02 08:37 PA'] },
-      { towards: 'D1', departures: ['2026-03-02 08:05 C1'] },
+      { towards: 'C1', departures: ['2026-03-02 08:05 C1'] },
     ]);
   });
 
@@ -131,8 +131,37 @@ describe('findLightRailDeparturesByDirection()', () => {
     const timetable = await buildTimetable(readLines);
     const directions = findLightRailDeparturesByDirection(timetable, { fromStationId: 'PA', date: '2026-03-02', time: '07:00', limit: 3 });
     expect(directions.map(({ towards, departures }) => ({ towards: towards.id, times: departures.map(({ date, departureTime }) => `${date} ${departureTime}`) }))).toEqual([
-      { towards: 'D1', times: ['2026-03-02 08:00', '2026-03-02 23:58', '2026-03-03 08:00'] },
+      { towards: 'C1', times: ['2026-03-02 08:00', '2026-03-02 23:58', '2026-03-03 08:00'] },
     ]);
+  });
+
+  test('should label a branch station direction by where its trips go', async () => {
+    const timetable = await buildTimetable(readLines);
+    const directions = findLightRailDeparturesByDirection(timetable, { fromStationId: 'D1', date: '2026-03-07', time: '04:00' });
+    expect(directions.map(({ towards, departures }) => ({ towards: towards.id, times: departures.map(({ departureTime }) => departureTime) }))).toEqual([{ towards: 'PB', times: ['10:00'] }]);
+  });
+});
+
+describe('hasDirectLightRailTrip()', () => {
+  test.each([
+    { from: 'D1', to: 'PB', expected: true },
+    { from: 'D1', to: 'PA', expected: false },
+    { from: 'PA', to: 'C1', expected: true },
+  ])('should return $expected for $from -> $to', async ({ from, to, expected }) => {
+    const timetable = await buildTimetable(readLines);
+    expect(hasDirectLightRailTrip(timetable, from, to)).toEqual(expected);
+  });
+});
+
+describe('findLightRailInterchange()', () => {
+  test('should return the first station where a direct trip to the destination can be caught', async () => {
+    const timetable = await buildTimetable(readLines);
+    expect(findLightRailInterchange(timetable, 'D1', 'PA')?.id).toEqual('PB');
+  });
+
+  test('should return null when the destination cannot be reached', async () => {
+    const timetable = await buildTimetable(readLines);
+    expect(findLightRailInterchange(timetable, 'PA', 'D1')).toEqual(null);
   });
 });
 
