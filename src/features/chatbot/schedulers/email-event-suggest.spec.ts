@@ -2,6 +2,7 @@ import type { Bot } from 'grammy';
 import { MY_USER_ID } from '@core/config';
 import { fetchEmailFull, listMessageIds } from '@services/gmail';
 import { listEvents } from '@services/google-calendar';
+import type { CalendarEvent } from '@services/google-calendar';
 import { getResponse } from '@services/openai';
 import type { ChatbotService } from '../chatbot.service';
 import { getScannedEmailIds, saveEmailEvents, setEmailEventMessageId } from '../email-events';
@@ -98,7 +99,7 @@ describe('emailEventSuggest()', () => {
   it('should not suggest an event that is already on the calendar', async () => {
     vi.mocked(listMessageIds).mockResolvedValue(['a']);
     vi.mocked(getResponse).mockResolvedValue({ id: 'r', result: { results: [event('a')] } });
-    vi.mocked(listEvents).mockResolvedValue([{ summary: 'event a' }]);
+    vi.mocked(listEvents).mockResolvedValue([{ summary: 'event a' } as CalendarEvent]);
 
     await emailEventSuggest(bot, chatbotService);
 
