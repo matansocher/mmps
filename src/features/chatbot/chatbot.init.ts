@@ -18,6 +18,7 @@ import { ChatbotSchedulerService } from './chatbot-scheduler.service';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
+import { ensureEmailEventIndexes } from './email-events';
 import { FileSummaryService } from './file-summary';
 import { ensureSecretaryMessageIndexes, SecretaryActionService, SecretaryMessageService } from './secretary';
 
@@ -29,6 +30,7 @@ export async function initChatbot(app: Express): Promise<void> {
   await ensureReminderIndexes();
   await ensureMemoryIndexes();
   await ensureSecretaryMessageIndexes();
+  await ensureEmailEventIndexes();
   await ensureTransferTrackerIndexes();
   await ensurePendingPostIndexes();
   await ensureDigestDeliveryIndexes();

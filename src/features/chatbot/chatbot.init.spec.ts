@@ -52,6 +52,7 @@ vi.mock('./chatbot-scheduler.service', () => ({
     init = schedulerInit;
   },
 }));
+vi.mock('./email-events', () => ({ ensureEmailEventIndexes: vi.fn() }));
 vi.mock('./file-summary', () => ({ FileSummaryService: class {} }));
 vi.mock('./secretary', () => ({ ensureSecretaryMessageIndexes: vi.fn(), SecretaryActionService: class {}, SecretaryMessageService: class {} }));
 

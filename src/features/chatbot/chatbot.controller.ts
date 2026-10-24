@@ -4,6 +4,7 @@ import type { ReactionTypeEmoji } from 'grammy/types';
 import { LOCAL_FILES_PATH, MY_USER_ID, WIFE_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { deleteFile } from '@core/utils';
+import { createEvent } from '@services/google-calendar';
 import { notify } from '@services/notifier';
 import { getTranscriptFromAudio } from '@services/openai/utils/get-transcript-from-audio';
 import { downloadFile, getCallbackQueryData, getMessageData, MessageLoader, sendRichMessage } from '@services/telegram';
@@ -12,9 +13,18 @@ import { getReminderById, updateReminderStatus } from '@shared/reminders';
 import { addExercise } from '@shared/trainer';
 import { BOT_CONFIG } from './chatbot.config';
 import { ChatbotService } from './chatbot.service';
+import { buildCalendarEvent, claimEmailEvent, resolveEmailEvent } from './email-events';
 import { FileSummaryService, getFileSummaryRejection } from './file-summary';
 import { buildCancelEditKeyboard, buildClearConfirmKeyboard, buildMemoryView, MEMORY_CALLBACK_PREFIX, parseMemoryCallbackData } from './memory';
-import { describeSnoozeOption, parseBirthdayCallbackData, parseExerciseCallbackData, parseReminderCallbackData, resolveSnoozeUntil, sendExerciseReminder } from './schedulers';
+import {
+  describeSnoozeOption,
+  parseBirthdayCallbackData,
+  parseEmailEventCallbackData,
+  parseExerciseCallbackData,
+  parseReminderCallbackData,
+  resolveSnoozeUntil,
+  sendExerciseReminder,
+} from './schedulers';
 import {
   ACTION_CALLBACK_PREFIX,
   buildActionsKeyboard,
@@ -280,6 +290,10 @@ export class ChatbotController {
       await this.handleBirthdayCallback(ctx);
       return;
     }
+    if (parseEmailEventCallbackData(data)) {
+      await this.handleEmailEventCallback(ctx);
+      return;
+    }
 
     await ctx.answerCallbackQuery().catch(() => {});
   }
@@ -363,6 +377,43 @@ export class ChatbotController {
       await sendRichMessage(this.bot, chatId, message);
     } catch (err) {
       this.logger.error(`Error handling birthday callback: ${getErrorMessage(err)}`);
+      await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
+    }
+  }
+
+  private async handleEmailEventCallback(ctx: Context): Promise<void> {
+    const { data, text } = getCallbackQueryData(ctx);
+    const parsed = parseEmailEventCallbackData(data);
+    if (!parsed || !isOwner(ctx)) {
+      await ctx.answerCallbackQuery().catch(() => {});
+      return;
+    }
+
+    const emailEvent = await claimEmailEvent(parsed.emailEventId).catch((err) => {
+      this.logger.error(`Failed to claim email event: ${getErrorMessage(err)}`);
+      return null;
+    });
+    if (!emailEvent?.event) {
+      await ctx.answerCallbackQuery({ text: 'Already handled.' }).catch(() => {});
+      return;
+    }
+
+    const id = parsed.emailEventId;
+    try {
+      if (parsed.action === 'dismiss') {
+        await resolveEmailEvent(id, 'dismissed');
+        await ctx.editMessageText(`❌ Dismissed\n\n${text}`).catch(() => {});
+        await ctx.answerCallbackQuery({ text: 'Dismissed' }).catch(() => {});
+        return;
+      }
+
+      const created = await createEvent(buildCalendarEvent(emailEvent.event));
+      await resolveEmailEvent(id, 'added', created.id);
+      await ctx.editMessageText(`✅ Added to calendar\n\n${text}`).catch(() => {});
+      await ctx.answerCallbackQuery({ text: 'Added to calendar' }).catch(() => {});
+    } catch (err) {
+      this.logger.error(`Error handling email event callback: ${getErrorMessage(err)}`);
+      await resolveEmailEvent(id, 'pending').catch(() => {});
       await ctx.answerCallbackQuery({ text: 'Something went wrong. Please try again.', show_alert: true }).catch(() => {});
     }
   }

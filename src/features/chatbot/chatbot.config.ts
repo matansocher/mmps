@@ -83,6 +83,11 @@ export const CHATBOT_CONFIG = {
     maxEmails: 50,
     batchSize: 20,
   },
+  emailEvents: {
+    maxEmails: 30,
+    batchSize: 10,
+    maxBodyChars: 2000,
+  },
 };
 
 // OR'd conditions; each object's properties are AND'd.
