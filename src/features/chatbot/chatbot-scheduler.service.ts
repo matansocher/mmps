@@ -8,6 +8,7 @@ import {
   dailySummary,
   earthquakeMonitor,
   emailCleanup,
+  emailEventSuggest,
   exerciseReminder,
   flightTrafficCheck,
   footballUpdate,
@@ -64,7 +65,11 @@ export class ChatbotSchedulerService {
 
     createSchedule(`30 22 * * 6`, async () => usageSummary(this.bot, this.chatbotService));
 
-    createSchedule(`00 12,20 * * *`, async () => emailCleanup(this.bot, this.chatbotService));
+    createSchedule(`00 12,20 * * *`, async () => {
+      // Sequential so spam is trashed before scanning the inbox for events.
+      await emailCleanup(this.bot, this.chatbotService);
+      await emailEventSuggest(this.bot, this.chatbotService);
+    });
 
     createSchedule(`0 10 1 * *`, async () => modelPricingCheck(this.bot));
 
