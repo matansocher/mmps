@@ -9,12 +9,15 @@ import {
   buildLightRailNetwork,
   findLastLightRailDepartures,
   findLightRailDepartures,
+  findLightRailDeparturesByDirection,
+  findLightRailInterchange,
   findLightRailStations,
   findLightRailStationsNearPlace,
   findLightRailStationsNearPoint,
   getLightRailTimetable,
+  hasDirectLightRailTrip,
 } from '@services/light-rail';
-import type { GeoPoint, LightRailStation, LightRailTimetable } from '@services/light-rail';
+import type { GeoPoint, LightRailDeparture, LightRailStation, LightRailTimetable } from '@services/light-rail';
 
 // Beyond this walking time the place is not really "near" the Red Line.
 const FAR_WALKING_MINUTES = 25;
@@ -24,10 +27,15 @@ const schema = z.object({
     .enum(['departures', 'last_train', 'nearest_station', 'station_map'])
     .optional()
     .describe(
-      '"departures" (default): upcoming trips between two stations. "last_train": the final scheduled trips of the night between two stations. "nearest_station": the closest Red Line stations to a place or coordinates. "station_map": a map image of the whole line with all its stations',
+      '"departures" (default): upcoming trips from a station, to a destination station or (without "to") in every direction. "last_train": the final scheduled trips of the night between two stations. "nearest_station": the closest Red Line stations to a place or coordinates. "station_map": a map image of the whole line with all its stations',
     ),
   from: z.string().optional().describe('departures / last_train: origin Red Line station name as the user said it, in Hebrew or English (e.g. "ארלוזורוב", "Allenby", "קריית אריה")'),
-  to: z.string().optional().describe('departures / last_train: destination Red Line station name as the user said it, in Hebrew or English (e.g. "אלנבי", "Petah Tikva Central Station", "הקוממיות")'),
+  to: z
+    .string()
+    .optional()
+    .describe(
+      'departures (optional, omit when the user did not name a destination) / last_train: destination Red Line station name as the user said it, in Hebrew or English (e.g. "אלנבי", "Petah Tikva Central Station", "הקוממיות")',
+    ),
   place: z.string().optional().describe('nearest_station: a place, address or landmark as the user said it, with the city if known (e.g. "דיזנגוף סנטר", "Rothschild 22 Tel Aviv", "קניון עזריאלי")'),
   lat: z.number().optional().describe('nearest_station: latitude of a location the user shared (use instead of place)'),
   lon: z.number().optional().describe('nearest_station: longitude of a location the user shared (use instead of place)'),
@@ -100,12 +108,15 @@ function stationMap(timetable: LightRailTimetable) {
 type ResolvedTrip = { readonly origin?: LightRailStation; readonly destination?: LightRailStation; readonly error?: Record<string, unknown> };
 
 function resolveTrip(timetable: LightRailTimetable, { action, from, to }: z.infer<typeof schema>): ResolvedTrip {
-  if (!from || !to) {
-    return { error: { error: `Both from and to are required for ${action ?? 'departures'}` } };
+  if (!from || (!to && action === 'last_train')) {
+    return { error: { error: `${action === 'last_train' ? 'Both from and to are' : 'from is'} required for ${action ?? 'departures'}` } };
   }
   const origin = resolveStation(timetable.stations, from, 'from');
   if (origin.error) {
     return { error: origin.error };
+  }
+  if (!to) {
+    return { origin: origin.station };
   }
   const destination = resolveStation(timetable.stations, to, 'to');
   if (destination.error) {
@@ -121,6 +132,19 @@ function mapDepartures(departures: ReturnType<typeof findLightRailDepartures>) {
   return departures.map(({ terminus, ...departure }) => ({ ...departure, towards: { nameHe: terminus.nameHe, nameEn: terminus.nameEn } }));
 }
 
+function arrivalDate({ date, departureTime, arrivalTime }: LightRailDeparture): string {
+  if (arrivalTime >= departureTime) {
+    return date;
+  }
+  const next = new Date(`${date}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  return next.toISOString().slice(0, 10);
+}
+
+function stationNames({ nameHe, nameEn }: LightRailStation) {
+  return { nameHe, nameEn };
+}
+
 async function departures(timetable: LightRailTimetable, input: z.infer<typeof schema>) {
   const { date, time, limit } = input;
   const trip = resolveTrip(timetable, input);
@@ -133,19 +157,35 @@ async function departures(timetable: LightRailTimetable, input: z.infer<typeof s
   const searchDate = date ?? format(nowLocal, 'yyyy-MM-dd');
   const searchTime = time ?? format(nowLocal, 'HH:mm');
 
-  const departures = findLightRailDepartures(timetable, { fromStationId: origin.id, toStationId: destination.id, date: searchDate, time: searchTime, limit });
-  const { nameHe: fromHe, nameEn: fromEn } = origin;
-  const { nameHe: toHe, nameEn: toEn } = destination;
+  const base = { line: 'Red Line (הקו האדום)', dataSource: 'scheduled timetable (not live)', from: stationNames(origin), searchedFrom: `${searchDate} ${searchTime}` };
 
-  return {
-    line: 'Red Line (הקו האדום)',
-    dataSource: 'scheduled timetable (not live)',
-    from: { nameHe: fromHe, nameEn: fromEn },
-    to: { nameHe: toHe, nameEn: toEn },
-    searchedFrom: `${searchDate} ${searchTime}`,
-    departures: mapDepartures(departures),
-    verifyUrl: buildGoogleMapsTransitUrl(origin, destination),
-  };
+  if (!destination) {
+    const directions = findLightRailDeparturesByDirection(timetable, { fromStationId: origin.id, date: searchDate, time: searchTime, limit });
+    return {
+      ...base,
+      directions: directions.map(({ towards, departures }) => ({
+        towards: stationNames(towards),
+        departures: departures.map(({ terminus, ...departure }) => ({ ...departure, terminus: stationNames(terminus) })),
+      })),
+    };
+  }
+
+  const verifyUrl = buildGoogleMapsTransitUrl(origin, destination);
+  if (!hasDirectLightRailTrip(timetable, origin.id, destination.id)) {
+    const changeAt = findLightRailInterchange(timetable, origin.id, destination.id);
+    if (!changeAt) {
+      return { ...base, to: stationNames(destination), noDirectTrip: true, departures: [], verifyUrl };
+    }
+    const firstLeg = findLightRailDepartures(timetable, { fromStationId: origin.id, toStationId: changeAt.id, date: searchDate, time: searchTime, limit });
+    const firstArrival = firstLeg[0];
+    const secondLeg = firstArrival
+      ? findLightRailDepartures(timetable, { fromStationId: changeAt.id, toStationId: destination.id, date: arrivalDate(firstArrival), time: firstArrival.arrivalTime, limit })
+      : [];
+    return { ...base, to: stationNames(destination), noDirectTrip: true, changeAt: stationNames(changeAt), firstLeg: mapDepartures(firstLeg), secondLeg: mapDepartures(secondLeg), verifyUrl };
+  }
+
+  const departures = findLightRailDepartures(timetable, { fromStationId: origin.id, toStationId: destination.id, date: searchDate, time: searchTime, limit });
+  return { ...base, to: stationNames(destination), departures: mapDepartures(departures), verifyUrl };
 }
 
 async function lastTrain(timetable: LightRailTimetable, input: z.infer<typeof schema>) {
@@ -157,6 +197,21 @@ async function lastTrain(timetable: LightRailTimetable, input: z.infer<typeof sc
 
   const nowLocal = toZonedTime(new Date(), DEFAULT_TIMEZONE);
   const serviceDate = input.date ?? getServiceDate(nowLocal);
+  if (!hasDirectLightRailTrip(timetable, origin.id, destination.id)) {
+    const changeAt = findLightRailInterchange(timetable, origin.id, destination.id);
+    return {
+      line: 'Red Line (הקו האדום)',
+      dataSource: 'scheduled timetable (not live)',
+      from: stationNames(origin),
+      to: stationNames(destination),
+      serviceDate,
+      noDirectTrip: true,
+      changeAt: changeAt ? stationNames(changeAt) : null,
+      firstLeg: changeAt ? mapDepartures(findLastLightRailDepartures(timetable, { fromStationId: origin.id, toStationId: changeAt.id, date: serviceDate, limit: input.limit })) : [],
+      secondLeg: changeAt ? mapDepartures(findLastLightRailDepartures(timetable, { fromStationId: changeAt.id, toStationId: destination.id, date: serviceDate, limit: input.limit })) : [],
+      verifyUrl: buildGoogleMapsTransitUrl(origin, destination),
+    };
+  }
   const departures = findLastLightRailDepartures(timetable, { fromStationId: origin.id, toStationId: destination.id, date: serviceDate, limit: input.limit });
   const nowKey = format(nowLocal, 'yyyy-MM-dd HH:mm');
   const last = departures[departures.length - 1];
@@ -192,8 +247,11 @@ Rules:
 - Pass station names exactly as the user wrote them (Hebrew or English); the tool resolves them. Convert relative times ("tomorrow at 8", "in an hour", "מחר בבוקר") to date + time in Israel time.
 - If the result has "candidates", ask which station they meant (or re-call with the obvious one). If it has "allStations", pick the closest real station and re-call, or ask the user.
 - The times are the SCHEDULED timetable, not live tracking — say so briefly (e.g. "לפי לוח הזמנים" / "scheduled").
+- If the user names only an origin ("when is the next/first light rail from Kiryat Arye?"), omit "to" — never guess a destination. The result then has "directions": one group per direction (towards = the far end), each departure with its own terminus.
+- "First train" questions ("מתי הרכבת הקלה הראשונה...", "first light rail tomorrow"): call departures with time "04:00" on that date and lead with the first departure (if its date is later than asked, say service only starts then).
 - Reply format: one line per departure: departure → arrival, duration, and the direction (towards). Mention the date only if it is not today.
-- If departures is empty, say there are no more scheduled trips for that time (the line does not run on Shabbat) and suggest a later time.
+- If noDirectTrip is true, no single trip connects the two stations (e.g. the Kiryat Arye branch and Petah Tikva Central): say to change at changeAt, list firstLeg (origin → changeAt) and then secondLeg (changeAt → destination). Do not say there is no service.
+- If departures (or every directions group) is empty and noDirectTrip is not set, say there are no more scheduled trips for that time and suggest a later time. Do not blame Shabbat unless the asked time is between Friday afternoon and Saturday evening.
 - ALWAYS end the reply with verifyUrl as a markdown link (e.g. [Open in Google Maps](url) / [פתיחה בגוגל מפות](url)).
 - Use station names in the user's language (nameHe for Hebrew, nameEn for English).
 nearest_station rules:
@@ -206,7 +264,8 @@ last_train rules:
 - Use it for "last train" questions ("מתי הרכבת הקלה האחרונה מאלנבי לפתח תקווה?", "last light rail to Bat Yam tonight"). The night runs until ~04:00, so trips after midnight count as tonight; pass date only for another evening.
 - departures is chronological and its LAST item is the final scheduled trip. Lead with it (departure → arrival, towards), then list the others briefly. Say it is the scheduled timetable.
 - If lastTrainAlreadyLeft is true, say tonight's last trip has already left.
-- If departures is empty, say there is no service that evening (the line does not run on Shabbat) and suggest another evening.
+- If noDirectTrip is true, the final trip that makes it is the last secondLeg departure from changeAt, and the last firstLeg trip arriving at changeAt before it; explain the change.
+- If departures is empty, say there is no service that evening (the line does not run on Friday night) and suggest another evening.
 - Same verifyUrl link rule as "departures".
 station_map rules:
 - Use it when the user asks for a map, route or list of the light rail stations ("יש לך מפת תחנות של הרכבת הקלה?", "show me the Red Line map", "אילו תחנות יש בקו האדום?"). Never use web_search to find a map for this.

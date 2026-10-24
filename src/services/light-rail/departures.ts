@@ -5,7 +5,9 @@ import type {
   LightRailDeparture,
   LightRailDirectionDepartures,
   LightRailServiceCalendar,
+  LightRailStation,
   LightRailTimetable,
+  LightRailTrip,
 } from './types';
 
 const DAY_SECONDS = 24 * 60 * 60;
@@ -83,7 +85,8 @@ export function findLastLightRailDepartures(timetable: LightRailTimetable, { fro
   return departures.filter((departure) => departure.date === date || (departure.date === nextDate && departure.departureTime < SERVICE_DAY_END_TIME)).slice(-limit);
 }
 
-// Groups the next departures from a station by direction along the line, labelled with the line end each direction heads to.
+// Groups the next departures from a station by direction (the next stop), labelled with the farthest terminus that direction reaches.
+// Station indexes are not a reliable line order because of the Kiryat Arye branch, so they are not used to tell directions apart.
 export function findLightRailDeparturesByDirection(
   timetable: LightRailTimetable,
   { fromStationId, date, time, limit = DEFAULT_LIMIT }: FindDirectionalDeparturesParams,
@@ -94,8 +97,7 @@ export function findLightRailDeparturesByDirection(
   const [hours, minutes] = time.split(':').map(Number);
   const requestedSec = hours * 3600 + minutes * 60;
   const servicesById = new Map(timetable.services.map((service) => [service.id, service]));
-  const lastIndex = timetable.stations.length - 1;
-  const candidates = new Map<number, { readonly departureSec: number; readonly terminusIndex: number }[]>();
+  const candidates = new Map<number, { readonly departureSec: number; readonly terminusIndex: number; readonly remainingStops: number }[]>();
 
   for (const dayOffset of [-1, 0, 1]) {
     const serviceDate = shiftDate(date, dayOffset);
@@ -107,19 +109,19 @@ export function findLightRailDeparturesByDirection(
       if (originPos === -1 || originPos === trip.stops.length - 1) continue;
       const departureSec = trip.stops[originPos][1] + offsetSec;
       if (departureSec < requestedSec) continue;
-      const lineEndIndex = trip.stops[originPos + 1][0] > fromIndex ? lastIndex : 0;
-      const group = candidates.get(lineEndIndex) ?? [];
-      group.push({ departureSec, terminusIndex: trip.stops[trip.stops.length - 1][0] });
-      candidates.set(lineEndIndex, group);
+      const nextStationIndex = trip.stops[originPos + 1][0];
+      const group = candidates.get(nextStationIndex) ?? [];
+      group.push({ departureSec, terminusIndex: trip.stops[trip.stops.length - 1][0], remainingStops: trip.stops.length - 1 - originPos });
+      candidates.set(nextStationIndex, group);
     }
   }
 
-  return [0, lastIndex]
-    .filter((lineEndIndex) => candidates.get(lineEndIndex)?.length)
-    .map((lineEndIndex) => ({
-      towards: timetable.stations[lineEndIndex],
-      departures: candidates
-        .get(lineEndIndex)
+  return [...candidates.values()]
+    .map((group) => ({ group, towardsIndex: group.reduce((farthest, item) => (item.remainingStops > farthest.remainingStops ? item : farthest)).terminusIndex }))
+    .sort((a, b) => a.towardsIndex - b.towardsIndex)
+    .map(({ group, towardsIndex }) => ({
+      towards: timetable.stations[towardsIndex],
+      departures: group
         .sort((a, b) => a.departureSec - b.departureSec)
         .slice(0, limit)
         .map(({ departureSec, terminusIndex }) => ({
@@ -128,4 +130,36 @@ export function findLightRailDeparturesByDirection(
           terminus: timetable.stations[terminusIndex],
         })),
     }));
+}
+
+function servesInOrder(trip: LightRailTrip, fromIndex: number, toIndex: number): boolean {
+  const originPos = trip.stops.findIndex(([stationIndex]) => stationIndex === fromIndex);
+  return originPos !== -1 && trip.stops.some(([stationIndex], i) => i > originPos && stationIndex === toIndex);
+}
+
+// Some station pairs have no direct trip (e.g. Kiryat Arye -> Petah Tikva Central, which are on different branches).
+export function hasDirectLightRailTrip(timetable: LightRailTimetable, fromStationId: string, toStationId: string): boolean {
+  const fromIndex = timetable.stations.findIndex(({ id }) => id === fromStationId);
+  const toIndex = timetable.stations.findIndex(({ id }) => id === toStationId);
+  return timetable.trips.some((trip) => servesInOrder(trip, fromIndex, toIndex));
+}
+
+// The first station along a trip from the origin where a direct trip to the destination can be caught.
+export function findLightRailInterchange(timetable: LightRailTimetable, fromStationId: string, toStationId: string): LightRailStation | null {
+  const fromIndex = timetable.stations.findIndex(({ id }) => id === fromStationId);
+  const toIndex = timetable.stations.findIndex(({ id }) => id === toStationId);
+  let best: { readonly stationIndex: number; readonly stopsAway: number } | null = null;
+  for (const trip of timetable.trips) {
+    const originPos = trip.stops.findIndex(([stationIndex]) => stationIndex === fromIndex);
+    if (originPos === -1) continue;
+    for (let pos = originPos + 1; pos < trip.stops.length; pos++) {
+      const stationIndex = trip.stops[pos][0];
+      if (best && pos - originPos >= best.stopsAway) break;
+      if (timetable.trips.some((other) => servesInOrder(other, stationIndex, toIndex))) {
+        best = { stationIndex, stopsAway: pos - originPos };
+        break;
+      }
+    }
+  }
+  return best ? timetable.stations[best.stationIndex] : null;
 }
