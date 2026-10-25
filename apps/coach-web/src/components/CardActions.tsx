@@ -44,20 +44,28 @@ export function PreMatchButton({ game }: { readonly game: Game }) {
   );
 }
 
-export function HotBadge({ game, compact }: { readonly game: Game; readonly compact?: boolean }) {
+export function useHotReason(game: Game) {
   const now = useNow(60_000);
+  return hotReason(game, now);
+}
+
+export function HotBadge({ game, compact }: { readonly game: Game; readonly compact?: boolean }) {
   const t = useT().dashboard.hot;
-  const reason = hotReason(game, now);
+  const reason = useHotReason(game);
   if (!reason) return null;
   const label = t.label(t.reasons[reason]);
+  if (compact) {
+    return (
+      <span role="img" aria-label={label} title={label} className="flex size-4 shrink-0 items-center justify-center rounded-full bg-accent-hot/15 text-accent-hot-text">
+        <Icon name="flame" size={11} />
+      </span>
+    );
+  }
   return (
-    <span
-      role="img"
-      aria-label={label}
-      title={label}
-      className={`hot-badge flex shrink-0 items-center justify-center rounded-full bg-accent-hot/15 text-accent-hot-text ${compact ? 'size-4' : 'size-6'}`}
-    >
-      <Icon name="flame" size={compact ? 11 : 14} />
+    <span title={label} className="flex h-6 shrink-0 items-center gap-1 rounded-full bg-accent-hot/18 ps-2 pe-2.5 text-xs font-bold whitespace-nowrap text-accent-hot-text">
+      <Icon name="flame" size={14} />
+      <span className="sr-only">{label}</span>
+      <span aria-hidden>{t.reasons[reason]}</span>
     </span>
   );
 }

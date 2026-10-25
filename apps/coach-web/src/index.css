@@ -135,6 +135,22 @@
   }
 }
 
+/* Linear drain; the inline duration/delay sync it to the next poll. */
+.notification-countdown {
+  animation-name: notification-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+@keyframes notification-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 /* Stale data after a failed refresh: keep it visible but quieter, and freeze the live cues. */
 [data-stale] .game-card {
   opacity: 0.92;
@@ -146,9 +162,6 @@
 }
 [data-stale] .live-minute {
   color: var(--color-text-secondary);
-}
-[data-stale] .live-progress {
-  background-color: var(--color-text-muted);
 }
 
 .banner-in {
@@ -201,6 +214,23 @@
 /* Live cards: faint green ring; a goal makes the scoring row glow for a few seconds. */
 .live-ring {
   box-shadow: inset 0 0 0 1px rgb(0 210 106 / 0.18);
+}
+/* Hot games (comeback, goal fest…): warm border + corner glow, overriding the live ring. */
+.hot-card {
+  border-color: rgb(255 122 26 / 0.35);
+  background-image: radial-gradient(120% 70% at 100% 0%, rgb(255 122 26 / 0.14), transparent 60%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 122 26 / 0.12),
+    0 10px 28px -14px rgb(255 90 26 / 0.45);
+}
+[dir='rtl'] .hot-card {
+  background-image: radial-gradient(120% 70% at 0% 0%, rgb(255 122 26 / 0.14), transparent 60%);
+}
+.hot-progress {
+  background-image: linear-gradient(to right, #ffb347, var(--color-accent-hot));
+}
+[dir='rtl'] .hot-progress {
+  background-image: linear-gradient(to left, #ffb347, var(--color-accent-hot));
 }
 .goal-flash {
   animation: goal-flash 8s ease-out;

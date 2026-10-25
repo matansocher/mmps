@@ -26,13 +26,13 @@ export function useGoalFlash(game: Game): Side | null {
   return side;
 }
 
-export function LiveProgress({ game }: { readonly game: Game }) {
+export function LiveProgress({ game, hot }: { readonly game: Game; readonly hot?: boolean }) {
   if (game.status !== 'live') return null;
   const minute = game.minute ?? (parseInt(game.minuteDisplay ?? '', 10) || 0);
   const progress = Math.min(minute / REGULATION_MINUTES, 1);
   return (
-    <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden rounded-t-[inherit] bg-accent-live/15">
-      <span className="block h-full origin-left bg-accent-live transition-transform duration-700 rtl:origin-right" style={{ transform: `scaleX(${progress})` }} />
+    <span aria-hidden className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden rounded-t-[inherit] ${hot ? 'bg-accent-hot/15' : 'bg-accent-live/15'}`}>
+      <span className={`block h-full origin-left ${hot ? 'hot-progress' : 'bg-accent-live'} transition-transform duration-700 rtl:origin-right`} style={{ transform: `scaleX(${progress})` }} />
     </span>
   );
 }

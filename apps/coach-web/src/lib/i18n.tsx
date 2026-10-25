@@ -113,7 +113,6 @@ const en = {
   card: {
     winPercentage: (percent: number) => `(${percent}%)`,
     winProbability: (team: string, percent: number) => `${team}: ${percent}% odds-implied chance to win, adjusted for bookmaker margin`,
-    timeline: (status: string) => `Match timeline, ${status}`,
     redCards: (n: number) => (n > 1 ? `${n} red cards` : '1 red card'),
     fullTime: 'FT',
     headlines: {
@@ -382,7 +381,6 @@ const he: Messages = {
   card: {
     winPercentage: (percent) => `(${percent}%)`,
     winProbability: (team, percent) => `${team}: סיכוי ניצחון של ${percent}% לפי יחסי ההימורים, בניכוי מרווח סוכנות ההימורים`,
-    timeline: (status) => `ציר המשחק, ${status}`,
     redCards: (n) => (n > 1 ? `${n} כרטיסים אדומים` : 'כרטיס אדום'),
     fullTime: 'הסתיים',
     headlines: {

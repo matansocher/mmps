@@ -3,7 +3,7 @@ import { messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { DashboardStandingRow, FormEntry, Game, GameEvent, Team } from '../types';
-import { HotBadge, PreMatchButton } from './CardActions';
+import { HotBadge, PreMatchButton, useHotReason } from './CardActions';
 import { ChannelBadge } from './ChannelBadge';
 import { CompetitionLogo } from './CompetitionLogo';
 import { GameHeadlineLine } from './GameHeadline';
@@ -14,8 +14,6 @@ import { TeamLogo } from './TeamLogo';
 import { FormBadge } from './ui';
 
 const MAX_SCORERS = 3;
-const REGULATION_MINUTES = 90;
-const EXTRA_TIME_MINUTES = 120;
 
 type ScorerLine = { readonly name: string; readonly minutes: string[] };
 
@@ -144,52 +142,6 @@ function ScheduledMatchup({ game }: { readonly game: Game }) {
   );
 }
 
-function liveMinute(game: Game): number {
-  if (game.minute != null) return game.minute;
-  const minute = parseInt(game.minuteDisplay ?? '', 10);
-  return Number.isFinite(minute) ? minute : 0;
-}
-
-function TimelineLane({ events, scale, side }: { readonly events: readonly GameEvent[]; readonly scale: number; readonly side: 'top' | 'bottom' }) {
-  return (
-    <div className="relative h-3">
-      {events.map((e) => (
-        <span
-          key={e.key}
-          title={`${e.minuteDisplay} ${eventText(e)}`}
-          className={`absolute -translate-x-1/2 rtl:translate-x-1/2 ${side === 'top' ? 'bottom-0' : 'top-0'} ${e.type === 'goal' ? 'text-text-primary' : 'text-text-secondary'}`}
-          style={{ insetInlineStart: `${Math.min(100, (e.minute / scale) * 100)}%` }}
-        >
-          <Icon name={EVENT_META[e.type].icon} size={11} />
-        </span>
-      ))}
-    </div>
-  );
-}
-
-// 0–90' track: played part in green, home events above, away events below.
-function MatchTimeline({ game }: { readonly game: Game }) {
-  const minute = liveMinute(game);
-  const events = game.events.filter((e) => CARD_EVENT_TYPES.has(e.type));
-  const latest = Math.max(minute, ...events.map((e) => e.minute));
-  const scale = latest > 105 ? EXTRA_TIME_MINUTES : REGULATION_MINUTES;
-  const played = Math.min(100, (minute / scale) * 100);
-  const t = useT();
-  return (
-    <div className="grid grid-cols-[14px_1fr] items-center gap-x-2.5 border-t border-line pt-3" aria-label={t.card.timeline(game.minuteDisplay || game.statusText)}>
-      <TeamLogo teamId={game.home.id} name={game.home.name} size={14} />
-      <TimelineLane events={events.filter((e) => e.side === 'home')} scale={scale} side="top" />
-      <span />
-      <div className="relative my-1 h-[3px] rounded-full bg-surface-3">
-        <div className="live-progress h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
-        <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ insetInlineStart: `${(45 / scale) * 100}%` }} aria-hidden />
-      </div>
-      <TeamLogo teamId={game.away.id} name={game.away.name} size={14} />
-      <TimelineLane events={events.filter((e) => e.side === 'away')} scale={scale} side="bottom" />
-    </div>
-  );
-}
-
 function FormPills({ entries }: { readonly entries: readonly FormEntry[] }) {
   const t = useT();
   return (
@@ -285,15 +237,16 @@ export function GameCard({ game }: { readonly game: Game }) {
   const t = useT();
   const scored = useGoalFlash(game);
   const live = game.status === 'live';
+  const hot = useHotReason(game) !== null;
   return (
     <div
       role="link"
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className={`game-card group relative ${live ? 'live-ring' : ''} ${scored ? 'goal-flash' : ''} flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0`}
+      className={`game-card group relative ${live ? 'live-ring' : ''} ${hot ? 'hot-card' : ''} ${scored ? 'goal-flash' : ''} flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0`}
     >
-      <LiveProgress game={game} />
+      <LiveProgress game={game} hot={hot} />
       <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
@@ -318,11 +271,6 @@ export function GameCard({ game }: { readonly game: Game }) {
           <KeyEvents game={game} side="home" />
           <TeamRow team={game.away} game={game} isWinner={awayScore >= homeScore} scored={scored === 'away'} />
           <KeyEvents game={game} side="away" />
-        </div>
-      )}
-      {game.status === 'live' && (
-        <div className="mt-auto">
-          <MatchTimeline game={game} />
         </div>
       )}
       {game.status === 'scheduled' && (
