@@ -66,7 +66,23 @@ function NotificationIcon({ notification }: { readonly notification: GameNotific
   );
 }
 
-function NotificationCard({ notification, onDismiss }: { readonly notification: GameNotification; readonly onDismiss: () => void }) {
+// Drains from the fetch that brought the notification until the next poll replaces it.
+function CountdownBar({ from, to }: { readonly from: number; readonly to: number }) {
+  const duration = to - from;
+  if (duration <= 0) return null;
+  return (
+    <span className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-line/40" aria-hidden>
+      <span
+        className="notification-countdown block h-full origin-left bg-accent-live/80 rtl:origin-right"
+        style={{ animationDuration: `${duration}ms`, animationDelay: `${from - Date.now()}ms` }}
+      />
+    </span>
+  );
+}
+
+type Countdown = { readonly from: number; readonly to: number } | null;
+
+function NotificationCard({ notification, countdown, onDismiss }: { readonly notification: GameNotification; readonly countdown: Countdown; readonly onDismiss: () => void }) {
   const open = () => {
     hapticSelect();
     navigate({ name: 'game', id: notification.gameId });
@@ -87,12 +103,13 @@ function NotificationCard({ notification, onDismiss }: { readonly notification: 
       <button onClick={onDismiss} aria-label={useT().common.dismiss} className="tap relative shrink-0 px-2.5 text-text-muted hover:text-text-primary">
         <Icon name="close" size={14} />
       </button>
+      {countdown && <CountdownBar key={countdown.to} from={countdown.from} to={countdown.to} />}
     </div>
   );
 }
 
 export function Notifications() {
-  const { notifications, dismissNotification, clearNotifications } = useDashboard();
+  const { notifications, dismissNotification, clearNotifications, lastFetchedAt, nextRetryAt } = useDashboard();
   const [expanded, setExpanded] = useState(false);
   const isDesktop = useIsDesktop();
   const t = useT();
@@ -105,6 +122,7 @@ export function Notifications() {
   const limit = expanded ? ordered.length : isDesktop ? MAX_VISIBLE_DESKTOP : MAX_VISIBLE_MOBILE;
   const visible = ordered.slice(0, limit);
   const hidden = ordered.length - visible.length;
+  const countdown: Countdown = lastFetchedAt && nextRetryAt && nextRetryAt > lastFetchedAt ? { from: lastFetchedAt, to: nextRetryAt } : null;
 
   return (
     <div
@@ -113,7 +131,7 @@ export function Notifications() {
       aria-live="polite"
     >
       {visible.map((n) => (
-        <NotificationCard key={n.key} notification={n} onDismiss={() => dismissNotification(n.key)} />
+        <NotificationCard key={n.key} notification={n} countdown={countdown} onDismiss={() => dismissNotification(n.key)} />
       ))}
       <div className="pointer-events-auto flex justify-end gap-2">
         {hidden > 0 && (

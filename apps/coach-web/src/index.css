@@ -135,6 +135,22 @@
   }
 }
 
+/* Linear drain; the inline duration/delay sync it to the next poll. */
+.notification-countdown {
+  animation-name: notification-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+@keyframes notification-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 /* Stale data after a failed refresh: keep it visible but quieter, and freeze the live cues. */
 [data-stale] .game-card {
   opacity: 0.92;
