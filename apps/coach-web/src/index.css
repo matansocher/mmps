@@ -163,9 +163,6 @@
 [data-stale] .live-minute {
   color: var(--color-text-secondary);
 }
-[data-stale] .live-progress {
-  background-color: var(--color-text-muted);
-}
 
 .banner-in {
   animation: banner-in 0.25s ease-out;

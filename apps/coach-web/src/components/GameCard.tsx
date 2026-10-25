@@ -14,8 +14,6 @@ import { TeamLogo } from './TeamLogo';
 import { FormBadge } from './ui';
 
 const MAX_SCORERS = 3;
-const REGULATION_MINUTES = 90;
-const EXTRA_TIME_MINUTES = 120;
 
 type ScorerLine = { readonly name: string; readonly minutes: string[] };
 
@@ -140,52 +138,6 @@ function ScheduledMatchup({ game }: { readonly game: Game }) {
       <ScheduledTeam team={game.home} form={game.form?.home} />
       <span className="score-font mt-2 shrink-0 text-score leading-none font-bold tracking-[-0.02em] text-text-primary">{formatKickoff(game.startTime)}</span>
       <ScheduledTeam team={game.away} form={game.form?.away} />
-    </div>
-  );
-}
-
-function liveMinute(game: Game): number {
-  if (game.minute != null) return game.minute;
-  const minute = parseInt(game.minuteDisplay ?? '', 10);
-  return Number.isFinite(minute) ? minute : 0;
-}
-
-function TimelineLane({ events, scale, side }: { readonly events: readonly GameEvent[]; readonly scale: number; readonly side: 'top' | 'bottom' }) {
-  return (
-    <div className="relative h-3">
-      {events.map((e) => (
-        <span
-          key={e.key}
-          title={`${e.minuteDisplay} ${eventText(e)}`}
-          className={`absolute -translate-x-1/2 rtl:translate-x-1/2 ${side === 'top' ? 'bottom-0' : 'top-0'} ${e.type === 'goal' ? 'text-text-primary' : 'text-text-secondary'}`}
-          style={{ insetInlineStart: `${Math.min(100, (e.minute / scale) * 100)}%` }}
-        >
-          <Icon name={EVENT_META[e.type].icon} size={11} />
-        </span>
-      ))}
-    </div>
-  );
-}
-
-// 0–90' track: played part in green, home events above, away events below.
-function MatchTimeline({ game }: { readonly game: Game }) {
-  const minute = liveMinute(game);
-  const events = game.events.filter((e) => CARD_EVENT_TYPES.has(e.type));
-  const latest = Math.max(minute, ...events.map((e) => e.minute));
-  const scale = latest > 105 ? EXTRA_TIME_MINUTES : REGULATION_MINUTES;
-  const played = Math.min(100, (minute / scale) * 100);
-  const t = useT();
-  return (
-    <div className="grid grid-cols-[14px_1fr] items-center gap-x-2.5 border-t border-line pt-3" aria-label={t.card.timeline(game.minuteDisplay || game.statusText)}>
-      <TeamLogo teamId={game.home.id} name={game.home.name} size={14} />
-      <TimelineLane events={events.filter((e) => e.side === 'home')} scale={scale} side="top" />
-      <span />
-      <div className="relative my-1 h-[3px] rounded-full bg-surface-3">
-        <div className="live-progress h-full rounded-full bg-accent-live/70 transition-[width] duration-700 ease-out" style={{ width: `${played}%` }} />
-        <span className="absolute -top-[2px] h-[7px] w-px bg-white/25" style={{ insetInlineStart: `${(45 / scale) * 100}%` }} aria-hidden />
-      </div>
-      <TeamLogo teamId={game.away.id} name={game.away.name} size={14} />
-      <TimelineLane events={events.filter((e) => e.side === 'away')} scale={scale} side="bottom" />
     </div>
   );
 }
@@ -318,11 +270,6 @@ export function GameCard({ game }: { readonly game: Game }) {
           <KeyEvents game={game} side="home" />
           <TeamRow team={game.away} game={game} isWinner={awayScore >= homeScore} scored={scored === 'away'} />
           <KeyEvents game={game} side="away" />
-        </div>
-      )}
-      {game.status === 'live' && (
-        <div className="mt-auto">
-          <MatchTimeline game={game} />
         </div>
       )}
       {game.status === 'scheduled' && (
