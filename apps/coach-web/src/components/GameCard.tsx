@@ -3,7 +3,7 @@ import { messages, useT } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { hapticSelect } from '../lib/telegram';
 import type { DashboardStandingRow, FormEntry, Game, GameEvent, Team } from '../types';
-import { HotBadge, PreMatchButton } from './CardActions';
+import { HotBadge, PreMatchButton, useHotReason } from './CardActions';
 import { ChannelBadge } from './ChannelBadge';
 import { CompetitionLogo } from './CompetitionLogo';
 import { GameHeadlineLine } from './GameHeadline';
@@ -237,15 +237,16 @@ export function GameCard({ game }: { readonly game: Game }) {
   const t = useT();
   const scored = useGoalFlash(game);
   const live = game.status === 'live';
+  const hot = useHotReason(game) !== null;
   return (
     <div
       role="link"
       tabIndex={0}
       onClick={() => openGame(game.id)}
       onKeyDown={(e) => e.key === 'Enter' && openGame(game.id)}
-      className={`game-card group relative ${live ? 'live-ring' : ''} ${scored ? 'goal-flash' : ''} flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0`}
+      className={`game-card group relative ${live ? 'live-ring' : ''} ${hot ? 'hot-card' : ''} ${scored ? 'goal-flash' : ''} flex cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition duration-200 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-[#161d27] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-brand active:translate-y-0`}
     >
-      <LiveProgress game={game} />
+      <LiveProgress game={game} hot={hot} />
       <div className="flex h-6 items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-text-secondary">
           <CompetitionLogo competitionId={game.competitionId} size={16} />
