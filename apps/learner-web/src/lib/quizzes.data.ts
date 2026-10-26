@@ -1191,6 +1191,958 @@ export const QUIZZES: QuizQuestion[] = [
     explanation: 'Multi-agent buys focus, isolation, and per-agent models, but pays in tokens, latency, routing risk, and state design.',
   },
 
+  // ===== AI Engineering: Frameworks, Runtimes & Harnesses =====
+  {
+    biteId: 'ai-engineering:lc-products',
+    question: 'Which LangChain product is the low-level runtime that provides persistence and interrupts?',
+    options: ['LangChain', 'Deep Agents', 'LangGraph', 'LangSmith'],
+    answerIndex: 2,
+    explanation: 'LangGraph is the runtime. LangChain and Deep Agents are built on top of it, and LangSmith is the observability and deployment platform.',
+  },
+  {
+    biteId: 'ai-engineering:lc-products',
+    question: 'A team needs a short tool-calling assistant with one or two tools. What is the best starting point?',
+    options: ['createAgent from langchain', 'A custom Pregel runtime', 'createDeepAgent with subagents', 'A LangSmith Fleet no-code agent only'],
+    answerIndex: 0,
+    explanation: 'createAgent gives the agent loop with minimal overhead. A full harness adds planning and filesystem tools that a short flow does not need.',
+  },
+  {
+    biteId: 'ai-engineering:lc-products',
+    question: 'Which statement about LangSmith is accurate?',
+    options: ['It only traces LangChain code', 'It replaces LangGraph at runtime', 'It is bundled inside createAgent', 'It works with any framework'],
+    answerIndex: 3,
+    explanation: 'LangSmith is framework-agnostic. It traces, evaluates and deploys agents regardless of the library used.',
+  },
+
+  // ===== AI Engineering: Workflows vs Agents: The Five Patterns =====
+  {
+    biteId: 'ai-engineering:workflows-vs-agents',
+    question: 'Which pattern fits when the number of subtasks is only known after an LLM plans them?',
+    options: ['Prompt chaining', 'Routing', 'Voting parallelization', 'Orchestrator-worker'],
+    answerIndex: 3,
+    explanation: 'Orchestrator-worker uses the Send API to create one worker per planned subtask at run time.',
+  },
+  {
+    biteId: 'ai-engineering:workflows-vs-agents',
+    question: 'You run the same classification prompt three times and take the majority answer. Which pattern is this?',
+    options: ['Parallel voting', 'Evaluator-optimizer', 'Prompt chaining', 'Routing by label'],
+    answerIndex: 0,
+    explanation: 'Voting runs the same task several times in parallel to raise confidence in the result.',
+  },
+  {
+    biteId: 'ai-engineering:workflows-vs-agents',
+    question: 'In LangGraph, how does an agent loop decide whether to call tools again?',
+    options: ['A fixed edge always loops back to tools', 'A reducer counts the messages so far', 'It reads tool_calls on the last message', 'The ToolNode itself chooses the next node'],
+    answerIndex: 2,
+    explanation: 'A conditional edge inspects lastMessage.tool_calls. If any exist it routes to the ToolNode, otherwise it ends.',
+  },
+  {
+    biteId: 'ai-engineering:workflows-vs-agents',
+    question: 'What is the main risk of an evaluator-optimizer loop without a cap?',
+    options: ['It cannot use structured output', 'It can loop and burn tokens', 'It skips the generator node', 'It needs the Functional API'],
+    answerIndex: 1,
+    explanation: 'A strict evaluator may never accept, so always limit the number of rounds.',
+  },
+
+  // ===== AI Engineering: What Changed in LangChain v1 =====
+  {
+    biteId: 'ai-engineering:langchain-v1',
+    question: 'Where did legacy chains and retrievers go in LangChain v1?',
+    options: ['@langchain/langgraph', '@langchain/classic', '@langchain/core', 'They were kept in langchain'],
+    answerIndex: 1,
+    explanation: 'v1 slimmed the langchain package and moved legacy chains, retrievers and the indexing API to @langchain/classic.',
+  },
+  {
+    biteId: 'ai-engineering:langchain-v1',
+    question: 'In v1, where does createAgent return structured output?',
+    options: ['result.messages.at(-1).content', 'result.output', 'result.structuredResponse', 'result.parsedOutput'],
+    answerIndex: 2,
+    explanation: 'With responseFormat set, the parsed object is returned in result.structuredResponse.',
+  },
+  {
+    biteId: 'ai-engineering:langchain-v1',
+    question: 'Which v1 middleware hook replaces preModelHook?',
+    options: ['beforeModel', 'wrapToolCall', 'afterAgent', 'afterModel'],
+    answerIndex: 0,
+    explanation: 'preModelHook maps to beforeModel and postModelHook maps to afterModel.',
+  },
+
+  // ===== AI Engineering: Messages, Content Blocks & Model Interfaces =====
+  {
+    biteId: 'ai-engineering:lc-messages',
+    question: 'Which field on an AIMessage holds tool calls requested by the model?',
+    options: ['response_metadata', 'tool_calls', 'artifact', 'usage_metadata'],
+    answerIndex: 1,
+    explanation: 'AIMessage.tool_calls lists each call with name, args and id.',
+  },
+  {
+    biteId: 'ai-engineering:lc-messages',
+    question: 'An Anthropic model returns "thinking" output. How does it appear in contentBlocks?',
+    options: ['As a non_standard block', 'As plain text', 'It is dropped', 'As a reasoning block'],
+    answerIndex: 3,
+    explanation: 'Standard content blocks normalize provider reasoning formats to type "reasoning".',
+  },
+  {
+    biteId: 'ai-engineering:lc-messages',
+    question: 'Which error does the default maxRetries logic NOT retry?',
+    options: ['A 429 rate limit', 'A network timeout', 'A 401 unauthorized', 'A 503 server error'],
+    answerIndex: 2,
+    explanation: 'Auth and not-found errors (401, 404) fail fast because retrying cannot fix them.',
+  },
+  {
+    biteId: 'ai-engineering:lc-messages',
+    question: 'What is the ToolMessage artifact field for?',
+    options: ['Data kept out of the prompt', 'The ID of the matching tool call', 'The JSON schema of the tool', 'Cached output from the model'],
+    answerIndex: 0,
+    explanation: 'The artifact stores data for your app, such as raw records, without sending it to the model.',
+  },
+
+  // ===== AI Engineering: Runtime & Context Injection =====
+  {
+    biteId: 'ai-engineering:lc-runtime-context',
+    question: 'Where does a tool read the user id passed via invoke(..., { context: { userId } })?',
+    options: ['From state.messages in the tool input', 'From the tool input schema fields', 'From runtime.context on the ToolRuntime', 'From a global set by createAgent'],
+    answerIndex: 2,
+    explanation: 'Tools receive a ToolRuntime as their second argument, and the context object is on runtime.context.',
+  },
+  {
+    biteId: 'ai-engineering:lc-runtime-context',
+    question: 'Which statement about runtime context is true?',
+    options: ['It is read-only during a run', 'It is saved by the checkpointer', 'The model sees it on every call', 'Tools update it with Command'],
+    answerIndex: 0,
+    explanation: 'Context is static for the invocation, and the model only sees it if you copy it into a prompt.',
+  },
+  {
+    biteId: 'ai-engineering:lc-runtime-context',
+    question: 'You need a preference that should still exist next week in a new thread. Where does it go?',
+    options: ['Runtime context', 'Custom agent state', 'The system prompt', 'The store'],
+    answerIndex: 3,
+    explanation: 'State is per thread and context is per invocation. Cross-thread, long-lived data belongs in the store.',
+  },
+  {
+    biteId: 'ai-engineering:lc-runtime-context',
+    question: 'When is runtime.serverInfo populated?',
+    options: ['Whenever a checkpointer is set', 'Only on LangGraph Server', 'Only inside wrapToolCall hooks', 'When contextSchema is declared'],
+    answerIndex: 1,
+    explanation: 'serverInfo carries assistant id, graph id and the authenticated user, and is null outside LangGraph Server.',
+  },
+
+  // ===== AI Engineering: Context Engineering =====
+  {
+    biteId: 'ai-engineering:context-engineering',
+    question: 'According to the LangChain docs, what is the most common reason an agent fails?',
+    options: ['The model is too small for the task', 'The tool schemas have type errors', 'The model was missing the right context', 'The checkpointer lost earlier state'],
+    answerIndex: 2,
+    explanation: 'The docs name two causes, weak models and missing context, and say missing context is the more common one.',
+  },
+  {
+    biteId: 'ai-engineering:context-engineering',
+    question: 'A wrapModelCall hook swaps request.model for a cheaper model. What is the scope of that change?',
+    options: ['Only the current model call', 'Every later call in the thread', 'Every thread for this user', 'Until the agent is recompiled'],
+    answerIndex: 0,
+    explanation: 'Edits to the request in wrapModelCall are transient and do not write to state.',
+  },
+  {
+    biteId: 'ai-engineering:context-engineering',
+    question: 'Which feature is an example of the "isolate" strategy?',
+    options: ['summarizationMiddleware', 'A store write of user preferences', 'A dynamic system prompt', 'A subagent with its own context window'],
+    answerIndex: 3,
+    explanation: 'Isolation splits work so each call sees a smaller slice. Subagents do this by running in their own window.',
+  },
+  {
+    biteId: 'ai-engineering:context-engineering',
+    question: 'How can a tool change what later model calls see in the same thread?',
+    options: ['Edit request.tools directly', 'Return a Command with a state update', 'Mutate runtime.context in place', 'Throw an error to reset history'],
+    answerIndex: 1,
+    explanation: 'A Command update writes to state, which persists for the thread. Runtime context is read-only.',
+  },
+
+  // ===== AI Engineering: The Prebuilt Middleware Catalog =====
+  {
+    biteId: 'ai-engineering:lc-middleware-catalog',
+    question: 'What is the default exitBehavior of toolCallLimitMiddleware?',
+    options: ['"end", stop the run', '"error", throw an exception', '"continue", tell the model and go on', '"retry", wait and try again'],
+    answerIndex: 2,
+    explanation: 'The tool limit defaults to "continue", which blocks the call with a message. The model limit defaults to "end".',
+  },
+  {
+    biteId: 'ai-engineering:lc-middleware-catalog',
+    question: 'Which middleware needs a checkpointer to work as intended?',
+    options: ['modelCallLimitMiddleware with threadLimit', 'toolRetryMiddleware with default options', 'piiMiddleware with the redact strategy', 'modelFallbackMiddleware with two models'],
+    answerIndex: 0,
+    explanation: 'threadLimit counts across the conversation, so the count must be saved between invocations. Human in the loop also needs one.',
+  },
+  {
+    biteId: 'ai-engineering:lc-middleware-catalog',
+    question: 'Where does toolEmulatorMiddleware belong?',
+    options: ['In production, as a cache layer', 'In front of every flaky external API', 'Only on agents with more than ten tools', 'In tests and prototypes'],
+    answerIndex: 3,
+    explanation: 'It replaces real tool calls with LLM-generated responses, which is useful for testing but wrong for real traffic.',
+  },
+  {
+    biteId: 'ai-engineering:lc-middleware-catalog',
+    question: 'What does piiMiddleware check by default?',
+    options: ['Input, output and tool results', 'Only the user input', 'Only the model output', 'Only tool results'],
+    answerIndex: 1,
+    explanation: 'applyToInput defaults to true. applyToOutput and applyToToolResults default to false.',
+  },
+
+  // ===== AI Engineering: Writing Custom Middleware =====
+  {
+    biteId: 'ai-engineering:lc-custom-middleware',
+    question: 'Which hook should you use to cache model responses and skip the call on a hit?',
+    options: ['beforeAgent', 'afterModel', 'beforeModel', 'wrapModelCall'],
+    answerIndex: 3,
+    explanation: 'Wrap-style hooks control whether the handler runs, so returning a cached response without calling it short-circuits the call.',
+  },
+  {
+    biteId: 'ai-engineering:lc-custom-middleware',
+    question: 'With middleware [m1, m2, m3], which afterModel hook runs first?',
+    options: ['m3', 'm1', 'm2', 'They run in parallel'],
+    answerIndex: 0,
+    explanation: 'after* hooks run in reverse list order, so the last middleware runs first.',
+  },
+  {
+    biteId: 'ai-engineering:lc-custom-middleware',
+    question: 'What must you add for a beforeModel hook to return jumpTo: "end"?',
+    options: ['A checkpointer on the agent', 'canJumpTo: ["end"] on the hook', 'A Command from @langchain/langgraph', 'A contextSchema with an end flag'],
+    answerIndex: 1,
+    explanation: 'Jump targets must be declared in canJumpTo so the graph can add the edges at compile time.',
+  },
+  {
+    biteId: 'ai-engineering:lc-custom-middleware',
+    question: 'What happens to a custom state field named _internalFlag?',
+    options: ['It is rejected by the schema', 'It is saved to the store', 'Hooks can read it, but it is left out of the result', 'It is visible only to the model'],
+    answerIndex: 2,
+    explanation: 'Fields starting with an underscore are private. They work during execution but are excluded from the invoke result.',
+  },
+
+  // ===== AI Engineering: Thinking in LangGraph: State, Nodes, Edges =====
+  {
+    biteId: 'ai-engineering:langgraph-basics',
+    question: 'Two parallel nodes append to the same list key. What do you need?',
+    options: ['A higher recursion limit', 'A separate subgraph per node', 'A reducer such as concat', 'An UntrackedValue field'],
+    answerIndex: 2,
+    explanation: 'Without a reducer the key is last-write-wins, so parallel writes conflict. A concat reducer merges them.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-basics',
+    question: 'What does recursionLimit count?',
+    options: ['Supersteps of the graph', 'Tokens sent to the model', 'Calls to a single node', 'Messages in the state'],
+    answerIndex: 0,
+    explanation: 'It caps the number of steps (default 25) and throws GraphRecursionError when exceeded.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-basics',
+    question: 'A node returns a Command with goto. What else should you configure?',
+    options: ['A Send for every target', 'The ends option on addNode', 'A checkpointer on compile', 'A reducer on every key'],
+    answerIndex: 1,
+    explanation: 'Command routing is dynamic, so ends lists the possible destinations for validation and drawing.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-basics',
+    question: 'Which tool fits fan-out when the branch count is only known at runtime?',
+    options: ['A normal edge to END', 'Overwrite on the list key', 'A larger recursionLimit', 'Send from a routing function'],
+    answerIndex: 3,
+    explanation: 'Send creates one branch per item, each with its own input, and results come back through a reducer.',
+  },
+
+  // ===== AI Engineering: Graph API vs Functional API =====
+  {
+    biteId: 'ai-engineering:langgraph-apis',
+    question: 'What happens to completed tasks when a Functional API workflow resumes?',
+    options: ['They run again from scratch', 'Their saved results are reused', 'They are skipped with no output', 'They move to a new thread ID'],
+    answerIndex: 1,
+    explanation: 'The entrypoint replays from the top, and finished tasks return their checkpointed results.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-apis',
+    question: 'Which feature does the Graph API have that the Functional API lacks?',
+    options: ['Support for interrupts', 'Checkpoint persistence', 'Token streaming', 'Graph visualisation'],
+    answerIndex: 3,
+    explanation: 'Both share persistence, interrupts and streaming. Only the Graph API can be drawn.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-apis',
+    question: 'Where should a Date.now() call go in an entrypoint?',
+    options: ['Inside a task', 'Before the entrypoint', 'In the checkpointer config', 'In the thread ID'],
+    answerIndex: 0,
+    explanation: 'Code outside tasks re-runs on replay. Inside a task the value is saved and reused.',
+  },
+
+  // ===== AI Engineering: The Pregel Runtime =====
+  {
+    biteId: 'ai-engineering:langgraph-pregel',
+    question: 'Which channel type backs a state key that has a reducer?',
+    options: ['LastValue', 'EphemeralValue', 'BinaryOperatorAggregate', 'Topic with accumulate'],
+    answerIndex: 2,
+    explanation: 'Reducers compile to BinaryOperatorAggregate, which folds every write in with the operator.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-pregel',
+    question: 'During the execute phase, when do other actors see a node’s writes?',
+    options: ['Immediately after the write', 'Only after the next checkpoint load', 'When the node returns early', 'In the next superstep'],
+    answerIndex: 3,
+    explanation: 'Writes are buffered and applied in the update phase, so they are visible from the next superstep.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-pregel',
+    question: 'What does recursionLimit bound in Pregel terms?',
+    options: ['The number of supersteps', 'The number of channels', 'Parallel actors per step', 'The checkpoint history size'],
+    answerIndex: 0,
+    explanation: 'The BSP loop stops with GraphRecursionError when it exceeds the maximum number of steps.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-pregel',
+    question: 'Where does the Graph API save checkpoints?',
+    options: ['After every LLM token', 'At superstep boundaries', 'Only when the run ends', 'Before each tool call'],
+    answerIndex: 1,
+    explanation: 'Channel values are saved between supersteps, which is the unit of resume after a crash or interrupt.',
+  },
+
+  // ===== AI Engineering: Interrupts & Human-in-the-Loop =====
+  {
+    biteId: 'ai-engineering:langgraph-interrupts',
+    question: 'What happens inside the node when you resume after an interrupt?',
+    options: ['It continues from the interrupt line', 'It is skipped and the next node runs', 'It re-runs from its first line', 'It restarts the whole graph run'],
+    answerIndex: 2,
+    explanation: 'The node re-executes from the top, and interrupt() now returns the resume value.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-interrupts',
+    question: 'Which value is meant to be passed to invoke() to answer an interrupt?',
+    options: ['new Command({ resume })', 'new Command({ update })', 'new Command({ goto })', 'new Send(node, value)'],
+    answerIndex: 0,
+    explanation: 'Only Command({ resume }) is intended as invoke input. update and goto are returned from nodes.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-interrupts',
+    question: 'In humanInTheLoopMiddleware, what does read_data: false in interruptOn mean?',
+    options: ['The tool is removed from the agent', 'Only reject decisions are allowed', 'The call needs a when predicate', 'The tool is auto-approved'],
+    answerIndex: 3,
+    explanation: 'false means the tool never pauses for review; true or a config object enables review.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-interrupts',
+    question: 'A human denies a side-effecting tool call. Which decision should you send?',
+    options: ['respond with a message', 'reject with a message', 'edit with empty args', 'approve with a note'],
+    answerIndex: 1,
+    explanation: 'reject skips the call and sends feedback. respond is treated as a successful tool result.',
+  },
+
+  // ===== AI Engineering: Time Travel, Subgraphs & Durable Execution =====
+  {
+    biteId: 'ai-engineering:langgraph-durability',
+    question: 'You replay a run from a checkpoint taken before the writeJoke node. What happens to writeJoke?',
+    options: ['Its saved output is reused from the cache', 'It is skipped because it already ran once', 'It runs again, including its LLM call', 'It runs only if you call updateState first'],
+    answerIndex: 2,
+    explanation: 'Replay re-executes every node after the checkpoint. LLM calls, API calls and interrupts all happen again.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-durability',
+    question: 'Which durability mode gives the fastest runs but loses all progress if the process crashes mid-run?',
+    options: ['"exit"', '"async"', '"sync"', '"none"'],
+    answerIndex: 0,
+    explanation: '"exit" persists only when the run ends, errors or interrupts. There is no "none" mode.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-durability',
+    question: 'A subgraph is compiled with checkpointer: true and called twice in the same parent run. What goes wrong?',
+    options: ['Interrupts stop working inside it', 'The two calls hit a namespace conflict', 'The parent loses its own checkpoints', 'Each call starts from empty state'],
+    answerIndex: 1,
+    explanation: 'Per-thread subgraphs share one namespace, so two calls in one run collide. Wrap each in a uniquely named graph.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-durability',
+    question: 'Why wrap a payment call in a task in the Functional API?',
+    options: ['Tasks run in a separate worker process', 'Tasks retry forever until they succeed', 'Tasks skip the checkpointer for speed', 'Completed task results are restored on resume'],
+    answerIndex: 3,
+    explanation: 'On resume, finished tasks return their saved result instead of running again. Unfinished tasks may re-run, so keep an idempotency key.',
+  },
+
+  // ===== AI Engineering: Stores & Long-Term Memory =====
+  {
+    biteId: 'ai-engineering:langgraph-memory',
+    question: 'Where does LangGraph keep memory that must survive across different threads for the same user?',
+    options: ['In the checkpointer for each thread', 'In a store under a user namespace', 'In the model provider conversation log', 'In the system prompt of every agent'],
+    answerIndex: 1,
+    explanation: 'Checkpointers are thread-scoped. Cross-thread memory goes in a BaseStore keyed by namespace and key.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-memory',
+    question: 'A store search returns exactly 10 items even though 40 match. What is the likely cause?',
+    options: [
+      'The embeddings index is misconfigured',
+      'Namespaces only match exactly, not by prefix',
+      'InMemoryStore caps every namespace at 10',
+      'The default limit is 10 and results are cut silently',
+    ],
+    answerIndex: 3,
+    explanation: 'search defaults to limit 10 and truncates without warning. Pass a larger limit or paginate with offset.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-memory',
+    question: 'Saving a refined system prompt to the store so the agent improves over time is which memory type?',
+    options: ['Procedural memory', 'Episodic memory', 'Semantic memory', 'Short-term memory'],
+    answerIndex: 0,
+    explanation: 'Procedural memory is about how to behave, which for agents usually means its instructions.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-memory',
+    question: 'What is the main downside of writing memories in the hot path?',
+    options: ['Other threads see stale memories', 'Memories cannot be searched later', 'It adds latency to the user response', 'It requires a cron job to trigger'],
+    answerIndex: 2,
+    explanation: 'Hot-path writes happen during the turn, so they add latency. Staleness and triggers are background-write concerns.',
+  },
+
+  // ===== AI Engineering: Streaming Modes & Event Streaming =====
+  {
+    biteId: 'ai-engineering:langgraph-streaming',
+    question: 'Which stream mode sends only the per-node changes instead of the whole state?',
+    options: ['values', 'debug', 'messages', 'updates'],
+    answerIndex: 3,
+    explanation: 'updates emits { nodeName: update } deltas. values resends the full state every step.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-streaming',
+    question: 'A tool calls the model with .invoke(). Can its tokens still reach the client?',
+    options: ['No, only .stream() calls emit tokens', 'Yes, messages mode captures them anyway', 'Only if the tool is an async generator', 'Only when subgraphs: true is also set'],
+    answerIndex: 1,
+    explanation: 'messages mode streams tokens from any LLM call in the run, even when the code uses invoke.',
+  },
+  {
+    biteId: 'ai-engineering:langgraph-streaming',
+    question: 'How do you emit a "Retrieved 50/100 records" message from inside a tool?',
+    options: ['Call config.writer and read custom mode', 'Return a partial ToolMessage early', 'Throw an interrupt with the progress text', 'Add the text to state.messages directly'],
+    answerIndex: 0,
+    explanation: 'config.writer sends arbitrary data that consumers receive with streamMode "custom".',
+  },
+
+  // ===== AI Engineering: Multi-Agent Patterns Compared =====
+  {
+    biteId: 'ai-engineering:multi-agent-patterns',
+    question: 'In the subagents pattern, what does the supervisor receive back from a subagent by default?',
+    options: ['The full subagent message history', 'Only the subagent final message', 'All tool calls the subagent made', 'A summary written by middleware'],
+    answerIndex: 1,
+    explanation: 'The subagent runs as a tool and its last message becomes the tool result. Prompt it to include its findings there.',
+  },
+  {
+    biteId: 'ai-engineering:multi-agent-patterns',
+    question: 'A user asks to compare three languages, each with ~2K tokens of docs. Which pattern uses the most tokens per the LangChain comparison?',
+    options: ['Router', 'Subagents', 'Custom workflow', 'Skills'],
+    answerIndex: 3,
+    explanation: 'Skills makes only 3 calls but each re-reads all loaded skill docs, around 15K tokens versus 9K for subagents or router.',
+  },
+  {
+    biteId: 'ai-engineering:multi-agent-patterns',
+    question: 'Which pattern fits a support flow where repair tools unlock only after warranty status is recorded?',
+    options: ['Handoffs driven by a step variable', 'Router with parallel Send fan-out', 'Subagents called as async jobs', 'Skills loaded through load_skill'],
+    answerIndex: 0,
+    explanation: 'Handoffs enforce sequential constraints by switching prompt and tools when a tool updates state like currentStep.',
+  },
+  {
+    biteId: 'ai-engineering:multi-agent-patterns',
+    question: 'When a handoff moves control to another agent node, what must the passed messages include?',
+    options: ['Only the latest human message', 'A summary of the prior agent turn', 'The tool-call AIMessage and its ToolMessage', 'The full system prompt of both agents'],
+    answerIndex: 2,
+    explanation: 'LLMs expect each tool call to have a response. Without the pair the next agent sees malformed history.',
+  },
+
+  // ===== AI Engineering: MCP in Practice & A2A =====
+  {
+    biteId: 'ai-engineering:mcp-a2a',
+    question: 'In @langchain/mcp-adapters 2.0, what replaces MultiServerMCPClient.getTools()?',
+    options: ['MCPAdapter.loadTools()', 'MCPAdapter.getToolset()', 'MCPAdapter.listTools()', 'MCPAdapter.connect()'],
+    answerIndex: 2,
+    explanation: 'The 2.0 migration renames getTools() to listTools() and the client class to MCPAdapter.',
+  },
+  {
+    biteId: 'ai-engineering:mcp-a2a',
+    question: 'Your HITL config uses interruptOn: { delete_file: true }, but the agent deletes files without asking. The tool came from an MCP server named fs. Why?',
+    options: ['The tool is named fs_delete_file', 'HITL ignores MCP tools entirely', 'Interrupts need a stdio transport', 'The server returned isError: true'],
+    answerIndex: 0,
+    explanation: 'Tool names are prefixed with the server name by default, so the key must be fs_delete_file. A key that matches nothing is silently ignored.',
+  },
+  {
+    biteId: 'ai-engineering:mcp-a2a',
+    question: 'An A2A client wants to send a follow-up message in an existing conversation after the last task completed. What should it send?',
+    options: ['The completed taskId only', 'A fresh contextId and taskId', 'Both contextId and old taskId', 'The contextId and no taskId'],
+    answerIndex: 3,
+    explanation: 'Each follow-up opens a new task within the same contextId. Reusing a completed taskId returns an error.',
+  },
+  {
+    biteId: 'ai-engineering:mcp-a2a',
+    question: 'Which statement about the Agent Server /mcp endpoint is correct?',
+    options: ['It keeps one MCP session per user', 'It exposes each graph as a stateless tool', 'It only supports the stdio transport', 'It bypasses the deployment custom auth'],
+    answerIndex: 1,
+    explanation: 'The /mcp endpoint uses Streamable HTTP, is stateless, exposes graphs as tools, and uses the same auth as the rest of the API.',
+  },
+
+  // ===== AI Engineering: Deep Agents: Planning, Filesystem & Subagents =====
+  {
+    biteId: 'ai-engineering:deep-agents',
+    question: 'Which backend should you choose for files that must survive across threads for the same user?',
+    options: ['StateBackend with a checkpointer', 'StoreBackend with a user namespace', 'LocalShellBackend under rootDir', 'The default with no configuration'],
+    answerIndex: 1,
+    explanation: 'StoreBackend writes to a cross-thread store. StateBackend is thread-scoped, and LocalShellBackend is unisolated dev-only disk access.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents',
+    question: 'A subagent config sets tools: [searchTool]. What tools does that subagent get?',
+    options: ['Parent tools plus searchTool', 'Only the built-in file tools', 'Only searchTool and built-ins', 'Every tool on every subagent'],
+    answerIndex: 2,
+    explanation: 'Setting tools replaces the inherited list entirely. The harness still adds its built-in tools such as the file tools.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents',
+    question: 'What happens when a tool returns a 60,000-token result inside a deep agent?',
+    options: ['The run fails with a context error', 'The result is silently truncated', 'A subagent is spawned to read it', 'It is saved to a file with a preview'],
+    answerIndex: 3,
+    explanation: 'Results over 20,000 tokens are offloaded to the backend and replaced by a path plus a 10-line preview.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents',
+    question: 'Why can a deep agent hold dozens of skills without filling its context?',
+    options: ['Only skill metadata loads at start', 'Skills run inside subagents only', 'Skills are compiled into tools', 'Skills are fetched from a vector DB'],
+    answerIndex: 0,
+    explanation: 'Progressive disclosure: names and descriptions load at startup, and the full SKILL.md is read only when a task matches.',
+  },
+
+  // ===== AI Engineering: Sandboxes, Interpreters & Code Execution =====
+  {
+    biteId: 'ai-engineering:deep-agents-sandboxes',
+    question: 'Which tool only appears when the backend supports sandbox execution?',
+    options: ['read_file', 'execute', 'glob', 'edit_file'],
+    answerIndex: 1,
+    explanation: 'execute is added only for backends that implement the sandbox protocol. The file tools exist on every backend.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents-sandboxes',
+    question: 'By default, what can code inside a Deep Agents QuickJS interpreter access?',
+    options: ['The host filesystem', 'Outbound network calls', 'Only in-memory compute', 'All the agent tools'],
+    answerIndex: 2,
+    explanation: 'Interpreter code has no filesystem, network, shell or clock by default. Tools must be bridged with a PTC allowlist.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents-sandboxes',
+    question: 'Your agent needs a GitHub token to push code it writes in a sandbox. What does the sandbox guidance recommend?',
+    options: ['Store it as a sandbox env var', 'Write it to a dotfile at startup', 'Pass it inside the user prompt', 'Push from a host-side tool instead'],
+    answerIndex: 3,
+    explanation: 'Secrets should stay outside the sandbox. Credentialed operations belong in host-side tools or behind a credential-injecting proxy.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents-sandboxes',
+    question: 'Why do permissions rules not restrict the execute tool?',
+    options: ['A shell can reach any path', 'execute runs before middleware', 'Rules only apply to subagents', 'execute is read-only by design'],
+    answerIndex: 0,
+    explanation: 'Permissions cover the built-in file tools. Arbitrary shell commands can touch any path, so isolation must come from the sandbox itself.',
+  },
+
+  // ===== AI Engineering: Deep Agents vs Claude Agent SDK =====
+  {
+    biteId: 'ai-engineering:deep-agents-vs-claude-sdk',
+    question: 'According to the comparison page, which models can the Claude Agent SDK use?',
+    options: ['Any provider via adapters', 'Claude models only', 'Claude and OpenAI models', 'Any open-weights model'],
+    answerIndex: 1,
+    explanation: 'The SDK works with Claude, served via Anthropic, Bedrock, Vertex or Azure. Deep Agents is model-agnostic.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents-vs-claude-sdk',
+    question: 'Which sandbox pattern does the Claude Agent SDK support?',
+    options: ['Sandbox as a remote tool only', 'Both patterns via backends', 'No sandbox support at all', 'Agent running inside the sandbox'],
+    answerIndex: 3,
+    explanation: 'The SDK runs the agent inside the sandbox. Deep Agents supports both that and the sandbox-as-tool pattern.',
+  },
+  {
+    biteId: 'ai-engineering:deep-agents-vs-claude-sdk',
+    question: 'What does a Deep Agents deployment provide that a self-hosted Claude Agent SDK app must build itself?',
+    options: ['A server with threads and auth', 'Access to Claude models', 'A local filesystem for tools', 'An MIT open-source license'],
+    answerIndex: 0,
+    explanation: 'Deep Agents deployments include Agent Server with streaming, threads, run history, webhooks and auth. Both projects are MIT licensed.',
+  },
+
+  // ===== AI Engineering: The Eval Lifecycle: Offline → Online → Continuous =====
+  {
+    biteId: 'ai-engineering:eval-lifecycle',
+    question: "In a LangSmith offline experiment, which component receives an example's reference outputs?",
+    options: ['Only the evaluators', 'The target function, as extra context', 'Both the target and the evaluators', 'Neither; they are only shown in the UI'],
+    answerIndex: 0,
+    explanation: 'Reference outputs are passed to evaluators for scoring. The app under test only sees the inputs, otherwise it could copy the answer.',
+  },
+  {
+    biteId: 'ai-engineering:eval-lifecycle',
+    question: 'Why should you pin a dataset version (for example with asOf or a tag) when comparing experiments?',
+    options: [
+      'Pinned versions run faster',
+      'Unpinned datasets cannot be passed to evaluate() at all',
+      'Scores from different snapshots are not comparable',
+      'Online evaluators refuse to run against unversioned data',
+    ],
+    answerIndex: 2,
+    explanation: 'Datasets gain and lose examples over time. Comparing experiments run on different snapshots mixes app changes with data changes.',
+  },
+  {
+    biteId: 'ai-engineering:eval-lifecycle',
+    question: 'Which practice best closes the loop between online and offline evaluation?',
+    options: [
+      'Raising the sampling rate of every online evaluator to 100% of traffic',
+      'Adding flagged production runs, with corrected references, to the dataset',
+      'Replacing the curated dataset with freshly generated synthetic data each week',
+      'Running offline evals only after each deploy',
+    ],
+    answerIndex: 1,
+    explanation: 'Failures found in production become dataset examples, so the next offline experiment tests for them. Corrected references keep the dataset trustworthy.',
+  },
+  {
+    biteId: 'ai-engineering:eval-lifecycle',
+    question: 'What does setting numRepetitions: 3 in evaluate() give you?',
+    options: [
+      'Three separate copies of the dataset, one per experiment run',
+      'Automatic retries whenever an evaluator throws or the target times out',
+      'A three-way pairwise comparison',
+      'A mean and spread per example, to separate signal from noise',
+    ],
+    answerIndex: 3,
+    explanation: 'Each example runs three times. The spread tells you whether a score difference between versions is larger than normal model variance.',
+  },
+
+  // ===== AI Engineering: Evaluator Types: Code, Judge, Pairwise, Composite =====
+  {
+    biteId: 'ai-engineering:evaluator-types',
+    question: 'You need to check that every agent reply is valid JSON matching a schema. Which evaluator fits best?',
+    options: ['A reference-free LLM-as-judge with a JSON rubric', 'A code evaluator', 'A pairwise evaluator against the previous version', 'A composite evaluator over tone and format'],
+    answerIndex: 1,
+    explanation: 'Schema validity is a rule. A code evaluator checks it for free, instantly and deterministically.',
+  },
+  {
+    biteId: 'ai-engineering:evaluator-types',
+    question: 'Why does a pairwise evaluate() call set randomizeOrder: true?',
+    options: [
+      'To sample a random subset of examples from the dataset',
+      'To run the two experiments concurrently so the comparison finishes faster',
+      "To reduce the judge's bias toward the first answer shown",
+      'To pick a random baseline experiment from the project',
+    ],
+    answerIndex: 2,
+    explanation: 'LLM judges tend to prefer whichever answer appears first. Shuffling the order spreads that bias evenly across both experiments.',
+  },
+  {
+    biteId: 'ai-engineering:evaluator-types',
+    question: 'Which metric requires a summary evaluator rather than a per-example evaluator?',
+    options: ['F1 score', 'Whether the reply is under 100 words long', 'Exact match against the reference answer', 'Toxicity of an individual reply'],
+    answerIndex: 0,
+    explanation: 'F1 combines true and false positive and negative counts across the whole experiment, so it needs all outputs at once.',
+  },
+  {
+    biteId: 'ai-engineering:evaluator-types',
+    question: 'What is the main downside of reporting only a composite score?',
+    options: [
+      'Composite scores cannot be displayed on dashboards',
+      'They require reference outputs on every single example',
+      'They only work with pairwise experiments in the UI',
+      'It hides which individual dimension regressed',
+    ],
+    answerIndex: 3,
+    explanation: 'A weighted average can stay flat while one component drops sharply. Keep the component scores visible.',
+  },
+
+  // ===== AI Engineering: Evaluating Agents: Trajectories & Multi-Turn =====
+  {
+    biteId: 'ai-engineering:agent-evals',
+    question: 'An agent must always call lookup_order but may call other tools too. Which trajectory match mode fits?',
+    options: ['strict, so the order of calls is also checked', 'unordered, so any order of the same calls passes', 'subset, so no tools outside the reference are used', 'superset'],
+    answerIndex: 3,
+    explanation: 'Superset passes when the trajectory contains at least the reference tool calls, extras allowed. That is a minimum-required-actions check.',
+  },
+  {
+    biteId: 'ai-engineering:agent-evals',
+    question: 'What does trajectory match compare by default when deciding if two tool calls are equal?',
+    options: ['The tool name and its arguments', 'Only the assistant message text after each call', 'Only the number of tool calls in the run', 'The latency and token cost of every call'],
+    answerIndex: 0,
+    explanation: 'By default a tool call matches only with the same tool and the same arguments. toolArgsMatchMode and toolArgsMatchOverrides change that.',
+  },
+  {
+    biteId: 'ai-engineering:agent-evals',
+    question: 'What is the main weakness of multi-turn simulation compared with single-turn evals?',
+    options: [
+      'It cannot run over a LangSmith dataset at all',
+      'It cannot detect context loss or repetition between later turns',
+      'Results are less repeatable because the simulated user varies',
+      'It requires a strict trajectory reference for every turn',
+    ],
+    answerIndex: 2,
+    explanation: 'The simulated user is itself an LLM, so conversations differ between runs. Scripted first turns and repetitions reduce the variance.',
+  },
+  {
+    biteId: 'ai-engineering:agent-evals',
+    question: 'In runMultiturnSimulation, who is responsible for keeping conversation history?',
+    options: ['The simulated user', 'Your app, keyed by threadId', 'The trajectory evaluator, between turns', 'LangSmith, automatically from the traces'],
+    answerIndex: 1,
+    explanation: 'The app receives one new message per turn with a threadId and must look up prior messages itself.',
+  },
+
+  // ===== AI Engineering: Human Feedback & Judge Calibration =====
+  {
+    biteId: 'ai-engineering:human-feedback',
+    question: "What does the alignment score in LangSmith's Align Evaluator flow measure?",
+    options: [
+      'How often reviewers agree with each other',
+      'How quickly and cheaply the judge returns a verdict for each run',
+      'The share of examples where the judge matches the human label',
+      "The judge's average score across the whole dataset",
+    ],
+    answerIndex: 2,
+    explanation: "Alignment is the percentage of labeled examples where the judge's score equals the human score.",
+  },
+  {
+    biteId: 'ai-engineering:human-feedback',
+    question: 'Two reviewers agree on only 55% of labels. What should you do before aligning a judge?',
+    options: [
+      'Rewrite the rubric',
+      'Average their scores and align the judge to the mean',
+      "Drop the second reviewer and use only the first reviewer's labels",
+      'Add more few-shot examples to the judge prompt right away',
+    ],
+    answerIndex: 0,
+    explanation: 'Low agreement means the criterion is ambiguous. Aligning a judge to inconsistent labels just copies the confusion.',
+  },
+  {
+    biteId: 'ai-engineering:human-feedback',
+    question: "Why can't reviewers in a multi-reviewer annotation queue see each other's scores?",
+    options: [
+      'To reduce storage cost for feedback records',
+      'Because pairwise queues only allow a single reviewer',
+      'Because feedback configs forbid duplicate keys on one run',
+      'To keep labels independent',
+    ],
+    answerIndex: 3,
+    explanation: 'Hidden scores prevent anchoring, so agreement between reviewers is a real signal of rubric clarity.',
+  },
+
+  // ===== AI Engineering: Evals in CI with Vitest =====
+  {
+    biteId: 'ai-engineering:evals-in-ci',
+    question: 'In the LangSmith Vitest integration, what does a single ls.describe block correspond to?',
+    options: ['A LangSmith dataset', 'A single trace', 'An annotation queue', 'A tracing project'],
+    answerIndex: 0,
+    explanation: 'Each ls.describe maps to a dataset, ls.test cases become examples, and each run creates a new experiment.',
+  },
+  {
+    biteId: 'ai-engineering:evals-in-ci',
+    question: 'What happens when a fakeModel is invoked more times than responses were queued?',
+    options: ['It repeats the last response', 'It returns an empty AIMessage', 'It throws a "no response queued" error', 'It calls the real provider'],
+    answerIndex: 2,
+    explanation: 'fakeModel throws when the queue is empty, which flags loops that call the model more often than the test expected.',
+  },
+  {
+    biteId: 'ai-engineering:evals-in-ci',
+    question: 'Why prefer ls.logOutputs over returning outputs from an ls.test body?',
+    options: ['Returned values skip the reporter', 'Returned values are lost if the test fails', 'logOutputs also runs the judge', 'Returning outputs disables tracing'],
+    answerIndex: 1,
+    explanation: 'The docs note that outputs returned from the test function are not recorded when the test throws; logOutputs records them first.',
+  },
+  {
+    biteId: 'ai-engineering:evals-in-ci',
+    question: 'Which assertion is most appropriate for an integration test against a real model?',
+    options: ['The reply text equals a fixed string', 'Latency is below 200 ms on every run', 'The token count matches the last run', 'The reply contains a get_weather tool call'],
+    answerIndex: 3,
+    explanation: 'Integration tests should check structure, such as a tool call or message type, because exact content varies between runs.',
+  },
+
+  // ===== AI Engineering: LangSmith Tracing Deep Dive =====
+  {
+    biteId: 'ai-engineering:langsmith-tracing',
+    question: 'Which headers carry LangSmith trace context between services in distributed tracing?',
+    options: ['traceparent and tracestate', 'langsmith-trace and baggage', 'x-api-key and Langsmith-Project', 'x-run-id and x-thread-id'],
+    answerIndex: 1,
+    explanation: 'runTree.toHeaders() produces langsmith-trace plus baggage, which carries metadata and tags.',
+  },
+  {
+    biteId: 'ai-engineering:langsmith-tracing',
+    question: 'You must never trace requests from one tenant. Which option fits?',
+    options: ['LANGSMITH_TRACING_SAMPLING_RATE=0', 'LANGSMITH_HIDE_OUTPUTS=true', 'An anonymizer regex for that tenant', 'tracingEnabled: false on a traceable variant'],
+    answerIndex: 3,
+    explanation: 'tracingEnabled is deterministic and overrides the env var; sampling is random and hiding still sends runs.',
+  },
+  {
+    biteId: 'ai-engineering:langsmith-tracing',
+    question: 'How is OTEL_EXPORTER_OTLP_ENDPOINT set when exporting OTel traces to LangSmith SaaS?',
+    options: ['https://api.smith.langchain.com/otel', 'https://api.smith.langchain.com/v1/traces', 'https://smith.langchain.com/otel/v1', 'https://api.smith.langchain.com/runs'],
+    answerIndex: 0,
+    explanation: 'The value is a base URL ending in /otel; the exporter appends /v1/traces itself.',
+  },
+  {
+    biteId: 'ai-engineering:langsmith-tracing',
+    question: 'What groups several traces into one conversation thread?',
+    options: ['Sending them to one project', 'Tagging them with the same string', 'A shared thread_id metadata value', 'Running them inside one traceable'],
+    answerIndex: 2,
+    explanation: 'Threads are built from a session_id or thread_id metadata key that must be on every run, including child runs.',
+  },
+
+  // ===== AI Engineering: Production Monitoring: Dashboards, Alerts & Online Evaluators =====
+  {
+    biteId: 'ai-engineering:production-monitoring',
+    question: 'Which time windows can a LangSmith alert aggregate over?',
+    options: ['1 or 5 minutes', '5 or 15 minutes', '15 or 60 minutes', 'Any custom cron window'],
+    answerIndex: 1,
+    explanation: 'Alerts aggregate over a 5 or 15 minute window and compare against a threshold with >= or <=.',
+  },
+  {
+    biteId: 'ai-engineering:production-monitoring',
+    question: 'What is the main lever for controlling the cost of an online LLM-as-judge evaluator?',
+    options: ['Disabling backfill', 'Using a pairwise queue', 'Extending trace retention', 'Setting a sampling rate'],
+    answerIndex: 3,
+    explanation: 'Sampling scores a fraction of matching traces; filters narrow it further to interesting traces.',
+  },
+  {
+    biteId: 'ai-engineering:production-monitoring',
+    question: 'Which of these is an automation rule action?',
+    options: ['Add the trace to an annotation queue', 'Roll back the production prompt', 'Retry the failed run', 'Change the model provider'],
+    answerIndex: 0,
+    explanation: 'Rule actions are add to dataset, add to annotation queue, webhook, and extend retention.',
+  },
+  {
+    biteId: 'ai-engineering:production-monitoring',
+    question: 'What does LangSmith Insights produce?',
+    options: ['Real-time pages on error spikes', 'Reference outputs for datasets', 'Clusters of traces with categories and attributes', 'A p99 latency chart per tool'],
+    answerIndex: 2,
+    explanation: 'Insights clusters sampled traces hierarchically and extracts attributes, as a scheduled report of up to 1,000 traces.',
+  },
+
+  // ===== AI Engineering: Prompt & Context Hub =====
+  {
+    biteId: 'ai-engineering:prompt-hub',
+    question: 'Which reference should an offline eval use so results are reproducible?',
+    options: ['The production environment tag', 'A movable commit tag', 'A specific commit hash', 'The latest version'],
+    answerIndex: 2,
+    explanation: 'Commit hashes never move; tags and environments can be repointed between runs.',
+  },
+  {
+    biteId: 'ai-engineering:prompt-hub',
+    question: 'How do you roll back the production prompt to an earlier version?',
+    options: ['Promote the earlier commit to production', 'Delete the newest commit', 'Create a revert commit in the UI', 'Clear the client prompt cache'],
+    answerIndex: 0,
+    explanation: 'Rollback is promotion of an older commit; the newer commit stays in history.',
+  },
+  {
+    biteId: 'ai-engineering:prompt-hub',
+    question: 'What does the TypeScript SDK do by default when you pull a prompt (langsmith 0.5.0+)?',
+    options: ['Fetches it from the network every time', 'Bundles it into the build output', 'Requires a webhook to refresh it', 'Caches it in memory and refreshes it in the background'],
+    answerIndex: 3,
+    explanation: 'The prompt cache is on by default with a TTL and background refresh; skipCache bypasses it per call.',
+  },
+
+  // ===== AI Engineering: Agent Server: Assistants, Threads & Runs =====
+  {
+    biteId: 'ai-engineering:agent-server',
+    question: 'In an Agent Server deployment, where does durable data like checkpoints and threads live?',
+    options: ['In Redis, alongside the pub/sub channels', 'In Postgres, with resources and the Store', 'In the queue worker memory until the run ends', 'In LangSmith tracing storage'],
+    answerIndex: 1,
+    explanation: 'Postgres holds resources, checkpoints and the Store. Redis only carries ephemeral signals like streaming and cancellation.',
+  },
+  {
+    biteId: 'ai-engineering:agent-server',
+    question: 'You update an assistant by sending only a new system prompt. What happens to the rest of its config?',
+    options: ['It is merged with the previous version', 'The update is rejected as incomplete', 'It is replaced, since updates do not merge', 'It falls back to the graph default values'],
+    answerIndex: 2,
+    explanation: 'Assistant updates create a new version with the config you send. They do not merge, so send the full config.',
+  },
+  {
+    biteId: 'ai-engineering:agent-server',
+    question: 'Your deployment has 3 queue workers with default settings. How many runs can execute at once?',
+    options: ['30, from workers times N_JOBS_PER_WORKER', '3, one run per worker process', '10, the global default limit', 'Unlimited, bounded only by API replicas'],
+    answerIndex: 0,
+    explanation: 'Run concurrency is the number of workers times N_JOBS_PER_WORKER, which defaults to 10.',
+  },
+  {
+    biteId: 'ai-engineering:agent-server',
+    question: 'Which use of RemoteGraph can deadlock?',
+    options: ['Calling it from a plain Node script', 'Adding it as a node in a local graph', 'Calling a deployment from inside itself', 'Passing custom auth headers to it'],
+    answerIndex: 2,
+    explanation: 'A run that waits on another run in the same deployment holds a worker while the inner run waits for one.',
+  },
+
+  // ===== AI Engineering: Double Texting =====
+  {
+    biteId: 'ai-engineering:double-texting',
+    question: 'Which double-texting strategy is the default on the Agent Server?',
+    options: ['reject', 'interrupt', 'rollback', 'enqueue'],
+    answerIndex: 3,
+    explanation: 'Enqueue is the default: the new run waits and executes after the current one finishes.',
+  },
+  {
+    biteId: 'ai-engineering:double-texting',
+    question: 'A new run uses multitaskStrategy "rollback". What happens to the first run?',
+    options: ['It finishes, then the new run starts', 'It is deleted and its progress reverted', 'It is kept with status interrupted', 'It continues while the new run gets 409'],
+    answerIndex: 1,
+    explanation: 'Rollback deletes the first run and reverts its progress, including its input, before the new run starts.',
+  },
+  {
+    biteId: 'ai-engineering:double-texting',
+    question: 'Why is interrupt risky for an agent that calls side-effecting tools?',
+    options: ['It returns 409 for every second message', 'It discards the first user message', 'It can stop between a tool call and its result', 'It only works for stateless runs'],
+    answerIndex: 2,
+    explanation: 'An interrupted run can leave dangling tool calls and side effects that the thread state does not reflect.',
+  },
+
+  // ===== AI Engineering: Auth, Isolation & Deployment Options =====
+  {
+    biteId: 'ai-engineering:deploy-auth',
+    question: 'A user authenticates successfully but can list every thread in the deployment. What is missing?',
+    options: ['A stronger token signing algorithm', 'An x-api-key header on each request', 'An on handler that filters by owner', 'Custom encryption with tenant keys'],
+    answerIndex: 2,
+    explanation: 'Authentication proves identity. Isolation needs an authorization handler that stamps owner metadata and returns an owner filter.',
+  },
+  {
+    biteId: 'ai-engineering:deploy-auth',
+    question: 'In LangSmith Deployment, how do the control plane and data plane communicate?',
+    options: ['The data plane listener polls the control plane', 'The control plane pushes changes into the data plane', 'Both write to a shared Redis instance', 'They never communicate after setup'],
+    answerIndex: 0,
+    explanation: 'The listener in the data plane polls the control plane, so no inbound connection into your network is needed.',
+  },
+  {
+    biteId: 'ai-engineering:deploy-auth',
+    question: 'You add a checkpointer TTL to langgraph.json. Which threads does it affect?',
+    options: ['All existing threads at the next sweep', 'Only threads in the interrupted state', 'Only threads with an owner field set', 'Only threads created after the change'],
+    answerIndex: 3,
+    explanation: 'TTL settings apply to threads created after you configure them, not retroactively.',
+  },
+
+  // ===== AI Engineering: Agent UIs: Streaming, HITL & Generative UI =====
+  {
+    biteId: 'ai-engineering:agent-ui',
+    question: 'A user closes the tab while the agent is still answering. Which call left the run running?',
+    options: ['stream.stop()', 'stream.disconnect()', 'stream.submit(null)', 'client.runs.cancel()'],
+    answerIndex: 1,
+    explanation: 'disconnect leaves the stream while the run continues on the server. stop and runs.cancel cancel the run.',
+  },
+  {
+    biteId: 'ai-engineering:agent-ui',
+    question: 'How do you regenerate an AI answer from an earlier point in the conversation?',
+    options: [
+      'Call stream.stop() and resubmit the same input',
+      'Delete the thread and replay all messages',
+      'Submit with forkFrom set to the parent checkpoint',
+      'Resume the interrupt with a reject decision',
+    ],
+    answerIndex: 2,
+    explanation: 'forkFrom with the message parentCheckpointId starts a new branch from that checkpoint.',
+  },
+  {
+    biteId: 'ai-engineering:agent-ui',
+    question: 'Which generative UI approach gives the most predictable, accessible output?',
+    options: ['Controlled components chosen by the agent', 'Declarative specs from a component catalog', 'Open-ended UI rendered in a sandbox', 'Raw HTML strings generated by the model'],
+    answerIndex: 0,
+    explanation: 'Controlled generative UI only renders components you wrote, trading breadth for predictability.',
+  },
+  {
+    biteId: 'ai-engineering:agent-ui',
+    question: 'Where does a headless tool actually execute?',
+    options: ['On the Agent Server queue worker', 'Inside an MCP server sandbox', 'In the LangSmith Studio process', 'In the browser, via useStream tools'],
+    answerIndex: 3,
+    explanation: 'The agent holds the schema; the frontend implementation passed to useStream runs on the client.',
+  },
+
   // ===== System Design: Ad Click Aggregator =====
   {
     biteId: 'system-design:q-ad-click',
