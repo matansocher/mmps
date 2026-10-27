@@ -41,8 +41,8 @@ export const provideTelegramBot = (botConfig: TelegramBotConfig): Bot => {
     .filter((command) => !command.hide)
     .map((command) => ({ ...command, command: command.command.replace('/', '') }));
   if (commands?.length) {
-    // Finite setup call - contain its rejection so it never reaches the process-wide fatal handler
-    bot.api.setMyCommands(commands).catch((err) => logger.error(`Failed to set commands for bot ${botConfig.id}: ${getErrorMessage(err)}`));
+    // Finite setup call - contain its rejection so it never reaches the process-wide fatal handler; failures are transient and harmless
+    bot.api.setMyCommands(commands).catch(() => {});
   }
 
   botInstances.set(botConfig.id, bot);

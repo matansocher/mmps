@@ -178,7 +178,7 @@ export class RailController {
       command: command.replace('/', ''),
       description: COMMAND_DESCRIPTIONS[language][key as keyof (typeof COMMAND_DESCRIPTIONS)['he']],
     }));
-    await this.bot.api.setMyCommands(commands, { scope: { type: 'chat', chat_id: chatId } }).catch((err) => this.logger.error(`Failed to set chat commands: ${getErrorMessage(err)}`));
+    await this.bot.api.setMyCommands(commands, { scope: { type: 'chat', chat_id: chatId } }).catch(() => {});
   }
 
   // Consumes the pending contact request, if any, so the next text message goes to the developer instead of the agent.

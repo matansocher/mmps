@@ -17,14 +17,28 @@ const MATCH_TITLE_PATTERN = /^⚽\s*(.+?)\s+vs\s+(.+)$/;
 
 const formatTime = (isoString: string) => new Date(isoString).toLocaleString('en-US', { timeZone: DEFAULT_TIMEZONE, hour: '2-digit', minute: '2-digit', hour12: false });
 
+// Legacy Markdown: escape entity chars outside entities; inside a bold entity they can't be escaped, so strip them
+const escapeMarkdown = (text: string) => text.replace(/([_*`[])/g, '\\$1');
+const stripMarkdown = (text: string) => text.replace(/[_*`[\]]/g, '');
+
 function buildMessage(event: CalendarEvent): string {
-  const title = event.summary || 'Untitled Event';
+  const title = stripMarkdown(event.summary || '') || 'Untitled Event';
   const startStr = formatTime(event.start.dateTime!);
   const endStr = event.end?.dateTime ? ` - ${formatTime(event.end.dateTime)}` : '';
   const lines = [`📅 *Upcoming event* (in ~${LEAD_MINUTES} min)`, ``, `*${title}*`, `🕒 ${startStr}${endStr}`];
-  if (event.location) lines.push(`📍 ${event.location}`);
-  if (event.description) lines.push(``, event.description);
+  if (event.location) lines.push(`📍 ${escapeMarkdown(event.location)}`);
+  if (event.description) lines.push(``, escapeMarkdown(event.description));
   return lines.join('\n');
+}
+
+async function sendAlert(bot: Bot, message: string): Promise<void> {
+  try {
+    await bot.api.sendMessage(MY_USER_ID, message, { parse_mode: 'Markdown' });
+  } catch (err) {
+    if (!getErrorMessage(err).includes("can't parse entities")) throw err;
+    logger.warn(`Markdown parse failed, resending as plain text: ${getErrorMessage(err)}`);
+    await bot.api.sendMessage(MY_USER_ID, stripMarkdown(message.replace(/\\([_*`[])/g, '$1')));
+  }
 }
 
 export function parseMatchTeams(summary: string): { readonly homeTeam: string; readonly awayTeam: string } | null {
@@ -88,7 +102,7 @@ export async function upcomingEventAlert(bot: Bot, chatbotService: ChatbotServic
       try {
         const oddsSection = await getMatchOddsSection(event);
         const message = oddsSection ? `${buildMessage(event)}\n\n${oddsSection}` : buildMessage(event);
-        await bot.api.sendMessage(MY_USER_ID, message, { parse_mode: 'Markdown' });
+        await sendAlert(bot, message);
         await chatbotService.recordProactiveMessage(MY_USER_ID, message, 'upcoming-event-alert');
       } catch (err) {
         logger.error(`Failed to send alert for event ${event.id}: ${getErrorMessage(err)}`);
