@@ -111,6 +111,31 @@ describe('upcomingEventAlert()', () => {
     expect(findMatchEventSlug).not.toHaveBeenCalled();
   });
 
+  it('should escape markdown characters in location and description', async () => {
+    vi.mocked(listEvents).mockResolvedValue([
+      createCalendarEvent({ summary: 'Sync_up *call*', location: 'Room_1', description: 'https://zoom.us/j/1?pwd=a_b [link]', extendedProperties: undefined }),
+    ]);
+
+    await upcomingEventAlert(bot, chatbotService);
+
+    const message = sendMessage.mock.calls[0][1];
+    expect(message).toContain('*Syncup call*');
+    expect(message).toContain('📍 Room\\_1');
+    expect(message).toContain('https://zoom.us/j/1?pwd=a\\_b \\[link]');
+  });
+
+  it('should resend as plain text when telegram cannot parse entities', async () => {
+    vi.mocked(listEvents).mockResolvedValue([createCalendarEvent({ summary: 'Meeting', description: 'a_b', extendedProperties: undefined })]);
+    sendMessage.mockRejectedValueOnce(new Error("Bad Request: can't parse entities: Can't find end of the entity")).mockResolvedValueOnce({});
+
+    await upcomingEventAlert(bot, chatbotService);
+
+    expect(sendMessage).toHaveBeenCalledTimes(2);
+    expect(sendMessage.mock.calls[1]).toEqual([MY_USER_ID, expect.stringContaining('ab')]);
+    expect(sendMessage.mock.calls[1][1]).not.toContain('*');
+    expect(chatbotService.recordProactiveMessage).toHaveBeenCalledTimes(1);
+  });
+
   it('should skip cancelled events', async () => {
     vi.mocked(listEvents).mockResolvedValue([createCalendarEvent({ status: 'cancelled' })]);
 

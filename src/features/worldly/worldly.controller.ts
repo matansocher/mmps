@@ -182,9 +182,7 @@ export class WorldlyController {
           }
           await saveUserDetails(userDetails);
           await setUserLanguage(chatId, selectedName);
-          await this.bot.api
-            .setMyCommands(getWorldlyCommands(selectedName), { scope: { type: 'chat', chat_id: chatId } })
-            .catch((err) => this.logger.error(`Failed to update command language: ${getErrorMessage(err)}`));
+          await this.bot.api.setMyCommands(getWorldlyCommands(selectedName), { scope: { type: 'chat', chat_id: chatId } }).catch(() => {});
           await ctx.reply(worldlyText(selectedName).languageSaved);
           await this.actionsHandler(ctx);
           break;

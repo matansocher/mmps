@@ -45,7 +45,7 @@ async function processSubscriptionsForChat(bot: Bot, chatId: number, subscriptio
         lastEpisodeReleaseDate: newEpisodes[0].release_date,
       });
     } catch (err) {
-      logger.error(`Failed to fetch episodes for show ${subscription.showName}: ${getErrorMessage(err)}`);
+      logger.warn(`Failed to fetch episodes for show ${subscription.showName}: ${getErrorMessage(err)}`);
     }
   }
 
