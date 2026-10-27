@@ -10,7 +10,7 @@ import { GUIDES, bitesByGuide, getBite } from '../lib/bites';
 import { celebrateLesson } from '../lib/celebrate';
 import { hasQuiz } from '../lib/quizzes';
 import { hasScenario } from '../lib/scenarios';
-import { summarize } from '../lib/scheduler';
+import { biteStatus, summarize } from '../lib/scheduler';
 
 export function BitePage() {
   const { biteId = '' } = useParams();
@@ -49,7 +49,7 @@ export function BitePage() {
     progress,
     courseBites.map((courseBite) => courseBite.id),
   );
-  const masteredAfterCompletion = courseSummary.mastered + (state?.rating === 'got_it' ? 0 : 1);
+  const masteredAfterCompletion = courseSummary.mastered + (biteStatus(state) === 'mastered' ? 0 : 1);
 
   return (
     <div>
@@ -104,14 +104,13 @@ export function BitePage() {
           <button
             type="button"
             className="btn primary block"
-            disabled={state?.rating === 'got_it'}
             onClick={() => {
               rateBite(bite.id, 'got_it');
               setShowMastery(true);
               celebrateLesson();
             }}
           >
-            <AppIcon name="check" size={19} /> {state?.rating === 'got_it' ? 'Marked as learned' : 'I learned this material'}
+            <AppIcon name="check" size={19} /> I learned this material
           </button>
           {showMastery ? (
             <div className="mastery-moment" role="status">
