@@ -31,6 +31,24 @@ describe('extractIncomingMessage()', () => {
     expect(message).toEqual({ kind: 'button', from: '1', id: 'w5', buttonId: 'more:abc:6', title: 'עוד' });
   });
 
+  it('should extract a template quick-reply tap as a button', () => {
+    const message = extractIncomingMessage(payload({ from: '1', id: 'w6', timestamp: '0', type: 'button', button: { payload: 'show:abc', text: 'הצג' } }));
+    expect(message).toEqual({ kind: 'button', from: '1', id: 'w6', buttonId: 'show:abc', title: 'הצג' });
+  });
+
+  it('should attach the sender profile name to a button tap', () => {
+    const body: WhatsAppWebhookPayload = {
+      entry: [
+        {
+          changes: [
+            { value: { contacts: [{ wa_id: '1', profile: { name: 'מתן' } }], messages: [{ from: '1', id: 'w7', timestamp: '0', type: 'button', button: { payload: 'publish:abc', text: 'פרסם' } }] } },
+          ],
+        },
+      ],
+    };
+    expect(extractIncomingMessage(body)).toEqual({ kind: 'button', from: '1', id: 'w7', senderName: 'מתן', buttonId: 'publish:abc', title: 'פרסם' });
+  });
+
   it('should convert the message timestamp to epoch ms', () => {
     const message = extractIncomingMessage(payload({ from: '1', id: 'w4', timestamp: '1700000000', type: 'text', text: { body: 'hi' } }));
     expect(message).toEqual({ kind: 'text', from: '1', id: 'w4', sentAt: 1700000000000, text: 'hi' });
@@ -39,6 +57,7 @@ describe('extractIncomingMessage()', () => {
   test.each([
     { name: 'image message', body: payload({ from: '1', id: '1', timestamp: '0', type: 'image' }) },
     { name: 'list reply', body: payload({ from: '1', id: '1', timestamp: '0', type: 'interactive', interactive: { type: 'list_reply' } }) },
+    { name: 'button message without payload', body: payload({ from: '1', id: '1', timestamp: '0', type: 'button', button: { text: 'הצג' } }) },
     { name: 'status update without messages', body: payload(null) },
     { name: 'empty payload', body: {} as WhatsAppWebhookPayload },
   ])('should return null for $name', ({ body }) => {

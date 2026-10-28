@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { env } from 'node:process';
 import { Logger } from '@core/utils';
-import { WHATSAPP_GRAPH_API_URL, WHATSAPP_PAIR_RATE_LIMIT_ERROR_CODE } from './constants';
+import { WHATSAPP_GRAPH_API_URL, WHATSAPP_PAIR_RATE_LIMIT_ERROR_CODE, WHATSAPP_REENGAGEMENT_ERROR_CODE } from './constants';
 import type {
   WhatsAppButtonsMessageRequest,
   WhatsAppMediaInfo,
   WhatsAppReplyButton,
   WhatsAppSendMessageResponse,
   WhatsAppStickerMessageRequest,
+  WhatsAppTemplateMessageRequest,
   WhatsAppTextMessageRequest,
   WhatsAppTypingIndicatorRequest,
 } from './types';
@@ -23,6 +24,11 @@ export function describeWhatsAppError(err: unknown): string {
 // Too many messages to the same user in a short time (error 131056).
 export function isWhatsAppPairRateLimitError(err: unknown): boolean {
   return axios.isAxiosError(err) && err.response?.data?.error?.code === WHATSAPP_PAIR_RATE_LIMIT_ERROR_CODE;
+}
+
+// Recipient is outside the 24h customer-service window; only approved templates can be sent (error 131047).
+export function isWhatsAppReEngagementError(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.data?.error?.code === WHATSAPP_REENGAGEMENT_ERROR_CODE;
 }
 
 // Marks the message read and shows "typing…" until we reply or 25s pass. Never throws.
@@ -95,6 +101,38 @@ export async function sendWhatsAppSticker(to: string, mediaId: string): Promise<
   });
   const messageId = response.data?.messages?.[0]?.id ?? null;
   logger.log(`Sent WhatsApp sticker to ${to} (id=${messageId})`);
+  return messageId;
+}
+
+// Approved template; each payload fills the quick-reply button at that index (a tap arrives as a `button` message). Throws on failure.
+type TemplateParams = {
+  readonly bodyParams?: string[]; // fills {{1}}, {{2}}, … in order
+  readonly quickReplyPayloads?: string[]; // payload per quick-reply button, by button index
+};
+
+export async function sendWhatsAppTemplate(to: string, name: string, languageCode: string, { bodyParams = [], quickReplyPayloads = [] }: TemplateParams = {}): Promise<string | null> {
+  const url = `${WHATSAPP_GRAPH_API_URL}/${env.PHONE_NUMBER_ID}/messages`;
+  const components: WhatsAppTemplateMessageRequest['template']['components'] = [
+    ...(bodyParams.length ? [{ type: 'body' as const, parameters: bodyParams.map((text) => ({ type: 'text' as const, text })) }] : []),
+    ...quickReplyPayloads.map((payload, index) => ({
+      type: 'button' as const,
+      sub_type: 'quick_reply' as const,
+      index: String(index),
+      parameters: [{ type: 'payload' as const, payload }],
+    })),
+  ];
+  const body: WhatsAppTemplateMessageRequest = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'template',
+    template: { name, language: { code: languageCode }, ...(components.length && { components }) },
+  };
+  const response = await axios.post<WhatsAppSendMessageResponse>(url, body, {
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+  });
+  const messageId = response.data?.messages?.[0]?.id ?? null;
+  logger.log(`Sent WhatsApp template ${name} to ${to} (id=${messageId})`);
   return messageId;
 }
 

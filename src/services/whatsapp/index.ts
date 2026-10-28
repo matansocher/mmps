@@ -2,9 +2,11 @@ export {
   describeWhatsAppError,
   downloadWhatsAppMedia,
   isWhatsAppPairRateLimitError,
+  isWhatsAppReEngagementError,
   sendWhatsAppButtons,
   sendWhatsAppMessage,
   sendWhatsAppSticker,
+  sendWhatsAppTemplate,
   sendWhatsAppTypingIndicator,
   uploadWhatsAppMedia,
 } from './api';

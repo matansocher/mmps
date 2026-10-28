@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { env } from 'node:process';
-import { isWhatsAppPairRateLimitError, sendWhatsAppButtons, sendWhatsAppTypingIndicator } from './api';
+import { isWhatsAppPairRateLimitError, isWhatsAppReEngagementError, sendWhatsAppButtons, sendWhatsAppTemplate, sendWhatsAppTypingIndicator } from './api';
 import { WHATSAPP_GRAPH_API_URL } from './constants';
 
 vi.mock('axios', async (importOriginal) => {
@@ -67,5 +67,56 @@ describe('isWhatsAppPairRateLimitError()', () => {
     { name: 'plain error', err: new Error('boom'), expected: false },
   ])('should return $expected for $name', ({ err, expected }) => {
     expect(isWhatsAppPairRateLimitError(err)).toEqual(expected);
+  });
+});
+
+describe('isWhatsAppReEngagementError()', () => {
+  test.each([
+    { name: 're-engagement error', err: apiError(131047), expected: true },
+    { name: 'other API error', err: apiError(131056), expected: false },
+    { name: 'plain error', err: new Error('boom'), expected: false },
+  ])('should return $expected for $name', ({ err, expected }) => {
+    expect(isWhatsAppReEngagementError(err)).toEqual(expected);
+  });
+});
+
+describe('sendWhatsAppTemplate()', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    env.PHONE_NUMBER_ID = '123';
+  });
+
+  it('should send a template with quick-reply payloads', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { messages: [{ id: 'wamid.out' }] } });
+    await expect(sendWhatsAppTemplate('972', 'new_sticker', 'he', { bodyParams: ['מתן'], quickReplyPayloads: ['show:abc'] })).resolves.toEqual('wamid.out');
+    expect(axios.post).toHaveBeenCalledWith(
+      `${WHATSAPP_GRAPH_API_URL}/123/messages`,
+      {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: '972',
+        type: 'template',
+        template: {
+          name: 'new_sticker',
+          language: { code: 'he' },
+          components: [
+            { type: 'body', parameters: [{ type: 'text', text: 'מתן' }] },
+            { type: 'button', sub_type: 'quick_reply', index: '0', parameters: [{ type: 'payload', payload: 'show:abc' }] },
+          ],
+        },
+      },
+      { headers: expect.objectContaining({ 'Content-Type': 'application/json' }) },
+    );
+  });
+
+  it('should omit components when there are no parameters', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { messages: [{ id: 'wamid.out' }] } });
+    await sendWhatsAppTemplate('972', 'new_sticker', 'he');
+    expect(vi.mocked(axios.post).mock.calls[0][1]).toEqual(expect.objectContaining({ template: { name: 'new_sticker', language: { code: 'he' } } }));
+  });
+
+  it('should throw on failure', async () => {
+    vi.mocked(axios.post).mockRejectedValueOnce(apiError(132001));
+    await expect(sendWhatsAppTemplate('972', 'new_sticker', 'he')).rejects.toThrow();
   });
 });

@@ -46,6 +46,11 @@ export async function findStickerById(id: ObjectId): Promise<StickerSummary | nu
   return getCollection().findOne({ _id: id }, WITHOUT_DATA);
 }
 
+// Atomically marks the owner's sticker as published; null if it's not theirs, already published or deleted.
+export async function claimStickerPublish(id: ObjectId, ownerPhone: string): Promise<StickerSummary | null> {
+  return getCollection().findOneAndUpdate({ _id: id, ownerPhone, publishedAt: { $exists: false } }, { $set: { publishedAt: new Date() } }, { returnDocument: 'after', ...WITHOUT_DATA });
+}
+
 export async function findStickerByMessageId(messageId: string): Promise<StickerSummary | null> {
   return getCollection().findOne({ messageIds: messageId }, WITHOUT_DATA);
 }

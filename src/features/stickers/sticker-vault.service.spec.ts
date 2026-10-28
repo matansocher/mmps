@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb';
 import { createHash } from 'node:crypto';
 import { sleep } from '@core/utils';
-import { downloadWhatsAppMedia, sendWhatsAppButtons, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from '@services/whatsapp';
-import { STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
+import { downloadWhatsAppMedia, sendWhatsAppButtons, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTemplate, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from '@services/whatsapp';
+import { PUBLISH_SEND_DELAY_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
 import * as repo from './mongo';
 import { fitStickerToLimit } from './sticker-image';
 import { handleIncomingMessage } from './sticker-vault.service';
@@ -28,9 +28,11 @@ vi.mock('@services/whatsapp', () => ({
   describeWhatsAppError: vi.fn(() => 'error'),
   downloadWhatsAppMedia: vi.fn(),
   isWhatsAppPairRateLimitError: vi.fn((err: { code?: number }) => err?.code === 131056),
+  isWhatsAppReEngagementError: vi.fn((err: { code?: number }) => err?.code === 131047),
   sendWhatsAppButtons: vi.fn(async () => undefined),
   sendWhatsAppMessage: vi.fn(async () => undefined),
   sendWhatsAppSticker: vi.fn(async () => 'wamid.sent'),
+  sendWhatsAppTemplate: vi.fn(async () => 'wamid.template'),
   sendWhatsAppTypingIndicator: vi.fn(async () => undefined),
   uploadWhatsAppMedia: vi.fn(async () => 'media.new'),
 }));
@@ -39,7 +41,8 @@ vi.mock('./mongo', () => ({
   addStickerMessageId: vi.fn(async () => undefined),
   addStickerTags: vi.fn(async (_id, tags: string[]) => tags),
   claimSearchPage: vi.fn(async () => null),
-  createSticker: vi.fn(async () => undefined),
+  claimStickerPublish: vi.fn(async () => null),
+  createSticker: vi.fn(async () => ({ _id: new ObjectId(SEARCH_ID_HEX) })),
   deleteSticker: vi.fn(async () => undefined),
   findStickerById: vi.fn(async () => null),
   findStickerByMessageId: vi.fn(async () => null),
@@ -118,7 +121,14 @@ describe('handleIncomingMessage()', () => {
     it('should save a new sticker keyed by its content hash', async () => {
       await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.in', mediaId: 'm1', animated: true });
       expect(repo.createSticker).toHaveBeenCalledWith({ ownerPhone: FROM, sha256, data, mimeType: 'image/webp', animated: true, messageId: 'wamid.in' });
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'נשמר ✅\nהגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.');
+      expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, 'נשמר ✅\nהגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.', [{ id: `publish:${SEARCH_ID_HEX}`, title: 'פרסם 📣' }]);
+      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not offer to publish a sticker that is already saved', async () => {
+      vi.mocked(repo.findStickerBySha).mockResolvedValueOnce(sticker());
+      await handleIncomingMessage({ kind: 'sticker', from: FROM, id: 'wamid.again', mediaId: 'm1', animated: false });
+      expect(sendWhatsAppButtons).not.toHaveBeenCalled();
     });
 
     it('should not duplicate a sticker that is already saved', async () => {
@@ -640,6 +650,81 @@ describe('handleIncomingMessage()', () => {
       await tap('something-else');
       expect(repo.getLatestSearchId).not.toHaveBeenCalled();
       expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('publish', () => {
+    const STICKER_HEX = 'aaaaaaaaaaaaaaaaaaaaaaaa';
+    const RECIPIENTS = ['972547669886', '972545429402'];
+    const reEngagement = Object.assign(new Error('outside window'), { code: 131047 });
+    const publish = () => handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', senderName: ' מתן\n', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
+    const published = () => sticker({ _id: new ObjectId(STICKER_HEX), mediaId: 'media.cached', mediaUploadedAt: new Date(), publishedAt: new Date() });
+
+    afterEach(() => vi.mocked(repo.findStickerById).mockImplementation(async () => null));
+
+    it('should send the sticker to every recipient but the uploader, 1s apart', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      await publish();
+      expect(repo.claimStickerPublish).toHaveBeenCalledWith(new ObjectId(STICKER_HEX), FROM);
+      expect(vi.mocked(sendWhatsAppSticker).mock.calls).toEqual(RECIPIENTS.map((to) => [to, 'media.cached']));
+      expect(sleep).toHaveBeenCalledWith(PUBLISH_SEND_DELAY_MS);
+      expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
+      expect(vi.mocked(sendWhatsAppMessage).mock.calls).toEqual(RECIPIENTS.map((to) => [to, '👆 סטיקר חדש מ-מתן נוסף למאגר 🎉']));
+    });
+
+    it('should fall back to a generic name when the uploader has no profile name', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      await handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(RECIPIENTS[0], '👆 סטיקר חדש מ-מישהו נוסף למאגר 🎉');
+    });
+
+    it('should skip the uploader when they are on the list', async () => {
+      const uploader = RECIPIENTS[0];
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      await handleIncomingMessage({ kind: 'button', from: uploader, id: 'wamid.tap', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
+      expect(vi.mocked(sendWhatsAppSticker).mock.calls).toEqual([[RECIPIENTS[1], 'media.cached']]);
+    });
+
+    it('should send the template to a recipient outside the 24h window', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce(reEngagement);
+      await publish();
+      expect(uploadWhatsAppMedia).not.toHaveBeenCalled();
+      expect(sendWhatsAppTemplate).toHaveBeenCalledWith(RECIPIENTS[0], 'new_sticker', 'he', { bodyParams: ['מתן'], quickReplyPayloads: [`show:${STICKER_HEX}`] });
+      expect(sendWhatsAppMessage).not.toHaveBeenCalledWith(RECIPIENTS[0], expect.anything());
+      expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS[1], 'media.cached');
+    });
+
+    it('should keep going when a recipient fails', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce(new Error('boom')).mockRejectedValueOnce(new Error('boom again'));
+      await publish();
+      expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
+      expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS[1], 'media.cached');
+      expect(vi.mocked(sendWhatsAppMessage).mock.calls).toEqual([[RECIPIENTS[1], '👆 סטיקר חדש מ-מתן נוסף למאגר 🎉']]);
+    });
+
+    it('should not publish twice or for someone who is not the owner', async () => {
+      await publish();
+      expect(sendWhatsAppSticker).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'הסטיקר הזה כבר פורסם.');
+    });
+
+    it('should send the sticker when a template recipient taps "הצג"', async () => {
+      vi.mocked(repo.findStickerById).mockResolvedValueOnce(published());
+      await tap(`show:${STICKER_HEX}`);
+      expect(sendWhatsAppSticker).toHaveBeenCalledWith(FROM, 'media.cached');
+    });
+
+    it('should say when the shown sticker was deleted', async () => {
+      await tap(`show:${STICKER_HEX}`);
+      expect(sendWhatsAppSticker).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, 'הסטיקר הזה כבר לא במאגר.');
     });
   });
 
