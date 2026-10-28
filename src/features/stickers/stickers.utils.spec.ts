@@ -1,4 +1,4 @@
-import { createStepTimer, formatStatsMessage, parseTagEdits, tokenize } from './stickers.utils';
+import { createStepTimer, formatStatsMessage, getSearcherName, parseTagEdits, tokenize } from './stickers.utils';
 
 describe('tokenize()', () => {
   test.each([
@@ -7,7 +7,7 @@ describe('tokenize()', () => {
     { text: 'ג׳ורג׳ עו״ד', expected: ['ג׳ורג׳', 'עו״ד'] },
     { text: `ג'ורג' עו"ד`, expected: ['ג׳ורג׳', 'עו״ד'] },
     { text: 'ג’ורג’ עו”ד', expected: ['ג׳ורג׳', 'עו״ד'] },
-    { text: '"שלום" \'cat\' don\'t', expected: ['שלום', 'cat', "don't"] },
+    { text: "\"שלום\" 'cat' don't", expected: ['שלום', 'cat', "don't"] },
     { text: 'צה"ל, ה׳!', expected: ['צה״ל', 'ה׳'] },
     { text: 'lol 100%', expected: ['lol', '100'] },
     { text: 'ת.ז U.S.A 3.5', expected: ['ת.ז', 'u.s.a', '3.5'] },
@@ -71,15 +71,23 @@ describe('formatStatsMessage()', () => {
         { value: 'dog', count: 2 },
         { value: 'cat', count: 1 },
       ],
-      topSearchers: [{ value: '972501231234', count: 5 }],
+      topSearchers: [{ value: '972545429402', count: 5 }],
     });
     expect(message).toEqual(
-      [
-        '📊 *סטטיסטיקות*',
-        '🏷️ *מילות החיפוש הנפוצות בסטיקרים*\n1. cat (3)',
-        '🔎 *המילים שחיפשו הכי הרבה*\n1. dog (2)\n2. cat (1)',
-        '🏆 *המחפשים המובילים*\n1. 972501231234 — 5 חיפושים',
-      ].join('\n\n'),
+      ['📊 *סטטיסטיקות*', '🏷️ *מילות החיפוש הנפוצות בסטיקרים*\n1. cat (3)', '🔎 *המילים שחיפשו הכי הרבה*\n1. dog (2)\n2. cat (1)', '🏆 *המחפשים המובילים*\n1. מתן — 5 חיפושים'].join('\n\n'),
     );
+  });
+});
+
+describe('getSearcherName()', () => {
+  test.each([
+    { phone: '972545429402', expected: 'מתן' },
+    { phone: '+972545429402', expected: 'מתן' },
+    { phone: '+972 54-542-9402', expected: 'מתן' },
+    { phone: '972509404893', expected: 'שרון' },
+    { phone: '972501231234', expected: '972501231234' },
+    { phone: '+972501231234', expected: '+972501231234' },
+  ])('should return $expected when phone is $phone', ({ phone, expected }) => {
+    expect(getSearcherName(phone)).toEqual(expected);
   });
 });

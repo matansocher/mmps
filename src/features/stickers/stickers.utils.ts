@@ -1,3 +1,4 @@
+import { SEARCHER_NAMES } from './constants';
 import type { StatCount } from './types';
 
 // An emoji with its skin tones and variation selectors, joined by ZWJ into one sequence (👍🏽, 👨‍👩‍👧, ❤️‍🔥), or a flag (🇮🇱)
@@ -61,6 +62,14 @@ export function createStepTimer(now: () => number = Date.now): StepTimer {
   };
 }
 
+export function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+export function getSearcherName(phone: string): string {
+  return SEARCHER_NAMES[normalizePhone(phone)] ?? phone;
+}
+
 export type StickerStats = {
   readonly topTags: StatCount[];
   readonly topWords: StatCount[];
@@ -87,7 +96,7 @@ export function formatStatsMessage({ topTags, topWords, topSearchers }: StickerS
     ),
     formatSection(
       '🏆 *המחפשים המובילים*',
-      topSearchers.map(({ value, count }) => `${value} — ${count} חיפושים`),
+      topSearchers.map(({ value, count }) => `${getSearcherName(value)} — ${count} חיפושים`),
       'אין עדיין מחפשים.',
     ),
   ].join('\n\n');

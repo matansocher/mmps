@@ -12,7 +12,7 @@ import {
   uploadWhatsAppMedia,
 } from '@services/whatsapp';
 import type { IncomingButtonReplyMessage, IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
-import { CARS_SURPRISE_STICKER_ID, STICKER_MEDIA_REUSE_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
+import { CARS_SURPRISE_STICKER_ID, STATS_HIDDEN_SEARCHERS, STICKER_MEDIA_REUSE_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
 import {
   addStickerMessageId,
   addStickerTags,
@@ -39,7 +39,7 @@ import {
 } from './mongo';
 import type { CreateSearchEventData } from './mongo';
 import { fitStickerToLimit, getStickerByteLimit } from './sticker-image';
-import { createStepTimer, formatStatsMessage, parseTagEdits, tokenize } from './stickers.utils';
+import { createStepTimer, formatStatsMessage, normalizePhone, parseTagEdits, tokenize } from './stickers.utils';
 import type { StepTimer, TagEdits } from './stickers.utils';
 import type { StickerSummary } from './types';
 
@@ -47,8 +47,8 @@ const logger = new Logger('stickers:sticker-vault');
 
 const DELETE_COMMANDS = ['delete', 'מחק', '-'];
 const STATS_COMMAND = '%';
-const STATS_TOP_LIMIT = 5;
-const STATS_TOP_SEARCHERS_LIMIT = 3;
+const STATS_TOP_TAGS_LIMIT = 5;
+const STATS_TOP_WORDS_LIMIT = 10;
 
 const HELP_MESSAGE = [
   '🗂️ *מאגר הסטיקרים*',
@@ -125,9 +125,8 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
 }
 
 async function sendStats(to: string, timer: StepTimer): Promise<void> {
-  const [topTags, topWords, topSearchers] = await timer.time('stats', () =>
-    Promise.all([getTopStickerTags(STATS_TOP_LIMIT), getTopSearchWords(STATS_TOP_LIMIT), getTopSearchers(STATS_TOP_SEARCHERS_LIMIT)]),
-  );
+  const [topTags, topWords, searchers] = await timer.time('stats', () => Promise.all([getTopStickerTags(STATS_TOP_TAGS_LIMIT), getTopSearchWords(STATS_TOP_WORDS_LIMIT), getTopSearchers()]));
+  const topSearchers = searchers.filter(({ value }) => !STATS_HIDDEN_SEARCHERS.includes(normalizePhone(value)));
   await timer.time('reply', () => sendWhatsAppMessage(to, formatStatsMessage({ topTags, topWords, topSearchers })));
 }
 

@@ -651,19 +651,22 @@ describe('handleIncomingMessage()', () => {
       ]);
       vi.mocked(repo.getTopSearchWords).mockResolvedValueOnce([{ value: 'כלב', count: 4 }]);
       vi.mocked(repo.getTopSearchers).mockResolvedValueOnce([
-        { value: '972501231234', count: 30 },
-        { value: '972509876543', count: 2 },
+        { value: '972547669886', count: 30 },
+        { value: '972545429402', count: 20 },
+        { value: '+972509404893', count: 4 },
+        { value: '972501231234', count: 2 },
       ]);
       await text(' % ');
       expect(repo.getTopStickerTags).toHaveBeenCalledWith(5);
-      expect(repo.getTopSearchWords).toHaveBeenCalledWith(5);
-      expect(repo.getTopSearchers).toHaveBeenCalledWith(3);
+      expect(repo.getTopSearchWords).toHaveBeenCalledWith(10);
+      expect(repo.getTopSearchers).toHaveBeenCalledWith();
       expect(sendWhatsAppMessage).toHaveBeenCalledTimes(1);
       const message = vi.mocked(sendWhatsAppMessage).mock.calls[0][1];
       expect(message).toContain('📊 *סטטיסטיקות*');
       expect(message).toContain('1. חתול (12)\n2. 😂 (7)');
       expect(message).toContain('1. כלב (4)');
-      expect(message).toContain('1. 972501231234 — 30 חיפושים\n2. 972509876543 — 2 חיפושים');
+      expect(message).toContain('1. ברויאר — 30 חיפושים\n2. שרון — 4 חיפושים\n3. 972501231234 — 2 חיפושים');
+      expect(message).not.toContain('מתן');
     });
 
     it('should not search, log a search or tag on "%"', async () => {

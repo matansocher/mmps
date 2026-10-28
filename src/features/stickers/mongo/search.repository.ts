@@ -55,8 +55,8 @@ export async function getTopSearchWords(limit: number): Promise<StatCount[]> {
     .toArray();
 }
 
-export async function getTopSearchers(limit: number): Promise<StatCount[]> {
+export async function getTopSearchers(): Promise<StatCount[]> {
   return getCollection()
-    .aggregate<StatCount>([{ $group: { _id: '$phone', count: { $sum: 1 } } }, { $sort: { count: -1, _id: 1 } }, { $limit: limit }, { $project: { _id: 0, value: '$_id', count: 1 } }])
+    .aggregate<StatCount>([{ $group: { _id: '$phone', count: { $sum: 1 } } }, { $sort: { count: -1, _id: 1 } }, { $project: { _id: 0, value: '$_id', count: 1 } }])
     .toArray();
 }
