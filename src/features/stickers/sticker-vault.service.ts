@@ -48,7 +48,6 @@ const logger = new Logger('stickers:sticker-vault');
 const DELETE_COMMANDS = ['delete', 'מחק', '-'];
 const STATS_COMMAND = '%';
 const STATS_TOP_LIMIT = 5;
-const STATS_TOP_SEARCHERS_LIMIT = 3;
 
 const HELP_MESSAGE = [
   '🗂️ *מאגר הסטיקרים*',
@@ -125,9 +124,7 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
 }
 
 async function sendStats(to: string, timer: StepTimer): Promise<void> {
-  const [topTags, topWords, topSearchers] = await timer.time('stats', () =>
-    Promise.all([getTopStickerTags(STATS_TOP_LIMIT), getTopSearchWords(STATS_TOP_LIMIT), getTopSearchers(STATS_TOP_SEARCHERS_LIMIT)]),
-  );
+  const [topTags, topWords, topSearchers] = await timer.time('stats', () => Promise.all([getTopStickerTags(STATS_TOP_LIMIT), getTopSearchWords(STATS_TOP_LIMIT), getTopSearchers()]));
   await timer.time('reply', () => sendWhatsAppMessage(to, formatStatsMessage({ topTags, topWords, topSearchers })));
 }
 
@@ -178,27 +175,33 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   }
 
   const matchedStickerIds = matches.map(({ _id }) => _id);
-  const result = await sendStickers(from, matches.slice(0, STICKER_PAGE_SIZE), timer);
-  const nextOffset = getNextOffset(matchedStickerIds, 0, result);
   const event: CreateSearchEventData = {
     phone: from,
     query: text,
     words,
     matchedCount: matches.length,
     matchedStickerIds,
-    nextOffset,
-    sentStickerIds: result.sentIds,
-    failedCount: result.failed,
-    rateLimited: Boolean(result.stoppedAt),
+    nextOffset: 0,
+    sentStickerIds: [],
+    failedCount: 0,
+    rateLimited: false,
     durationMs: timer.elapsedMs(),
   };
-  // The "עוד" button needs the stored search; without it the first page is all the user gets.
+  // Recorded before sending so "%" counts the search right away, even when sending is slow or never finishes.
+  // Without the stored search the "עוד" button can't work, so the first page is all the user gets.
   const searchId = await timer
     .time('record', () => recordSearchEvent(event))
     .catch((err) => {
       logger.error(`Failed to record search event: ${getErrorMessage(err)}`);
       return null;
     });
+  const result = await sendStickers(from, matches.slice(0, STICKER_PAGE_SIZE), timer);
+  const nextOffset = getNextOffset(matchedStickerIds, 0, result);
+  if (searchId) {
+    await timer
+      .time('recordPage', () => recordSearchPage(searchId, { nextOffset, sentIds: result.sentIds, failed: result.failed, rateLimited: Boolean(result.stoppedAt) }))
+      .catch((err) => logger.error(`Failed to record search page: ${getErrorMessage(err)}`));
+  }
   await sendPageStatus(from, searchId, { start: 0, nextOffset, total: matches.length, pageSize: Math.min(STICKER_PAGE_SIZE, matches.length), ...result }, timer);
 }
 

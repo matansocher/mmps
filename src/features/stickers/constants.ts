@@ -8,6 +8,18 @@ export const STICKERS_CARS_SEARCH_COUNTS_COLLECTION = 'cars_search_counts';
 // MongoDB _id of the intentional untagged sticker. Empty disables the special cycle.
 export const CARS_SURPRISE_STICKER_ID = '6ac6a21f06cf38b203478389';
 
+// Names shown in "%" stats instead of phone numbers. Keys are digits only; lookups strip "+" and other non-digits.
+export const SEARCHER_NAMES: Record<string, string> = {
+  '972545429402': 'מתן',
+  '972547669886': 'ברויאר',
+  '972546736789': 'עומרי',
+  '972526566765': 'דור',
+  '972544456078': 'דורון',
+  '972508565456': 'ליאור',
+  '972503222347': 'ניבו',
+  '972509404893': 'שרון',
+};
+
 // Meta's per-user pair rate limit allows short bursts (~10) but only ~1 msg/6s sustained. A page (6 stickers + the "עוד" message) fits in a burst,
 // and the time the user takes to tap "עוד" lets the quota recover.
 export const STICKER_PAGE_SIZE = 6;
