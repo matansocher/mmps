@@ -5,18 +5,31 @@ import {
   describeWhatsAppError,
   downloadWhatsAppMedia,
   isWhatsAppPairRateLimitError,
+  isWhatsAppReEngagementError,
   sendWhatsAppButtons,
   sendWhatsAppMessage,
   sendWhatsAppSticker,
+  sendWhatsAppTemplate,
   sendWhatsAppTypingIndicator,
   uploadWhatsAppMedia,
 } from '@services/whatsapp';
 import type { IncomingButtonReplyMessage, IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
-import { CARS_SURPRISE_STICKER_ID, STICKER_MEDIA_REUSE_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
+import {
+  CARS_SURPRISE_STICKER_ID,
+  NEW_STICKER_TEMPLATE_LANGUAGE,
+  NEW_STICKER_TEMPLATE_NAME,
+  PUBLISH_RECIPIENTS,
+  PUBLISH_SEND_DELAY_MS,
+  STICKER_MEDIA_REUSE_MS,
+  STICKER_PAGE_SIZE,
+  STICKER_RATE_LIMIT_BACKOFF_MS,
+  STICKER_SEND_DELAY_MS,
+} from './constants';
 import {
   addStickerMessageId,
   addStickerTags,
   claimSearchPage,
+  claimStickerPublish,
   createSticker,
   deleteSticker,
   findStickerById,
@@ -67,6 +80,12 @@ const RATE_LIMIT_MESSAGE = 'שלחתי הרבה הודעות ברצף. חכו כ
 const STALE_BUTTON_MESSAGE = 'הכפתור הזה כבר לא פעיל. שלחו את החיפוש שוב כדי להתחיל מההתחלה.';
 const MORE_BUTTON_TITLE = 'עוד ⬇️';
 const MORE_BUTTON_PATTERN = /^more:([a-f0-9]{24}):(\d+)$/;
+const PUBLISH_BUTTON_TITLE = 'פרסם 📣';
+const PUBLISH_BUTTON_PATTERN = /^publish:([a-f0-9]{24})$/;
+const SHOW_BUTTON_PATTERN = /^show:([a-f0-9]{24})$/;
+const ALREADY_PUBLISHED_MESSAGE = 'הסטיקר הזה כבר פורסם.';
+const STICKER_GONE_MESSAGE = 'הסטיקר הזה כבר לא במאגר.';
+const UNKNOWN_UPLOADER_NAME = 'מישהו';
 const STICKER_ERROR_MESSAGE = 'משהו השתבש ולא הצלחתי לשמור את הסטיקר 😕 נסו שוב מאוחר יותר.';
 const TEXT_ERROR_MESSAGE = 'משהו השתבש 😕 נסו שוב מאוחר יותר.';
 
@@ -112,8 +131,9 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
     return;
   }
 
+  let created: StickerSummary;
   try {
-    await timer.time('create', () => createSticker({ ownerPhone: from, sha256, data: fitted, mimeType: fitted === data ? mimeType : 'image/webp', animated, messageId: id }));
+    created = await timer.time('create', () => createSticker({ ownerPhone: from, sha256, data: fitted, mimeType: fitted === data ? mimeType : 'image/webp', animated, messageId: id }));
   } catch (err) {
     // Two deliveries of the same sticker raced past the lookup; the unique index kept one.
     if ((err as { code?: number })?.code === 11000) return;
@@ -121,7 +141,16 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
   }
   const sizeNote = fitted === data ? `${data.length} bytes` : `${data.length} → ${fitted.length} bytes`;
   logger.log(`Saved sticker ${sha256.slice(0, 12)} for ${from} (${sizeNote}, animated=${animated})`);
-  await timer.time('reply', () => sendWhatsAppMessage(from, `נשמר ✅\n${ADD_WORDS_HINT}`));
+  const savedText = `נשמר ✅\n${ADD_WORDS_HINT}`;
+  if (!getPublishRecipients(from).length) {
+    await timer.time('reply', () => sendWhatsAppMessage(from, savedText));
+    return;
+  }
+  await timer.time('reply', () => sendWhatsAppButtons(from, savedText, [{ id: `publish:${created._id}`, title: PUBLISH_BUTTON_TITLE }]));
+}
+
+function getPublishRecipients(uploader: string): string[] {
+  return PUBLISH_RECIPIENTS.filter((phone) => phone !== uploader);
 }
 
 async function sendStats(to: string, timer: StepTimer): Promise<void> {
@@ -202,13 +231,58 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   await sendPageStatus(from, searchId, { start: 0, nextOffset, total: matches.length, pageSize: Math.min(STICKER_PAGE_SIZE, matches.length), ...result }, timer);
 }
 
-// Only the newest search of a phone can continue, so an old button can't resend stickers that a newer search already sent.
-async function handleButton({ from, buttonId }: IncomingButtonReplyMessage, timer: StepTimer): Promise<void> {
-  const parsed = MORE_BUTTON_PATTERN.exec(buttonId);
-  if (!parsed) {
-    logger.warn(`Ignoring unknown button ${buttonId} from ${from}`);
+async function handleButton({ from, senderName, buttonId }: IncomingButtonReplyMessage, timer: StepTimer): Promise<void> {
+  const more = MORE_BUTTON_PATTERN.exec(buttonId);
+  if (more) return handleMoreButton(from, more, timer);
+  const publish = PUBLISH_BUTTON_PATTERN.exec(buttonId);
+  if (publish) return publishSticker(from, senderName, new ObjectId(publish[1]), timer);
+  const show = SHOW_BUTTON_PATTERN.exec(buttonId);
+  if (show) return showSticker(from, new ObjectId(show[1]), timer);
+  logger.warn(`Ignoring unknown button ${buttonId} from ${from}`);
+}
+
+// Only the owner can publish, and only once, so a double tap doesn't spam everyone.
+async function publishSticker(from: string, senderName: string | undefined, stickerId: ObjectId, timer: StepTimer): Promise<void> {
+  const claimed = await timer.time('claimPublish', () => claimStickerPublish(stickerId, from));
+  if (!claimed) {
+    await timer.time('reply', () => sendWhatsAppMessage(from, ALREADY_PUBLISHED_MESSAGE));
     return;
   }
+  // Template params can't contain newlines/tabs or runs of spaces.
+  const uploaderName = senderName?.replace(/\s+/g, ' ').trim() || UNKNOWN_UPLOADER_NAME;
+  const recipients = getPublishRecipients(from);
+  for (const [index, to] of recipients.entries()) {
+    if (index > 0) await timer.time('delay', () => sleep(PUBLISH_SEND_DELAY_MS));
+    // Re-read so the media uploaded for the first recipient is reused for the rest.
+    const sticker = (await timer.time('findSticker', () => findStickerById(stickerId))) ?? claimed;
+    try {
+      await sendStoredSticker(to, sticker, timer);
+      await timer.time('reply', () => sendWhatsAppMessage(to, `👆 סטיקר חדש מ-${uploaderName} נוסף למאגר 🎉`));
+    } catch (err) {
+      if (!isWhatsAppReEngagementError(err)) {
+        logger.error(`Failed to publish sticker ${stickerId} to ${to}: ${describeWhatsAppError(err)}`);
+        continue;
+      }
+      // Outside the 24h window only a template gets through; its "הצג" button brings them back inside it.
+      await timer
+        .time('template', () => sendWhatsAppTemplate(to, NEW_STICKER_TEMPLATE_NAME, NEW_STICKER_TEMPLATE_LANGUAGE, { bodyParams: [uploaderName], quickReplyPayloads: [`show:${stickerId}`] }))
+        .catch((templateErr) => logger.error(`Failed to send ${NEW_STICKER_TEMPLATE_NAME} template to ${to}: ${describeWhatsAppError(templateErr)}`));
+    }
+  }
+  logger.log(`Published sticker ${stickerId} from ${from} to ${recipients.length} recipients`);
+}
+
+async function showSticker(from: string, stickerId: ObjectId, timer: StepTimer): Promise<void> {
+  const sticker = await timer.time('findSticker', () => findStickerById(stickerId));
+  if (!sticker) {
+    await timer.time('reply', () => sendWhatsAppMessage(from, STICKER_GONE_MESSAGE));
+    return;
+  }
+  await sendStoredSticker(from, sticker, timer);
+}
+
+// Only the newest search of a phone can continue, so an old button can't resend stickers that a newer search already sent.
+async function handleMoreButton(from: string, parsed: RegExpExecArray, timer: StepTimer): Promise<void> {
   const searchId = new ObjectId(parsed[1]);
   const offset = Number(parsed[2]);
   const latestId = await timer.time('findLatest', () => getLatestSearchId(from));
@@ -327,7 +401,7 @@ async function sendStoredSticker(to: string, sticker: StickerSummary, timer: Ste
     try {
       messageId = await timer.time('sendCached', () => sendWhatsAppSticker(to, cachedMediaId));
     } catch (err) {
-      if (isWhatsAppPairRateLimitError(err)) throw err;
+      if (isWhatsAppPairRateLimitError(err) || isWhatsAppReEngagementError(err)) throw err;
       logger.warn(`Cached media ${cachedMediaId} failed, re-uploading: ${describeWhatsAppError(err)}`);
     }
   }

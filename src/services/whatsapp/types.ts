@@ -28,6 +28,23 @@ export type WhatsAppButtonsMessageRequest = WhatsAppMessageBase & {
   };
 };
 
+export type WhatsAppTemplateMessageRequest = WhatsAppMessageBase & {
+  readonly type: 'template';
+  readonly template: {
+    readonly name: string;
+    readonly language: { readonly code: string };
+    readonly components?: ReadonlyArray<
+      | { readonly type: 'body'; readonly parameters: ReadonlyArray<{ readonly type: 'text'; readonly text: string }> }
+      | {
+          readonly type: 'button';
+          readonly sub_type: 'quick_reply';
+          readonly index: string;
+          readonly parameters: ReadonlyArray<{ readonly type: 'payload'; readonly payload: string }>;
+        }
+    >;
+  };
+};
+
 export type WhatsAppSendMessageResponse = {
   readonly messages?: ReadonlyArray<{ readonly id: string }>;
 };
@@ -56,6 +73,7 @@ export type WhatsAppIncomingMessage = {
   readonly sticker?: { readonly id: string; readonly mime_type?: string; readonly sha256?: string; readonly animated?: boolean };
   readonly context?: { readonly from?: string; readonly id?: string };
   readonly interactive?: { readonly type?: string; readonly button_reply?: { readonly id: string; readonly title: string } };
+  readonly button?: { readonly payload?: string; readonly text?: string }; // template quick-reply tap
 };
 
 export type WhatsAppStatusError = {
@@ -80,6 +98,7 @@ export type WhatsAppWebhookPayload = {
       readonly field?: string;
       readonly value?: {
         readonly messaging_product?: string;
+        readonly contacts?: ReadonlyArray<{ readonly wa_id?: string; readonly profile?: { readonly name?: string } }>;
         readonly messages?: ReadonlyArray<WhatsAppIncomingMessage>;
         readonly statuses?: ReadonlyArray<WhatsAppMessageStatus>;
       };
@@ -110,6 +129,7 @@ export type IncomingButtonReplyMessage = {
   readonly from: string;
   readonly id: string;
   readonly sentAt?: number; // epoch ms from Meta's message timestamp (1s precision)
+  readonly senderName?: string; // the sender's WhatsApp profile name
   readonly buttonId: string;
   readonly title: string;
 };

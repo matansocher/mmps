@@ -19,3 +19,10 @@ export const STICKER_MEDIA_REUSE_MS = 25 * 24 * 60 * 60 * 1000; // Meta keeps up
 export const STICKER_DIMENSION = 512;
 export const STICKER_MAX_STATIC_BYTES = 100 * 1024;
 export const STICKER_MAX_ANIMATED_BYTES = 500 * 1024;
+
+// Who gets a newly saved sticker when its uploader taps "פרסם". Test list for now; the uploader is always skipped.
+export const PUBLISH_RECIPIENTS = ['972547669886', '972545429402'];
+export const PUBLISH_SEND_DELAY_MS = 1000; // gap between recipients
+// Approved Meta template for recipients outside the 24h window; its quick-reply button "הצג" sends the sticker.
+export const NEW_STICKER_TEMPLATE_NAME = 'new_sticker';
+export const NEW_STICKER_TEMPLATE_LANGUAGE = 'he';

@@ -12,6 +12,7 @@ export type Sticker = {
   readonly messageIds: string[]; // wamids of chat messages showing this sticker, for quote-reply lookup
   readonly mediaId?: string; // last upload to Meta, reusable until it expires
   readonly mediaUploadedAt?: Date;
+  readonly publishedAt?: Date; // when the owner broadcast it with "פרסם"; set once
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };

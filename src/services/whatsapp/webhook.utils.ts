@@ -2,10 +2,12 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { IncomingMessage, WhatsAppWebhookPayload } from './types';
 
 export function extractIncomingMessage(payload: WhatsAppWebhookPayload): IncomingMessage | null {
-  const message = payload?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+  const value = payload?.entry?.[0]?.changes?.[0]?.value;
+  const message = value?.messages?.[0];
   if (!message?.from) return null;
   const sentAt = Number(message.timestamp) * 1000;
   const base = { from: message.from, id: message.id, ...(sentAt > 0 && { sentAt }) };
+  const senderName = value.contacts?.find((contact) => contact.wa_id === message.from)?.profile?.name ?? value.contacts?.[0]?.profile?.name;
   if (message.type === 'text' && message.text?.body) {
     return { kind: 'text', ...base, text: message.text.body, ...(message.context?.id && { contextId: message.context.id }) };
   }
@@ -13,7 +15,10 @@ export function extractIncomingMessage(payload: WhatsAppWebhookPayload): Incomin
     return { kind: 'sticker', ...base, mediaId: message.sticker.id, animated: Boolean(message.sticker.animated) };
   }
   if (message.type === 'interactive' && message.interactive?.type === 'button_reply' && message.interactive.button_reply?.id) {
-    return { kind: 'button', ...base, buttonId: message.interactive.button_reply.id, title: message.interactive.button_reply.title };
+    return { kind: 'button', ...base, ...(senderName && { senderName }), buttonId: message.interactive.button_reply.id, title: message.interactive.button_reply.title };
+  }
+  if (message.type === 'button' && message.button?.payload) {
+    return { kind: 'button', ...base, ...(senderName && { senderName }), buttonId: message.button.payload, title: message.button.text ?? '' };
   }
   return null;
 }
