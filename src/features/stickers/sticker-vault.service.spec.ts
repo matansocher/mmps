@@ -398,8 +398,7 @@ describe('handleIncomingMessage()', () => {
       expect(vi.mocked(sendWhatsAppSticker).mock.calls.map(([, mediaId]) => mediaId)).toEqual(['media.regular', 'media.regular', 'media.surprise', 'media.regular', 'media.regular', 'media.surprise']);
       expect(repo.searchStickers).toHaveBeenCalledTimes(4);
       expect(repo.findStickerById).toHaveBeenCalledWith(surprise._id);
-      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedCount: 1, matchedStickerIds: [surprise._id] }));
-      expect(repo.recordSearchPage).toHaveBeenLastCalledWith(SEARCH_ID, expect.objectContaining({ nextOffset: 1, sentIds: [surprise._id] }));
+      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedCount: 1, matchedStickerIds: [surprise._id], nextOffset: 1, sentStickerIds: [surprise._id] }));
       expect(repo.addStickerTags).not.toHaveBeenCalled();
     });
 
@@ -434,8 +433,7 @@ describe('handleIncomingMessage()', () => {
       expect(repo.nextCarsSearchCount).toHaveBeenCalledTimes(3);
       expect(sendWhatsAppSticker).toHaveBeenCalledExactlyOnceWith(FROM, 'media.surprise');
       expect(sendWhatsAppButtons).not.toHaveBeenCalled();
-      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedStickerIds: [surprise._id] }));
-      expect(repo.recordSearchPage).toHaveBeenLastCalledWith(SEARCH_ID, expect.objectContaining({ nextOffset: 1 }));
+      expect(repo.recordSearchEvent).toHaveBeenLastCalledWith(expect.objectContaining({ matchedStickerIds: [surprise._id], nextOffset: 1 }));
     });
 
     it('should select the surprise once for three overlapping searches', async () => {
@@ -485,13 +483,9 @@ describe('handleIncomingMessage()', () => {
   });
 
   describe('search metrics', () => {
-    it('should record a search before sending, then the stickers it sent', async () => {
+    it('should record a search with the stickers it sent', async () => {
       const matches = [sticker(), sticker()];
       vi.mocked(repo.searchStickers).mockResolvedValueOnce(matches);
-      vi.mocked(sendWhatsAppSticker).mockImplementationOnce(async () => {
-        expect(repo.recordSearchEvent).toHaveBeenCalledTimes(1);
-        return 'wamid.1';
-      });
       await text('Happy cat');
       expect(repo.recordSearchEvent).toHaveBeenCalledWith({
         phone: FROM,
@@ -499,21 +493,12 @@ describe('handleIncomingMessage()', () => {
         words: ['happy', 'cat'],
         matchedCount: 2,
         matchedStickerIds: matches.map((m) => m._id),
-        nextOffset: 0,
-        sentStickerIds: [],
+        nextOffset: 2,
+        sentStickerIds: matches.map((m) => m._id),
         failedCount: 0,
         rateLimited: false,
         durationMs: expect.any(Number),
       });
-      expect(repo.recordSearchPage).toHaveBeenCalledWith(SEARCH_ID, { nextOffset: 2, sentIds: matches.map((m) => m._id), failed: 0, rateLimited: false });
-    });
-
-    it('should still count the search when sending the stickers fails', async () => {
-      vi.mocked(repo.searchStickers).mockResolvedValueOnce([sticker()]);
-      vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce(new Error('meta down'));
-      await text('cat');
-      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ words: ['cat'], matchedCount: 1 }));
-      expect(repo.recordSearchPage).toHaveBeenCalledWith(SEARCH_ID, expect.objectContaining({ failed: 1 }));
     });
 
     it('should record a search with no results', async () => {
@@ -527,7 +512,7 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(fitStickerToLimit).mockResolvedValueOnce(null);
       vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.1').mockRejectedValueOnce({ code: 131056 }).mockRejectedValueOnce({ code: 131056 });
       await text('cat');
-      expect(repo.recordSearchPage).toHaveBeenCalledWith(SEARCH_ID, { sentIds: [matches[1]._id], failed: 1, rateLimited: true, nextOffset: 2 });
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ sentStickerIds: [matches[1]._id], failedCount: 1, rateLimited: true, nextOffset: 2 }));
     });
 
     it('should not record a tag edit', async () => {
@@ -552,8 +537,7 @@ describe('handleIncomingMessage()', () => {
       await text('cat');
       expect(vi.mocked(sendWhatsAppSticker)).toHaveBeenCalledTimes(STICKER_PAGE_SIZE);
       expect(vi.mocked(sleep).mock.calls.map(([ms]) => ms)).toEqual(Array(STICKER_PAGE_SIZE - 1).fill(STICKER_SEND_DELAY_MS));
-      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ matchedCount: matches.length, matchedStickerIds: matches.map((m) => m._id) }));
-      expect(repo.recordSearchPage).toHaveBeenCalledWith(SEARCH_ID, expect.objectContaining({ nextOffset: STICKER_PAGE_SIZE }));
+      expect(repo.recordSearchEvent).toHaveBeenCalledWith(expect.objectContaining({ matchedCount: matches.length, matchedStickerIds: matches.map((m) => m._id), nextOffset: STICKER_PAGE_SIZE }));
       expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, 'יש עוד 2 סטיקרים.', [{ id: `more:${SEARCH_ID_HEX}:${STICKER_PAGE_SIZE}`, title: MORE }]);
       expect(sendWhatsAppMessage).not.toHaveBeenCalled();
     });
@@ -578,7 +562,6 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(repo.recordSearchEvent).mockRejectedValueOnce(new Error('mongo down'));
       await text('cat');
       expect(sendWhatsAppSticker).toHaveBeenCalledTimes(STICKER_PAGE_SIZE);
-      expect(repo.recordSearchPage).not.toHaveBeenCalled();
       expect(sendWhatsAppButtons).not.toHaveBeenCalled();
       expect(sendWhatsAppMessage).toHaveBeenCalledWith(FROM, expect.stringContaining('משהו השתבש'));
     });
@@ -668,21 +651,22 @@ describe('handleIncomingMessage()', () => {
       ]);
       vi.mocked(repo.getTopSearchWords).mockResolvedValueOnce([{ value: 'כלב', count: 4 }]);
       vi.mocked(repo.getTopSearchers).mockResolvedValueOnce([
-        { value: '972545429402', count: 30 },
-        { value: '972547669886', count: 4 },
-        { value: '972546736789', count: 3 },
-        { value: '972509876543', count: 2 },
+        { value: '972547669886', count: 30 },
+        { value: '972545429402', count: 20 },
+        { value: '+972509404893', count: 4 },
+        { value: '972501231234', count: 2 },
       ]);
       await text(' % ');
       expect(repo.getTopStickerTags).toHaveBeenCalledWith(5);
-      expect(repo.getTopSearchWords).toHaveBeenCalledWith(5);
+      expect(repo.getTopSearchWords).toHaveBeenCalledWith(10);
       expect(repo.getTopSearchers).toHaveBeenCalledWith();
       expect(sendWhatsAppMessage).toHaveBeenCalledTimes(1);
       const message = vi.mocked(sendWhatsAppMessage).mock.calls[0][1];
       expect(message).toContain('📊 *סטטיסטיקות*');
       expect(message).toContain('1. חתול (12)\n2. 😂 (7)');
       expect(message).toContain('1. כלב (4)');
-      expect(message).toContain('1. מתן — 30 חיפושים\n2. ברויאר — 4 חיפושים\n3. עומרי — 3 חיפושים\n4. 972509876543 — 2 חיפושים');
+      expect(message).toContain('1. ברויאר — 30 חיפושים\n2. שרון — 4 חיפושים\n3. 972501231234 — 2 חיפושים');
+      expect(message).not.toContain('מתן');
     });
 
     it('should not search, log a search or tag on "%"', async () => {

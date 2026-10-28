@@ -62,8 +62,12 @@ export function createStepTimer(now: () => number = Date.now): StepTimer {
   };
 }
 
+export function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
 export function getSearcherName(phone: string): string {
-  return SEARCHER_NAMES[phone.replace(/\D/g, '')] ?? phone;
+  return SEARCHER_NAMES[normalizePhone(phone)] ?? phone;
 }
 
 export type StickerStats = {

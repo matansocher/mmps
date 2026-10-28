@@ -20,6 +20,9 @@ export const SEARCHER_NAMES: Record<string, string> = {
   '972509404893': 'שרון',
 };
 
+// Searchers left out of "%" stats. Digits only.
+export const STATS_HIDDEN_SEARCHERS = ['972545429402'];
+
 // Meta's per-user pair rate limit allows short bursts (~10) but only ~1 msg/6s sustained. A page (6 stickers + the "עוד" message) fits in a burst,
 // and the time the user takes to tap "עוד" lets the quota recover.
 export const STICKER_PAGE_SIZE = 6;
