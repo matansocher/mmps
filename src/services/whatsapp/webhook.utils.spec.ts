@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import type { WhatsAppIncomingMessage, WhatsAppWebhookPayload } from './types';
-import { describeFailedStatuses, extractIncomingMessage, isAllowedSender, isValidSignature, parseAllowedPhones } from './webhook.utils';
+import { describeFailedStatuses, extractFailedStatuses, extractIncomingMessage, isAllowedSender, isValidSignature, parseAllowedPhones } from './webhook.utils';
 
 describe('extractIncomingMessage()', () => {
   const payload = (message: WhatsAppIncomingMessage | null): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ value: { messages: message ? [message] : undefined } }] }] });
@@ -29,6 +29,20 @@ describe('extractIncomingMessage()', () => {
       payload({ from: '1', id: 'w5', timestamp: '0', type: 'interactive', interactive: { type: 'button_reply', button_reply: { id: 'more:abc:6', title: 'עוד' } } }),
     );
     expect(message).toEqual({ kind: 'button', from: '1', id: 'w5', buttonId: 'more:abc:6', title: 'עוד' });
+  });
+
+  it('should attach the tapped message id to a button tap', () => {
+    const message = extractIncomingMessage(
+      payload({
+        from: '1',
+        id: 'w8',
+        timestamp: '0',
+        type: 'interactive',
+        context: { from: '2', id: 'wamid.saved' },
+        interactive: { type: 'button_reply', button_reply: { id: 'publish:abc', title: 'פרסם' } },
+      }),
+    );
+    expect(message).toEqual({ kind: 'button', from: '1', id: 'w8', buttonId: 'publish:abc', title: 'פרסם', contextId: 'wamid.saved' });
   });
 
   it('should extract a template quick-reply tap as a button', () => {
@@ -98,6 +112,23 @@ describe('describeFailedStatuses()', () => {
 
   it('should return nothing for message events', () => {
     expect(describeFailedStatuses({ entry: [{ changes: [{ value: { messages: [] } }] }] } as WhatsAppWebhookPayload)).toEqual([]);
+  });
+});
+
+describe('extractFailedStatuses()', () => {
+  const payload = (statuses: unknown[]): WhatsAppWebhookPayload => ({ entry: [{ changes: [{ field: 'messages', value: { statuses } }] }] }) as WhatsAppWebhookPayload;
+
+  it('should return failed deliveries with their error codes', () => {
+    const failed = { id: 'wamid.x', status: 'failed', recipient_id: '972', errors: [{ code: 131047, title: 'Re-engagement message' }] };
+    expect(extractFailedStatuses(payload([failed, { id: 'wamid.y', status: 'delivered', recipient_id: '972' }]))).toEqual([{ messageId: 'wamid.x', recipient: '972', errorCodes: [131047] }]);
+  });
+
+  it('should handle failures without error details', () => {
+    expect(extractFailedStatuses(payload([{ id: 'wamid.x', status: 'failed', recipient_id: '972' }]))).toEqual([{ messageId: 'wamid.x', recipient: '972', errorCodes: [] }]);
+  });
+
+  it('should return nothing for message events', () => {
+    expect(extractFailedStatuses({ entry: [{ changes: [{ value: { messages: [] } }] }] } as WhatsAppWebhookPayload)).toEqual([]);
   });
 });
 
