@@ -11,7 +11,7 @@ import {
   sendWhatsAppTypingIndicator,
   uploadWhatsAppMedia,
 } from '@services/whatsapp';
-import { PUBLISH_SEND_DELAY_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
+import { PUBLISH_EXCLUDED_PHONES, PUBLISH_SEND_DELAY_MS, SEARCHER_NAMES, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
 import * as repo from './mongo';
 import { fitStickerToLimit } from './sticker-image';
 import { handleFailedStatus, handleIncomingMessage } from './sticker-vault.service';
@@ -134,6 +134,12 @@ describe('handleIncomingMessage()', () => {
       expect(repo.createSticker).toHaveBeenCalledWith({ ownerPhone: FROM, sha256, data, mimeType: 'image/webp', animated: true, messageId: 'wamid.in' });
       expect(sendWhatsAppButtons).toHaveBeenCalledWith(FROM, 'נשמר ✅\nהגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.', [{ id: `publish:${SEARCH_ID_HEX}`, title: 'פרסם 📣' }]);
       expect(sendWhatsAppMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not offer to publish to an excluded uploader', async () => {
+      await handleIncomingMessage({ kind: 'sticker', from: PUBLISH_EXCLUDED_PHONES[0], id: 'wamid.in', mediaId: 'm1', animated: false });
+      expect(sendWhatsAppButtons).not.toHaveBeenCalled();
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(PUBLISH_EXCLUDED_PHONES[0], 'נשמר ✅\nהגיבו לסטיקר עם מילים כדי להוסיף מילות חיפוש.');
     });
 
     it('should not offer to publish a sticker that is already saved', async () => {
@@ -666,7 +672,7 @@ describe('handleIncomingMessage()', () => {
 
   describe('publish', () => {
     const STICKER_HEX = 'aaaaaaaaaaaaaaaaaaaaaaaa';
-    const RECIPIENTS = ['972547669886', '972545429402'];
+    const RECIPIENTS = Object.keys(SEARCHER_NAMES).filter((phone) => !PUBLISH_EXCLUDED_PHONES.includes(phone));
     const reEngagement = Object.assign(new Error('outside window'), { code: 131047 });
     const publish = () => handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', senderName: ' מתן\n', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
     const published = () => sticker({ _id: new ObjectId(STICKER_HEX), mediaId: 'media.cached', mediaUploadedAt: new Date(), publishedAt: new Date() });
@@ -697,7 +703,24 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
       vi.mocked(repo.findStickerById).mockImplementation(async () => published());
       await handleIncomingMessage({ kind: 'button', from: uploader, id: 'wamid.tap', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
-      expect(vi.mocked(sendWhatsAppSticker).mock.calls).toEqual([[RECIPIENTS[1], 'media.cached']]);
+      expect(vi.mocked(sendWhatsAppSticker).mock.calls).toEqual(RECIPIENTS.slice(1).map((to) => [to, 'media.cached']));
+    });
+
+    it('should broadcast to every known user except the excluded phones', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      await publish();
+      const sentTo = vi.mocked(sendWhatsAppSticker).mock.calls.map(([to]) => to);
+      expect(sentTo).toHaveLength(Object.keys(SEARCHER_NAMES).length - PUBLISH_EXCLUDED_PHONES.length);
+      expect(sentTo).not.toContain('972545429402');
+    });
+
+    it('should not broadcast when an excluded uploader taps an old publish button', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      await handleIncomingMessage({ kind: 'button', from: PUBLISH_EXCLUDED_PHONES[0], id: 'wamid.tap', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
+      expect(sendWhatsAppSticker).not.toHaveBeenCalled();
+      expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
     });
 
     it('should send the template to a recipient outside the 24h window', async () => {
@@ -707,7 +730,7 @@ describe('handleIncomingMessage()', () => {
       await publish();
       expect(uploadWhatsAppMedia).not.toHaveBeenCalled();
       expect(sendWhatsAppTemplate).toHaveBeenCalledWith(RECIPIENTS[0], 'new_sticker', 'he', { bodyParams: ['מתן'], quickReplyPayloads: [`show:${STICKER_HEX}`] });
-      expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS[1], 'media.cached');
+      expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS.at(-1), 'media.cached');
     });
 
     it('should keep going when a recipient fails', async () => {
@@ -716,7 +739,7 @@ describe('handleIncomingMessage()', () => {
       vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce(new Error('boom')).mockRejectedValueOnce(new Error('boom again'));
       await publish();
       expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
-      expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS[1], 'media.cached');
+      expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS.at(-1), 'media.cached');
       expect(vi.mocked(sendWhatsAppReaction).mock.calls).toEqual([[FROM, 'wamid.tap', '❌']]);
     });
 

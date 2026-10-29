@@ -21,8 +21,9 @@ import {
   NEW_STICKER_TEMPLATE_LANGUAGE,
   NEW_STICKER_TEMPLATE_NAME,
   PUBLISH_DELIVERY_TRACKING_MS,
-  PUBLISH_RECIPIENTS,
+  PUBLISH_EXCLUDED_PHONES,
   PUBLISH_SEND_DELAY_MS,
+  SEARCHER_NAMES,
   STATS_HIDDEN_SEARCHERS,
   STICKER_MEDIA_REUSE_MS,
   STICKER_PAGE_SIZE,
@@ -167,7 +168,8 @@ async function handleSticker({ from, id, mediaId, animated }: IncomingStickerMes
 }
 
 function getPublishRecipients(uploader: string): string[] {
-  return PUBLISH_RECIPIENTS.filter((phone) => phone !== uploader);
+  if (PUBLISH_EXCLUDED_PHONES.includes(uploader)) return [];
+  return Object.keys(SEARCHER_NAMES).filter((phone) => phone !== uploader && !PUBLISH_EXCLUDED_PHONES.includes(phone));
 }
 
 async function sendStats(to: string, timer: StepTimer): Promise<void> {
