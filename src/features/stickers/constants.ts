@@ -35,8 +35,8 @@ export const STICKER_DIMENSION = 512;
 export const STICKER_MAX_STATIC_BYTES = 100 * 1024;
 export const STICKER_MAX_ANIMATED_BYTES = 500 * 1024;
 
-// Who gets a newly saved sticker when its uploader taps "פרסם". Test list for now; the uploader is always skipped.
-export const PUBLISH_RECIPIENTS = ['972547669886', '972545429402'];
+// A newly saved sticker is broadcast to everyone in SEARCHER_NAMES but the uploader. These phones neither publish nor receive broadcasts. Digits only.
+export const PUBLISH_EXCLUDED_PHONES = ['972545429402'];
 export const PUBLISH_DELIVERY_TRACKING_MS = 10 * 60 * 1000; // how long to wait for a broadcast sticker's failed status before forgetting it
 export const PUBLISH_SEND_DELAY_MS = 1000; // gap between recipients
 // Approved Meta template for recipients outside the 24h window; its quick-reply button "הצג" sends the sticker.

@@ -103,11 +103,11 @@ describe('describeFailedStatuses()', () => {
 
   it('should describe failed deliveries with their errors', () => {
     const failed = { id: 'wamid.x', status: 'failed', recipient_id: '972', errors: [{ code: 131053, title: 'Media upload error', error_data: { details: 'too large' } }] };
-    expect(describeFailedStatuses(payload([failed, { id: 'wamid.y', status: 'delivered' }]))).toEqual(['wamid.x to 972: 131053 Media upload error - too large']);
+    expect(describeFailedStatuses(payload([failed, { id: 'wamid.y', status: 'delivered' }]))).toEqual([{ text: 'wamid.x to 972: 131053 Media upload error - too large', errorCodes: [131053] }]);
   });
 
   it('should handle failures without error details', () => {
-    expect(describeFailedStatuses(payload([{ id: 'wamid.x', status: 'failed', recipient_id: '972' }]))).toEqual(['wamid.x to 972: no error details']);
+    expect(describeFailedStatuses(payload([{ id: 'wamid.x', status: 'failed', recipient_id: '972' }]))).toEqual([{ text: 'wamid.x to 972: no error details', errorCodes: [] }]);
   });
 
   it('should return nothing for message events', () => {
