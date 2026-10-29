@@ -66,7 +66,7 @@ type PendingPublishDelivery = {
   readonly stickerId: ObjectId;
   readonly uploader: string;
   readonly uploaderName: string;
-  readonly confirmationId?: string; // the uploader's "נשמר" message, reacted to with the publish result
+  readonly confirmationId?: string; // the uploader's "פרסם" tap, reacted to with the publish result
   readonly expiresAt: number;
 };
 
@@ -247,11 +247,11 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   await sendPageStatus(from, searchId, { start: 0, nextOffset, total: matches.length, pageSize: Math.min(STICKER_PAGE_SIZE, matches.length), ...result }, timer);
 }
 
-async function handleButton({ from, senderName, buttonId, contextId }: IncomingButtonReplyMessage, timer: StepTimer): Promise<void> {
+async function handleButton({ from, id, senderName, buttonId }: IncomingButtonReplyMessage, timer: StepTimer): Promise<void> {
   const more = MORE_BUTTON_PATTERN.exec(buttonId);
   if (more) return handleMoreButton(from, more, timer);
   const publish = PUBLISH_BUTTON_PATTERN.exec(buttonId);
-  if (publish) return publishSticker(from, senderName, contextId, new ObjectId(publish[1]), timer);
+  if (publish) return publishSticker(from, senderName, id, new ObjectId(publish[1]), timer);
   const show = SHOW_BUTTON_PATTERN.exec(buttonId);
   if (show) return showSticker(from, new ObjectId(show[1]), timer);
   logger.warn(`Ignoring unknown button ${buttonId} from ${from}`);
@@ -273,9 +273,9 @@ async function publishSticker(from: string, senderName: string | undefined, conf
     // Re-read so the media uploaded for the first recipient is reused for the rest.
     const sticker = (await timer.time('findSticker', () => findStickerById(stickerId))) ?? claimed;
     try {
+      await timer.time('reply', () => sendWhatsAppMessage(to, `🎉 ${uploaderName} הוסיף סטיקר חדש למאגר`));
       const messageId = await sendStoredSticker(to, sticker, timer);
       if (messageId) trackPublishDelivery(messageId, { stickerId, uploader: from, uploaderName, confirmationId, expiresAt: Date.now() + PUBLISH_DELIVERY_TRACKING_MS });
-      await timer.time('reply', () => sendWhatsAppMessage(to, `👆 סטיקר חדש מ-${uploaderName} נוסף למאגר 🎉`));
     } catch (err) {
       if (!isWhatsAppReEngagementError(err)) {
         logger.error(`Failed to publish sticker ${stickerId} to ${to}: ${describeWhatsAppError(err)}`);
