@@ -147,4 +147,9 @@ export type FailedMessageStatus = {
   readonly errorCodes: number[];
 };
 
+export type FailedStatusDescription = {
+  readonly text: string;
+  readonly errorCodes: number[];
+};
+
 export type IncomingMessage = IncomingTextMessage | IncomingStickerMessage | IncomingButtonReplyMessage;

@@ -2,7 +2,7 @@ import type { Express, Request, Response } from 'express';
 import express from 'express';
 import { env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
-import { WHATSAPP_SIGNATURE_HEADER } from './constants';
+import { WHATSAPP_REENGAGEMENT_ERROR_CODE, WHATSAPP_SIGNATURE_HEADER } from './constants';
 import type { FailedMessageStatus, IncomingMessage, WhatsAppWebhookPayload } from './types';
 import { describeFailedStatuses, describePayload, extractFailedStatuses, extractIncomingMessage, isAllowedSender, isValidSignature } from './webhook.utils';
 
@@ -58,7 +58,10 @@ export function registerWhatsAppWebhook(app: Express, { path, onMessage, onFaile
 
       res.sendStatus(200);
 
-      describeFailedStatuses(payload).forEach((failure) => logger.error(`Message delivery failed: ${failure}`));
+      // 131047 (outside the 24h window) is expected for inactive users and handled by onFailedStatus, so it only warns.
+      describeFailedStatuses(payload).forEach(({ text, errorCodes }) =>
+        errorCodes.includes(WHATSAPP_REENGAGEMENT_ERROR_CODE) ? logger.warn(`Message delivery failed: ${text}`) : logger.error(`Message delivery failed: ${text}`),
+      );
       if (onFailedStatus) {
         extractFailedStatuses(payload).forEach((failure) => onFailedStatus(failure).catch((err) => logger.error(`Failed to handle failed status of ${failure.messageId}: ${getErrorMessage(err)}`)));
       }
