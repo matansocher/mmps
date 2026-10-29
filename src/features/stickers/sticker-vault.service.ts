@@ -273,9 +273,9 @@ async function publishSticker(from: string, senderName: string | undefined, conf
     // Re-read so the media uploaded for the first recipient is reused for the rest.
     const sticker = (await timer.time('findSticker', () => findStickerById(stickerId))) ?? claimed;
     try {
+      await timer.time('reply', () => sendWhatsAppMessage(to, `🎉 ${uploaderName} הוסיף סטיקר חדש למאגר`));
       const messageId = await sendStoredSticker(to, sticker, timer);
       if (messageId) trackPublishDelivery(messageId, { stickerId, uploader: from, uploaderName, confirmationId, expiresAt: Date.now() + PUBLISH_DELIVERY_TRACKING_MS });
-      await timer.time('reply', () => sendWhatsAppMessage(to, `👆 סטיקר חדש מ-${uploaderName} נוסף למאגר 🎉`));
     } catch (err) {
       if (!isWhatsAppReEngagementError(err)) {
         logger.error(`Failed to publish sticker ${stickerId} to ${to}: ${describeWhatsAppError(err)}`);

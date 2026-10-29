@@ -681,14 +681,15 @@ describe('handleIncomingMessage()', () => {
       expect(vi.mocked(sendWhatsAppSticker).mock.calls).toEqual(RECIPIENTS.map((to) => [to, 'media.cached']));
       expect(sleep).toHaveBeenCalledWith(PUBLISH_SEND_DELAY_MS);
       expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
-      expect(vi.mocked(sendWhatsAppMessage).mock.calls).toEqual(RECIPIENTS.map((to) => [to, '👆 סטיקר חדש מ-מתן נוסף למאגר 🎉']));
+      expect(vi.mocked(sendWhatsAppMessage).mock.calls).toEqual(RECIPIENTS.map((to) => [to, '🎉 מתן הוסיף סטיקר חדש למאגר']));
+      expect(vi.mocked(sendWhatsAppMessage).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(sendWhatsAppSticker).mock.invocationCallOrder[0]);
     });
 
     it('should fall back to a generic name when the uploader has no profile name', async () => {
       vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
       vi.mocked(repo.findStickerById).mockImplementation(async () => published());
       await handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(RECIPIENTS[0], '👆 סטיקר חדש מ-מישהו נוסף למאגר 🎉');
+      expect(sendWhatsAppMessage).toHaveBeenCalledWith(RECIPIENTS[0], '🎉 מישהו הוסיף סטיקר חדש למאגר');
     });
 
     it('should skip the uploader when they are on the list', async () => {
@@ -706,7 +707,6 @@ describe('handleIncomingMessage()', () => {
       await publish();
       expect(uploadWhatsAppMedia).not.toHaveBeenCalled();
       expect(sendWhatsAppTemplate).toHaveBeenCalledWith(RECIPIENTS[0], 'new_sticker', 'he', { bodyParams: ['מתן'], quickReplyPayloads: [`show:${STICKER_HEX}`] });
-      expect(sendWhatsAppMessage).not.toHaveBeenCalledWith(RECIPIENTS[0], expect.anything());
       expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS[1], 'media.cached');
     });
 
@@ -717,7 +717,7 @@ describe('handleIncomingMessage()', () => {
       await publish();
       expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
       expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS[1], 'media.cached');
-      expect(vi.mocked(sendWhatsAppMessage).mock.calls).toEqual([[RECIPIENTS[1], '👆 סטיקר חדש מ-מתן נוסף למאגר 🎉']]);
+      expect(vi.mocked(sendWhatsAppReaction).mock.calls).toEqual([[FROM, 'wamid.saved', '❌']]);
     });
 
     it('should send the template when a broadcast sticker later fails with 131047', async () => {
