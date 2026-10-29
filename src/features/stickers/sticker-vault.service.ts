@@ -8,16 +8,19 @@ import {
   isWhatsAppReEngagementError,
   sendWhatsAppButtons,
   sendWhatsAppMessage,
+  sendWhatsAppReaction,
   sendWhatsAppSticker,
   sendWhatsAppTemplate,
   sendWhatsAppTypingIndicator,
   uploadWhatsAppMedia,
+  WHATSAPP_REENGAGEMENT_ERROR_CODE,
 } from '@services/whatsapp';
-import type { IncomingButtonReplyMessage, IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
+import type { FailedMessageStatus, IncomingButtonReplyMessage, IncomingMessage, IncomingStickerMessage, IncomingTextMessage } from '@services/whatsapp';
 import {
   CARS_SURPRISE_STICKER_ID,
   NEW_STICKER_TEMPLATE_LANGUAGE,
   NEW_STICKER_TEMPLATE_NAME,
+  PUBLISH_DELIVERY_TRACKING_MS,
   PUBLISH_RECIPIENTS,
   PUBLISH_SEND_DELAY_MS,
   STATS_HIDDEN_SEARCHERS,
@@ -59,6 +62,17 @@ import type { StickerSummary } from './types';
 
 const logger = new Logger('stickers:sticker-vault');
 
+type PendingPublishDelivery = {
+  readonly stickerId: ObjectId;
+  readonly uploader: string;
+  readonly uploaderName: string;
+  readonly confirmationId?: string; // the uploader's "נשמר" message, reacted to with the publish result
+  readonly expiresAt: number;
+};
+
+// Meta accepts a message outside the 24h window and only reports 131047 later in a status webhook, so remember broadcast stickers until then.
+const pendingPublishDeliveries = new Map<string, PendingPublishDelivery>();
+
 const DELETE_COMMANDS = ['delete', 'מחק', '-'];
 const STATS_COMMAND = '%';
 const STATS_TOP_TAGS_LIMIT = 5;
@@ -87,6 +101,8 @@ const SHOW_BUTTON_PATTERN = /^show:([a-f0-9]{24})$/;
 const ALREADY_PUBLISHED_MESSAGE = 'הסטיקר הזה כבר פורסם.';
 const STICKER_GONE_MESSAGE = 'הסטיקר הזה כבר לא במאגר.';
 const UNKNOWN_UPLOADER_NAME = 'מישהו';
+const PUBLISH_SUCCESS_REACTION = '✅';
+const PUBLISH_FAILURE_REACTION = '❌';
 const STICKER_ERROR_MESSAGE = 'משהו השתבש ולא הצלחתי לשמור את הסטיקר 😕 נסו שוב מאוחר יותר.';
 const TEXT_ERROR_MESSAGE = 'משהו השתבש 😕 נסו שוב מאוחר יותר.';
 
@@ -231,18 +247,18 @@ async function handleText({ from, text, contextId }: IncomingTextMessage, timer:
   await sendPageStatus(from, searchId, { start: 0, nextOffset, total: matches.length, pageSize: Math.min(STICKER_PAGE_SIZE, matches.length), ...result }, timer);
 }
 
-async function handleButton({ from, senderName, buttonId }: IncomingButtonReplyMessage, timer: StepTimer): Promise<void> {
+async function handleButton({ from, senderName, buttonId, contextId }: IncomingButtonReplyMessage, timer: StepTimer): Promise<void> {
   const more = MORE_BUTTON_PATTERN.exec(buttonId);
   if (more) return handleMoreButton(from, more, timer);
   const publish = PUBLISH_BUTTON_PATTERN.exec(buttonId);
-  if (publish) return publishSticker(from, senderName, new ObjectId(publish[1]), timer);
+  if (publish) return publishSticker(from, senderName, contextId, new ObjectId(publish[1]), timer);
   const show = SHOW_BUTTON_PATTERN.exec(buttonId);
   if (show) return showSticker(from, new ObjectId(show[1]), timer);
   logger.warn(`Ignoring unknown button ${buttonId} from ${from}`);
 }
 
 // Only the owner can publish, and only once, so a double tap doesn't spam everyone.
-async function publishSticker(from: string, senderName: string | undefined, stickerId: ObjectId, timer: StepTimer): Promise<void> {
+async function publishSticker(from: string, senderName: string | undefined, confirmationId: string | undefined, stickerId: ObjectId, timer: StepTimer): Promise<void> {
   const claimed = await timer.time('claimPublish', () => claimStickerPublish(stickerId, from));
   if (!claimed) {
     await timer.time('reply', () => sendWhatsAppMessage(from, ALREADY_PUBLISHED_MESSAGE));
@@ -251,25 +267,55 @@ async function publishSticker(from: string, senderName: string | undefined, stic
   // Template params can't contain newlines/tabs or runs of spaces.
   const uploaderName = senderName?.replace(/\s+/g, ' ').trim() || UNKNOWN_UPLOADER_NAME;
   const recipients = getPublishRecipients(from);
+  let failures = 0;
   for (const [index, to] of recipients.entries()) {
     if (index > 0) await timer.time('delay', () => sleep(PUBLISH_SEND_DELAY_MS));
     // Re-read so the media uploaded for the first recipient is reused for the rest.
     const sticker = (await timer.time('findSticker', () => findStickerById(stickerId))) ?? claimed;
     try {
-      await sendStoredSticker(to, sticker, timer);
+      const messageId = await sendStoredSticker(to, sticker, timer);
+      if (messageId) trackPublishDelivery(messageId, { stickerId, uploader: from, uploaderName, confirmationId, expiresAt: Date.now() + PUBLISH_DELIVERY_TRACKING_MS });
       await timer.time('reply', () => sendWhatsAppMessage(to, `👆 סטיקר חדש מ-${uploaderName} נוסף למאגר 🎉`));
     } catch (err) {
       if (!isWhatsAppReEngagementError(err)) {
         logger.error(`Failed to publish sticker ${stickerId} to ${to}: ${describeWhatsAppError(err)}`);
+        failures++;
         continue;
       }
-      // Outside the 24h window only a template gets through; its "הצג" button brings them back inside it.
-      await timer
-        .time('template', () => sendWhatsAppTemplate(to, NEW_STICKER_TEMPLATE_NAME, NEW_STICKER_TEMPLATE_LANGUAGE, { bodyParams: [uploaderName], quickReplyPayloads: [`show:${stickerId}`] }))
-        .catch((templateErr) => logger.error(`Failed to send ${NEW_STICKER_TEMPLATE_NAME} template to ${to}: ${describeWhatsAppError(templateErr)}`));
+      if (!(await timer.time('template', () => sendNewStickerTemplate(to, stickerId, uploaderName)))) failures++;
     }
   }
-  logger.log(`Published sticker ${stickerId} from ${from} to ${recipients.length} recipients`);
+  logger.log(`Published sticker ${stickerId} from ${from} to ${recipients.length - failures}/${recipients.length} recipients`);
+  if (confirmationId) await timer.time('react', () => sendWhatsAppReaction(from, confirmationId, failures ? PUBLISH_FAILURE_REACTION : PUBLISH_SUCCESS_REACTION));
+}
+
+function trackPublishDelivery(messageId: string, delivery: PendingPublishDelivery): void {
+  const now = Date.now();
+  for (const [id, pending] of pendingPublishDeliveries) {
+    if (pending.expiresAt <= now) pendingPublishDeliveries.delete(id);
+  }
+  pendingPublishDeliveries.set(messageId, delivery);
+}
+
+export async function handleFailedStatus({ messageId, recipient, errorCodes }: FailedMessageStatus): Promise<void> {
+  const delivery = pendingPublishDeliveries.get(messageId);
+  if (!delivery) return;
+  pendingPublishDeliveries.delete(messageId);
+  if (delivery.expiresAt <= Date.now() || !errorCodes.includes(WHATSAPP_REENGAGEMENT_ERROR_CODE)) return;
+  logger.log(`Published sticker ${delivery.stickerId} was outside ${recipient}'s 24h window, sending the ${NEW_STICKER_TEMPLATE_NAME} template`);
+  const sent = await sendNewStickerTemplate(recipient, delivery.stickerId, delivery.uploaderName);
+  if (!sent && delivery.confirmationId) await sendWhatsAppReaction(delivery.uploader, delivery.confirmationId, PUBLISH_FAILURE_REACTION);
+}
+
+// Outside the 24h window only a template gets through; its "הצג" button brings them back inside it.
+async function sendNewStickerTemplate(to: string, stickerId: ObjectId, uploaderName: string): Promise<boolean> {
+  try {
+    await sendWhatsAppTemplate(to, NEW_STICKER_TEMPLATE_NAME, NEW_STICKER_TEMPLATE_LANGUAGE, { bodyParams: [uploaderName], quickReplyPayloads: [`show:${stickerId}`] });
+    return true;
+  } catch (err) {
+    logger.error(`Failed to send ${NEW_STICKER_TEMPLATE_NAME} template to ${to}: ${describeWhatsAppError(err)}`);
+    return false;
+  }
 }
 
 async function showSticker(from: string, stickerId: ObjectId, timer: StepTimer): Promise<void> {
@@ -391,7 +437,7 @@ async function editStickerTags(from: string, sticker: StickerSummary, { add, rem
   await timer.time('reply', () => sendWhatsAppMessage(from, `עודכן ✅\n${formatTags(tags, 'אין מילות חיפוש')}`));
 }
 
-async function sendStoredSticker(to: string, sticker: StickerSummary, timer: StepTimer): Promise<void> {
+async function sendStoredSticker(to: string, sticker: StickerSummary, timer: StepTimer): Promise<string | null> {
   // Stickers saved before size limits were enforced may be too big; their cached upload would "send" and then silently fail delivery.
   const needsSizeCheck = sticker.byteSize === undefined || sticker.byteSize > getStickerByteLimit(sticker.animated);
   const cachedMediaId = !needsSizeCheck && sticker.mediaId && sticker.mediaUploadedAt && Date.now() - new Date(sticker.mediaUploadedAt).getTime() < STICKER_MEDIA_REUSE_MS ? sticker.mediaId : null;
@@ -429,4 +475,5 @@ async function sendStoredSticker(to: string, sticker: StickerSummary, timer: Ste
     const sentId = messageId;
     await timer.time('recordId', () => addStickerMessageId(sticker._id, sentId)).catch((err) => logger.error(`Failed to record sent sticker id: ${getErrorMessage(err)}`));
   }
+  return messageId;
 }

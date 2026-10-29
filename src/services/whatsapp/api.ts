@@ -5,6 +5,7 @@ import { WHATSAPP_GRAPH_API_URL, WHATSAPP_PAIR_RATE_LIMIT_ERROR_CODE, WHATSAPP_R
 import type {
   WhatsAppButtonsMessageRequest,
   WhatsAppMediaInfo,
+  WhatsAppReactionMessageRequest,
   WhatsAppReplyButton,
   WhatsAppSendMessageResponse,
   WhatsAppStickerMessageRequest,
@@ -44,6 +45,23 @@ export async function sendWhatsAppTypingIndicator(messageId: string): Promise<vo
     await axios.post(url, body, { headers: { ...authHeaders(), 'Content-Type': 'application/json' } });
   } catch (err) {
     logger.error(`Failed to send WhatsApp typing indicator for ${messageId}: ${describeWhatsAppError(err)}`);
+  }
+}
+
+// Reacts to a message with an emoji (empty string removes the reaction). Never throws.
+export async function sendWhatsAppReaction(to: string, messageId: string, emoji: string): Promise<void> {
+  const url = `${WHATSAPP_GRAPH_API_URL}/${env.PHONE_NUMBER_ID}/messages`;
+  const body: WhatsAppReactionMessageRequest = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'reaction',
+    reaction: { message_id: messageId, emoji },
+  };
+  try {
+    await axios.post(url, body, { headers: { ...authHeaders(), 'Content-Type': 'application/json' } });
+  } catch (err) {
+    logger.error(`Failed to send WhatsApp reaction to ${messageId}: ${describeWhatsAppError(err)}`);
   }
 }
 

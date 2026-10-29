@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import type { IncomingMessage, WhatsAppWebhookPayload } from './types';
+import type { FailedMessageStatus, IncomingMessage, WhatsAppWebhookPayload } from './types';
 
 export function extractIncomingMessage(payload: WhatsAppWebhookPayload): IncomingMessage | null {
   const value = payload?.entry?.[0]?.changes?.[0]?.value;
@@ -7,18 +7,26 @@ export function extractIncomingMessage(payload: WhatsAppWebhookPayload): Incomin
   if (!message?.from) return null;
   const sentAt = Number(message.timestamp) * 1000;
   const base = { from: message.from, id: message.id, ...(sentAt > 0 && { sentAt }) };
+  const contextId = message.context?.id;
   const senderName = value.contacts?.find((contact) => contact.wa_id === message.from)?.profile?.name ?? value.contacts?.[0]?.profile?.name;
   if (message.type === 'text' && message.text?.body) {
-    return { kind: 'text', ...base, text: message.text.body, ...(message.context?.id && { contextId: message.context.id }) };
+    return { kind: 'text', ...base, text: message.text.body, ...(contextId && { contextId }) };
   }
   if (message.type === 'sticker' && message.sticker?.id) {
     return { kind: 'sticker', ...base, mediaId: message.sticker.id, animated: Boolean(message.sticker.animated) };
   }
   if (message.type === 'interactive' && message.interactive?.type === 'button_reply' && message.interactive.button_reply?.id) {
-    return { kind: 'button', ...base, ...(senderName && { senderName }), buttonId: message.interactive.button_reply.id, title: message.interactive.button_reply.title };
+    return {
+      kind: 'button',
+      ...base,
+      ...(senderName && { senderName }),
+      buttonId: message.interactive.button_reply.id,
+      title: message.interactive.button_reply.title,
+      ...(contextId && { contextId }),
+    };
   }
   if (message.type === 'button' && message.button?.payload) {
-    return { kind: 'button', ...base, ...(senderName && { senderName }), buttonId: message.button.payload, title: message.button.text ?? '' };
+    return { kind: 'button', ...base, ...(senderName && { senderName }), buttonId: message.button.payload, title: message.button.text ?? '', ...(contextId && { contextId }) };
   }
   return null;
 }
@@ -38,6 +46,13 @@ export function describePayload(payload: WhatsAppWebhookPayload): string {
   const messages = changes.flatMap((change) => change.value?.messages ?? []).map((message) => message.type);
   const statuses = changes.flatMap((change) => change.value?.statuses ?? []).map((status) => status.status);
   return `object=${payload?.object} field=${fields} messages=[${messages.join(',')}] statuses=[${statuses.join(',')}]`;
+}
+
+export function extractFailedStatuses(payload: WhatsAppWebhookPayload): FailedMessageStatus[] {
+  const statuses = (payload?.entry ?? []).flatMap((entry) => entry.changes ?? []).flatMap((change) => change.value?.statuses ?? []);
+  return statuses
+    .filter((status) => status.status === 'failed' && status.id && status.recipient_id)
+    .map((status) => ({ messageId: status.id, recipient: status.recipient_id, errorCodes: (status.errors ?? []).map((error) => error.code).filter((code) => code !== undefined) }));
 }
 
 // One line per failed delivery, e.g. "wamid.X to 972501234567: 131053 Media upload error - Sticker file too large"

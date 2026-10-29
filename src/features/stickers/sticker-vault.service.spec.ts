@@ -1,11 +1,20 @@
 import { ObjectId } from 'mongodb';
 import { createHash } from 'node:crypto';
 import { sleep } from '@core/utils';
-import { downloadWhatsAppMedia, sendWhatsAppButtons, sendWhatsAppMessage, sendWhatsAppSticker, sendWhatsAppTemplate, sendWhatsAppTypingIndicator, uploadWhatsAppMedia } from '@services/whatsapp';
+import {
+  downloadWhatsAppMedia,
+  sendWhatsAppButtons,
+  sendWhatsAppMessage,
+  sendWhatsAppReaction,
+  sendWhatsAppSticker,
+  sendWhatsAppTemplate,
+  sendWhatsAppTypingIndicator,
+  uploadWhatsAppMedia,
+} from '@services/whatsapp';
 import { PUBLISH_SEND_DELAY_MS, STICKER_PAGE_SIZE, STICKER_RATE_LIMIT_BACKOFF_MS, STICKER_SEND_DELAY_MS } from './constants';
 import * as repo from './mongo';
 import { fitStickerToLimit } from './sticker-image';
-import { handleIncomingMessage } from './sticker-vault.service';
+import { handleFailedStatus, handleIncomingMessage } from './sticker-vault.service';
 import type { SearchEvent, StickerSummary } from './types';
 
 const SEARCH_ID_HEX = '652f1c2b9d3e4a0012345678';
@@ -31,10 +40,12 @@ vi.mock('@services/whatsapp', () => ({
   isWhatsAppReEngagementError: vi.fn((err: { code?: number }) => err?.code === 131047),
   sendWhatsAppButtons: vi.fn(async () => undefined),
   sendWhatsAppMessage: vi.fn(async () => undefined),
+  sendWhatsAppReaction: vi.fn(async () => undefined),
   sendWhatsAppSticker: vi.fn(async () => 'wamid.sent'),
   sendWhatsAppTemplate: vi.fn(async () => 'wamid.template'),
   sendWhatsAppTypingIndicator: vi.fn(async () => undefined),
   uploadWhatsAppMedia: vi.fn(async () => 'media.new'),
+  WHATSAPP_REENGAGEMENT_ERROR_CODE: 131047,
 }));
 
 vi.mock('./mongo', () => ({
@@ -657,7 +668,7 @@ describe('handleIncomingMessage()', () => {
     const STICKER_HEX = 'aaaaaaaaaaaaaaaaaaaaaaaa';
     const RECIPIENTS = ['972547669886', '972545429402'];
     const reEngagement = Object.assign(new Error('outside window'), { code: 131047 });
-    const publish = () => handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', senderName: ' מתן\n', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
+    const publish = () => handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', senderName: ' מתן\n', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣', contextId: 'wamid.saved' });
     const published = () => sticker({ _id: new ObjectId(STICKER_HEX), mediaId: 'media.cached', mediaUploadedAt: new Date(), publishedAt: new Date() });
 
     afterEach(() => vi.mocked(repo.findStickerById).mockImplementation(async () => null));
@@ -707,6 +718,63 @@ describe('handleIncomingMessage()', () => {
       expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
       expect(sendWhatsAppSticker).toHaveBeenLastCalledWith(RECIPIENTS[1], 'media.cached');
       expect(vi.mocked(sendWhatsAppMessage).mock.calls).toEqual([[RECIPIENTS[1], '👆 סטיקר חדש מ-מתן נוסף למאגר 🎉']]);
+    });
+
+    it('should send the template when a broadcast sticker later fails with 131047', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.late-1').mockResolvedValueOnce('wamid.late-2');
+      await publish();
+      await handleFailedStatus({ messageId: 'wamid.late-2', recipient: RECIPIENTS[1], errorCodes: [131047] });
+      await handleFailedStatus({ messageId: 'wamid.late-2', recipient: RECIPIENTS[1], errorCodes: [131047] });
+      expect(vi.mocked(sendWhatsAppTemplate).mock.calls).toEqual([[RECIPIENTS[1], 'new_sticker', 'he', { bodyParams: ['מתן'], quickReplyPayloads: [`show:${STICKER_HEX}`] }]]);
+    });
+
+    it('should ignore failures that are not tracked broadcasts or not 131047', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.other-1');
+      await publish();
+      await handleFailedStatus({ messageId: 'wamid.other-1', recipient: RECIPIENTS[0], errorCodes: [131053] });
+      await handleFailedStatus({ messageId: 'wamid.unknown', recipient: RECIPIENTS[0], errorCodes: [131047] });
+      expect(sendWhatsAppTemplate).not.toHaveBeenCalled();
+    });
+
+    it('should react ✅ on the saved message when every recipient was reached', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce(reEngagement);
+      await publish();
+      expect(vi.mocked(sendWhatsAppReaction).mock.calls).toEqual([[FROM, 'wamid.saved', '✅']]);
+    });
+
+    it('should react ❌ on the saved message when a recipient was not reached', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      vi.mocked(sendWhatsAppSticker).mockRejectedValueOnce(reEngagement);
+      vi.mocked(sendWhatsAppTemplate).mockRejectedValueOnce(new Error('template rejected'));
+      await publish();
+      expect(vi.mocked(sendWhatsAppReaction).mock.calls).toEqual([[FROM, 'wamid.saved', '❌']]);
+    });
+
+    it('should switch the reaction to ❌ when the late template fallback fails', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      vi.mocked(sendWhatsAppSticker).mockResolvedValueOnce('wamid.react-1').mockResolvedValueOnce('wamid.react-2');
+      await publish();
+      vi.mocked(sendWhatsAppTemplate).mockRejectedValueOnce(new Error('template rejected'));
+      await handleFailedStatus({ messageId: 'wamid.react-1', recipient: RECIPIENTS[0], errorCodes: [131047] });
+      expect(vi.mocked(sendWhatsAppReaction).mock.calls).toEqual([
+        [FROM, 'wamid.saved', '✅'],
+        [FROM, 'wamid.saved', '❌'],
+      ]);
+    });
+
+    it('should not react when the tap has no message context', async () => {
+      vi.mocked(repo.claimStickerPublish).mockResolvedValueOnce(published());
+      vi.mocked(repo.findStickerById).mockImplementation(async () => published());
+      await handleIncomingMessage({ kind: 'button', from: FROM, id: 'wamid.tap', buttonId: `publish:${STICKER_HEX}`, title: 'פרסם 📣' });
+      expect(sendWhatsAppReaction).not.toHaveBeenCalled();
     });
 
     it('should not publish twice or for someone who is not the owner', async () => {

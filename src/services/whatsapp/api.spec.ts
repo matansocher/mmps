@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { env } from 'node:process';
-import { isWhatsAppPairRateLimitError, isWhatsAppReEngagementError, sendWhatsAppButtons, sendWhatsAppTemplate, sendWhatsAppTypingIndicator } from './api';
+import { isWhatsAppPairRateLimitError, isWhatsAppReEngagementError, sendWhatsAppButtons, sendWhatsAppReaction, sendWhatsAppTemplate, sendWhatsAppTypingIndicator } from './api';
 import { WHATSAPP_GRAPH_API_URL } from './constants';
 
 vi.mock('axios', async (importOriginal) => {
@@ -29,6 +29,28 @@ describe('sendWhatsAppTypingIndicator()', () => {
   it('should swallow errors', async () => {
     vi.mocked(axios.post).mockRejectedValueOnce(apiError(100));
     await expect(sendWhatsAppTypingIndicator('wamid.in')).resolves.toBeUndefined();
+  });
+});
+
+describe('sendWhatsAppReaction()', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    env.PHONE_NUMBER_ID = '123';
+  });
+
+  it('should react to the message with the emoji', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { messages: [{ id: 'wamid.out' }] } });
+    await sendWhatsAppReaction('972', 'wamid.saved', '✅');
+    expect(axios.post).toHaveBeenCalledWith(
+      `${WHATSAPP_GRAPH_API_URL}/123/messages`,
+      { messaging_product: 'whatsapp', recipient_type: 'individual', to: '972', type: 'reaction', reaction: { message_id: 'wamid.saved', emoji: '✅' } },
+      { headers: expect.objectContaining({ 'Content-Type': 'application/json' }) },
+    );
+  });
+
+  it('should swallow errors', async () => {
+    vi.mocked(axios.post).mockRejectedValueOnce(apiError(100));
+    await expect(sendWhatsAppReaction('972', 'wamid.saved', '✅')).resolves.toBeUndefined();
   });
 });
 

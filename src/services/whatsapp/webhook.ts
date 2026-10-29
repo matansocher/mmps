@@ -3,8 +3,8 @@ import express from 'express';
 import { env } from 'node:process';
 import { getErrorMessage, Logger } from '@core/utils';
 import { WHATSAPP_SIGNATURE_HEADER } from './constants';
-import type { IncomingMessage, WhatsAppWebhookPayload } from './types';
-import { describeFailedStatuses, describePayload, extractIncomingMessage, isAllowedSender, isValidSignature } from './webhook.utils';
+import type { FailedMessageStatus, IncomingMessage, WhatsAppWebhookPayload } from './types';
+import { describeFailedStatuses, describePayload, extractFailedStatuses, extractIncomingMessage, isAllowedSender, isValidSignature } from './webhook.utils';
 
 const logger = new Logger('whatsapp:webhook');
 
@@ -13,11 +13,12 @@ type RawBodyRequest = Request & { rawBody?: Buffer };
 export type WhatsAppWebhookOptions = {
   readonly path: string;
   readonly onMessage: (message: IncomingMessage) => Promise<void>;
+  readonly onFailedStatus?: (failure: FailedMessageStatus) => Promise<void>;
   readonly allowedPhones?: ReadonlySet<string>; // digits only; empty or missing = everyone
 };
 
 // Must be called before the global express.json() parser, so the raw body is kept for the signature check.
-export function registerWhatsAppWebhook(app: Express, { path, onMessage, allowedPhones = new Set() }: WhatsAppWebhookOptions): void {
+export function registerWhatsAppWebhook(app: Express, { path, onMessage, onFailedStatus, allowedPhones = new Set() }: WhatsAppWebhookOptions): void {
   app.get(path, (req: Request, res: Response) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
@@ -58,6 +59,9 @@ export function registerWhatsAppWebhook(app: Express, { path, onMessage, allowed
       res.sendStatus(200);
 
       describeFailedStatuses(payload).forEach((failure) => logger.error(`Message delivery failed: ${failure}`));
+      if (onFailedStatus) {
+        extractFailedStatuses(payload).forEach((failure) => onFailedStatus(failure).catch((err) => logger.error(`Failed to handle failed status of ${failure.messageId}: ${getErrorMessage(err)}`)));
+      }
 
       const message = extractIncomingMessage(payload);
       if (!message) {

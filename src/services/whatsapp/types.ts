@@ -57,6 +57,11 @@ export type WhatsAppMediaInfo = {
   readonly id: string;
 };
 
+export type WhatsAppReactionMessageRequest = WhatsAppMessageBase & {
+  readonly type: 'reaction';
+  readonly reaction: { readonly message_id: string; readonly emoji: string };
+};
+
 export type WhatsAppTypingIndicatorRequest = {
   readonly messaging_product: 'whatsapp';
   readonly status: 'read';
@@ -131,7 +136,15 @@ export type IncomingButtonReplyMessage = {
   readonly sentAt?: number; // epoch ms from Meta's message timestamp (1s precision)
   readonly senderName?: string; // the sender's WhatsApp profile name
   readonly buttonId: string;
+  readonly contextId?: string; // id of the message whose button was tapped
   readonly title: string;
+};
+
+// An outgoing message Meta accepted but later reported as undeliverable (arrives via a `failed` status webhook).
+export type FailedMessageStatus = {
+  readonly messageId: string;
+  readonly recipient: string;
+  readonly errorCodes: number[];
 };
 
 export type IncomingMessage = IncomingTextMessage | IncomingStickerMessage | IncomingButtonReplyMessage;
