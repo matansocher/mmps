@@ -2,7 +2,7 @@ import { tool } from '@langchain/core/tools';
 import { addMinutes, format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
-import { DEFAULT_TIMEZONE } from '@core/config';
+import { ISRAEL_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import {
   buildRailSearchUrl,
@@ -186,7 +186,7 @@ async function resolveTrip({ from, to, fromPlace, toPlace }: z.infer<typeof sche
 }
 
 async function lastTrain({ origin, destination }: ResolvedTrip, date: string | undefined, limit: number | undefined) {
-  const nowLocal = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+  const nowLocal = toZonedTime(new Date(), ISRAEL_TIMEZONE);
   const serviceDate = date ?? getServiceDate(nowLocal);
   const lastTrains = await findLastTrains({ fromStationId: origin.station.id, toStationId: destination.station.id, date: serviceDate, limit });
   const { lastDirectTrain, hasNightTrains, messages } = lastTrains;
@@ -234,7 +234,7 @@ async function runner(input: z.infer<typeof schema>) {
   }
 
   const { origin, destination } = trip;
-  const nowLocal = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+  const nowLocal = toZonedTime(new Date(), ISRAEL_TIMEZONE);
   // Leaving now from a place means catching trains after the walk to the station.
   const accessMinutes = origin.access ? origin.access.walkingMinutes + STATION_BUFFER_MINUTES : 0;
   const earliestLocal = addMinutes(nowLocal, date || time ? 0 : accessMinutes);

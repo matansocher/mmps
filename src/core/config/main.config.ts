@@ -8,7 +8,10 @@ export const MY_USER_ID = Number(env.MY_USER_ID);
 export const WIFE_USER_ID = Number(env.WIFE_USER_ID);
 export const MY_USER_NAME = env.MY_USER_NAME;
 
-export const DEFAULT_TIMEZONE = 'Asia/Jerusalem';
+export const ISRAEL_TIMEZONE = 'Asia/Jerusalem';
+
+// User-facing timezone (e.g. set TIMEZONE=Asia/Tokyo while abroad). Israel-specific features use ISRAEL_TIMEZONE.
+export const DEFAULT_TIMEZONE = env.TIMEZONE || ISRAEL_TIMEZONE;
 
 export const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 

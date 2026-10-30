@@ -4,7 +4,7 @@ import { type Bot, type Context, type InlineKeyboard, InputFile } from 'grammy';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { DEFAULT_TIMEZONE, LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
+import { ISRAEL_TIMEZONE, LOCAL_FILES_PATH, MY_USER_NAME } from '@core/config';
 import { createRateLimitCounter } from '@core/express';
 import { deleteFile, getErrorMessage, Logger } from '@core/utils';
 import { buildToolImages, LIGHT_RAIL_MAP_IMAGE_BUILDER, RAIL_ROUTE_IMAGE_BUILDER } from '@features/chatbot/tool-images';
@@ -56,7 +56,7 @@ const ROUTE_IMAGE_FILE_NAME = 'rail-route.png';
 const CALLBACK_ACTIONS: Record<Exclude<RailSearchAction, 'stops' | 'where'>, string> = { later: 'LATER_TRAINS', reverse: 'REVERSE_DIRECTION', refresh: 'REFRESH' };
 
 function getLocalNow(): Date {
-  return toZonedTime(new Date(), DEFAULT_TIMEZONE);
+  return toZonedTime(new Date(), ISRAEL_TIMEZONE);
 }
 
 function isNotModifiedError(err: unknown): boolean {
