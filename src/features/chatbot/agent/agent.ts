@@ -29,6 +29,7 @@ import {
   socialTool,
   spotifyPodcastTool,
   spotifyTool,
+  summaryLocationTool,
   topMatchesForPredictionTool,
   weatherTool,
   webSearchTool,
@@ -67,6 +68,7 @@ General style:
 export function agent(): AgentDescriptor {
   const tools = [
     weatherTool,
+    summaryLocationTool,
     webSearchTool,
     browseUrlTool,
     earthquakeTool,

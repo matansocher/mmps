@@ -16,8 +16,6 @@ const SUMMARY_KEEP_TOKENS = parseInt(env.CHATBOT_SUMMARY_KEEP_TOKENS || '8000', 
 export const CHATBOT_CONFIG = {
   // Toggle per-turn token/cost observability. Defaults on; set CHATBOT_USAGE_TRACKING=false to disable.
   usageTracking: env.CHATBOT_USAGE_TRACKING !== 'false',
-  // Location used by the nightly summary's weather section.
-  summaryLocation: env.CHATBOT_SUMMARY_LOCATION || 'Kfar Saba',
   // Scheduled messages are appended to the chat's agent thread so follow-up replies have context.
   // Long digests are cut to this many characters; summarization compresses the thread over time.
   proactiveMemory: {

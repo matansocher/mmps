@@ -8,6 +8,7 @@ import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
+import { getSummaryLocation } from '@shared/summary-location';
 import type { ChatbotService } from '../chatbot.service';
 import { dailySummary } from './daily-summary';
 
@@ -27,6 +28,7 @@ vi.mock('@shared/agenda-image', () => ({ generateAgendaImage: vi.fn(() => Buffer
 vi.mock('@services/weather', () => ({ getTomorrowHourlyForecast: vi.fn() }));
 vi.mock('@shared/calendar-events', () => ({ getTomorrowEvents: vi.fn() }));
 vi.mock('@shared/reminders', () => ({ getPendingRemindersDueOnOrBefore: vi.fn() }));
+vi.mock('@shared/summary-location', () => ({ getSummaryLocation: vi.fn() }));
 
 const bot = { api: { sendMessage: vi.fn() } } as unknown as Bot;
 
@@ -90,6 +92,18 @@ describe('dailySummary()', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getPendingRemindersDueOnOrBefore).mockResolvedValue([]);
+    vi.mocked(getSummaryLocation).mockResolvedValue('Kfar Saba');
+  });
+
+  it('should fetch the weather for the saved summary location and name it in the heading', async () => {
+    vi.mocked(getSummaryLocation).mockResolvedValue('Kyoto');
+    vi.mocked(getTomorrowHourlyForecast).mockResolvedValue(createForecast());
+    vi.mocked(getTomorrowEvents).mockResolvedValue([]);
+
+    await dailySummary(bot, chatbotService);
+
+    expect(getTomorrowHourlyForecast).toHaveBeenCalledWith('Kyoto');
+    expect(lastSentMessage().startsWith('**🌤 Weather for tomorrow (Kyoto)**')).toBe(true);
   });
 
   it('should fetch weather and calendar in parallel', async () => {
@@ -109,7 +123,7 @@ describe('dailySummary()', () => {
     await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
-    expect(message).toContain('**🌤 Weather for tomorrow**\n\n| Time | Temp | Conditions |');
+    expect(message).toContain('**🌤 Weather for tomorrow (Kfar Saba)**\n\n| Time | Temp | Conditions |');
     expect(message).toContain('| 10:00 | 28°C | Sunny |');
     expect(message).toContain('| 22:00 | 24°C | Sunny |');
   });
@@ -120,7 +134,7 @@ describe('dailySummary()', () => {
 
     await dailySummary(bot, chatbotService);
 
-    expect(lastSentMessage().startsWith('**🌤 Weather for tomorrow**')).toBe(true);
+    expect(lastSentMessage().startsWith('**🌤 Weather for tomorrow (Kfar Saba)**')).toBe(true);
   });
 
   it('should render the calendar section as a table', async () => {
@@ -163,7 +177,7 @@ describe('dailySummary()', () => {
 
     const message = lastSentMessage();
     expect(message).not.toContain('Good night');
-    expect(message.startsWith('**🌤 Weather for tomorrow**')).toBe(true);
+    expect(message.startsWith('**🌤 Weather for tomorrow (Kfar Saba)**')).toBe(true);
   });
 
   it('should separate every section heading from its table with a blank line', async () => {
@@ -184,7 +198,7 @@ describe('dailySummary()', () => {
     await dailySummary(bot, chatbotService);
 
     const message = lastSentMessage();
-    expect(message).toContain('**🌤 Weather for tomorrow**\n\n| Time |');
+    expect(message).toContain('**🌤 Weather for tomorrow (Kfar Saba)**\n\n| Time |');
     expect(message).toContain('| 10:00 | 28°C | Sunny |');
     expect(message).toContain('| 14:00 | 31°C | Sunny |');
     expect(message).toContain('| 18:00 | 29°C | Sunny |');
@@ -197,7 +211,7 @@ describe('dailySummary()', () => {
 
     await dailySummary(bot, chatbotService);
 
-    expect(lastSentMessage()).toContain('**🌤 Weather for tomorrow**\n\nNot available');
+    expect(lastSentMessage()).toContain('**🌤 Weather for tomorrow (Kfar Saba)**\n\nNot available');
   });
 
   it('should keep a multi-line event location on a single table row', async () => {
