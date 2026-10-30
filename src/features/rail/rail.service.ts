@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { modelCallLimitMiddleware, toolCallLimitMiddleware } from 'langchain';
 import { env } from 'node:process';
-import { DEFAULT_TIMEZONE, isProd } from '@core/config/main.config';
+import { ISRAEL_TIMEZONE, isProd } from '@core/config/main.config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { AiService, createAgentService } from '@features/chatbot/agent';
 import type { ToolResult } from '@features/chatbot/types';
@@ -119,7 +119,7 @@ export class RailService {
 
   private getNextLightRailDepartures(timetable: LightRailTimetable, fromStationId: string): LightRailDirectionDepartures[] {
     try {
-      const now = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+      const now = toZonedTime(new Date(), ISRAEL_TIMEZONE);
       return findLightRailDeparturesByDirection(timetable, { fromStationId, date: format(now, 'yyyy-MM-dd'), time: format(now, 'HH:mm'), limit: LIGHT_RAIL_DEPARTURES_PER_DIRECTION });
     } catch (err) {
       this.logger.error(`Light rail departures lookup failed: ${getErrorMessage(err)}`);
@@ -140,9 +140,9 @@ export class RailService {
   // isLanguageSaved: the user picked a language in /actions, so it overrides replying in the message's language.
   async processMessage(message: string, chatId: number, language: ImageLanguage, isLanguageSaved = false): Promise<RailAgentReply> {
     try {
-      const formattedTime = format(toZonedTime(new Date(), DEFAULT_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
+      const formattedTime = format(toZonedTime(new Date(), ISRAEL_TIMEZONE), "yyyy-MM-dd'T'HH:mm:ss");
       const languageRule = isLanguageSaved ? `\nThe user chose to always get replies in ${LANGUAGE_NAMES[language]} - reply in ${LANGUAGE_NAMES[language]} regardless of the message language.` : '';
-      const system = `Current time: ${formattedTime} (${DEFAULT_TIMEZONE})${languageRule}`;
+      const system = `Current time: ${formattedTime} (${ISRAEL_TIMEZONE})${languageRule}`;
       const threadId = await this.touchThread(chatId);
       const usageHandler = new UsageCallbackHandler();
       const startedAt = Date.now();
@@ -179,7 +179,7 @@ export class RailService {
     if (!line?.stops.length) return null;
     const now = new Date();
     const progress = estimateTrainProgress(line, now);
-    const updatedAt = format(toZonedTime(now, DEFAULT_TIMEZONE), 'HH:mm');
+    const updatedAt = format(toZonedTime(now, ISRAEL_TIMEZONE), 'HH:mm');
     return { image: generateTrainMapImage(line, progress, language, updatedAt), caption: formatTrainMapCaption(line, progress, language) };
   }
 }

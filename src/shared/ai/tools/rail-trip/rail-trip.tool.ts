@@ -2,7 +2,7 @@ import { tool } from '@langchain/core/tools';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
-import { DEFAULT_TIMEZONE } from '@core/config';
+import { ISRAEL_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { findStations, RAIL_STATIONS, searchTrains } from '@services/israel-rail';
 import type { RailStation } from '@services/israel-rail';
@@ -78,7 +78,7 @@ async function runner({ from, to, date, time, limit }: z.infer<typeof schema>) {
     return buildResolutionError(fromMatches, toMatches);
   }
 
-  const nowLocal = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+  const nowLocal = toZonedTime(new Date(), ISRAEL_TIMEZONE);
   const searchDate = date ?? format(nowLocal, 'yyyy-MM-dd');
   const searchTime = time ?? format(nowLocal, 'HH:mm');
 
