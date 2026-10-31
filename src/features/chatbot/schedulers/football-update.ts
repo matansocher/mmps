@@ -1,8 +1,8 @@
+import { formatInTimeZone } from 'date-fns-tz';
 import type { Bot } from 'grammy';
 import { z } from 'zod';
-import { MY_USER_ID } from '@core/config';
+import { ISRAEL_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
-import { getDateString } from '@core/utils';
 import { sendImageWithCaption, sendShortenedMessage } from '@services/telegram';
 import { detectLanguage } from '@shared/image-card';
 import { generateMatchCardsImage } from '@shared/sports';
@@ -17,7 +17,7 @@ const footballUpdateResponseSchema = z.object({
 
 export async function footballUpdate(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
-    const prompt = `Generate a midday football update for today (${getDateString()}).
+    const prompt = `Generate a midday football update for today (${formatInTimeZone(new Date(), ISRAEL_TIMEZONE, 'yyyy-MM-dd')}).
         Use the match_summary tool to get today's match results and ongoing matches.
         If no matches are found, set hasMatches to false.
         Format the message as:
