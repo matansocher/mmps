@@ -51,7 +51,7 @@ const schema = z.object({
   assignees: z.array(z.string()).optional().describe('GitHub usernames to assign'),
   state: z.enum(['open', 'closed']).optional().describe('Issue/PR state filter'),
   mergeMethod: z.enum(['merge', 'squash', 'rebase']).optional().describe('Merge strategy for merge_pr (defaults to squash)'),
-  workflow: z.string().optional().describe('Workflow file name to filter list_workflow_runs by, e.g. "heroku-deploy.yml" or "ci.yml"'),
+  workflow: z.string().optional().describe('Workflow file name to filter list_workflow_runs by, e.g. "deploy.yml" or "ci.yml"'),
   branch: z.string().optional().describe('Branch to filter list_workflow_runs by, e.g. "main"'),
   runStatus: z.enum(['completed', 'in_progress', 'queued', 'success', 'failure', 'cancelled']).optional().describe('Run status/conclusion to filter list_workflow_runs by'),
   limit: z.number().optional().describe('Max runs to return for list_workflow_runs (default 5, max 20)'),
@@ -193,7 +193,7 @@ Flows:
 - "Implement this issue" (existing issue number): add the "implement" label to the issue (issueNumber).
 - "Deploy mmps" / "ship it to production": use "deploy", then confirm it was dispatched.
 - "Merge PR 42": use "merge_pr" with the prNumber; only pass mergeMethod when explicitly asked. Confirm the result.
-- "Why did the deploy/build/CI fail?" / "check GitHub Actions": list_workflow_runs (workflow "heroku-deploy.yml" for deploys, "ci.yml" for CI; runStatus "failure" to find the latest failure), then get_workflow_run with its runId to see failed jobs, failed steps and annotations, then get_job_log with the failed job's jobId. Report the failing job/step and quote the exact error lines (file:line and message). Never ask the user for logs — fetch them. If the user pastes an Actions URL, take runId from /actions/runs/<runId> and jobId from /job/<jobId>. For PR status checks use get_pr_checks.
+- "Why did the deploy/build/CI fail?" / "check GitHub Actions": list_workflow_runs (workflow "deploy.yml" for deploys, "ci.yml" for CI; runStatus "failure" to find the latest failure), then get_workflow_run with its runId to see failed jobs, failed steps and annotations, then get_job_log with the failed job's jobId. Report the failing job/step and quote the exact error lines (file:line and message). Never ask the user for logs — fetch them. If the user pastes an Actions URL, take runId from /actions/runs/<runId> and jobId from /job/<jobId>. For PR status checks use get_pr_checks.
 - If an action returns success: false, relay the error briefly.`,
   schema,
 });

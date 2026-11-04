@@ -218,7 +218,7 @@ The chatbot can trigger automated GitHub Actions workflows:
 Both are jobs in `.github/workflows/ai.yml`, using `openai/codex-action`.
 
 **Deploy Workflow**
-- Trigger: the `deploy` action dispatches `.github/workflows/heroku-deploy.yml` via `workflow_dispatch`
+- Trigger: the `deploy` action dispatches `.github/workflows/deploy.yml` via `workflow_dispatch`
 - Use case: "deploy mmps" or "ship it to production"
 
 When the chatbot recognizes these requests, it uses the GitHub tool to add the appropriate label, triggering the automation:
