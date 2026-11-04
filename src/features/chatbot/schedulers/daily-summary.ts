@@ -11,7 +11,7 @@ import { getTomorrowEvents } from '@shared/calendar-events';
 import type { CalendarEvent } from '@shared/calendar-events';
 import { getPendingRemindersDueOnOrBefore } from '@shared/reminders';
 import type { Reminder } from '@shared/reminders';
-import { getSummaryLocation } from '@shared/summary-location';
+import { CHATBOT_CONFIG } from '../chatbot.config';
 import type { ChatbotService } from '../chatbot.service';
 import { formatEventTime } from './utils/events';
 
@@ -28,16 +28,15 @@ function cell(text: string): string {
   return text.replace(/\s+/g, ' ').replace(/\|/g, '\\|').trim();
 }
 
-function buildWeatherTable(location: string, hourly: ReadonlyArray<HourlyWeather>): string {
-  const heading = `**🌤 Weather for tomorrow (${location})**`;
+function buildWeatherTable(hourly: ReadonlyArray<HourlyWeather>): string {
   const rows = SUMMARY_HOURS.map((hour) => hourly.find((entry) => entry.hour === hour))
     .filter((entry): entry is HourlyWeather => !!entry)
     .map((entry) => `| ${String(entry.hour).padStart(2, '0')}:00 | ${Math.round(entry.temperature)}°C | ${cell(entry.condition)} |`);
 
   if (!rows.length) {
-    return [heading, '', 'Not available'].join('\n');
+    return ['**🌤 Weather for tomorrow**', '', 'Not available'].join('\n');
   }
-  return [heading, '', '| Time | Temp | Conditions |', '|:-----|-----:|:-----------|', ...rows].join('\n');
+  return ['**🌤 Weather for tomorrow**', '', '| Time | Temp | Conditions |', '|:-----|-----:|:-----------|', ...rows].join('\n');
 }
 
 function buildCalendarTable(events: CalendarEvent[]): string {
@@ -86,9 +85,8 @@ function buildRemindersSection(reminders: Reminder[]): string | null {
 
 export async function dailySummary(bot: Bot, chatbotService: ChatbotService): Promise<void> {
   try {
-    const location = await getSummaryLocation();
     const [forecast, events, reminders] = await Promise.all([
-      getTomorrowHourlyForecast(location).catch((err) => {
+      getTomorrowHourlyForecast(CHATBOT_CONFIG.summaryLocation).catch((err) => {
         logger.error(`Failed to fetch tomorrow's forecast: ${getErrorMessage(err)}`);
         return null;
       }),
@@ -100,12 +98,7 @@ export async function dailySummary(bot: Bot, chatbotService: ChatbotService): Pr
     ]);
 
     // Birthdays get their own section, so they are dropped from the calendar table to avoid listing them twice.
-    const sections = [
-      buildWeatherTable(location, forecast?.hourly ?? []),
-      buildCalendarTable(events.filter((event) => !isBirthday(event))),
-      buildBirthdaysSection(events),
-      buildRemindersSection(reminders),
-    ];
+    const sections = [buildWeatherTable(forecast?.hourly ?? []), buildCalendarTable(events.filter((event) => !isBirthday(event))), buildBirthdaysSection(events), buildRemindersSection(reminders)];
     const message = sections.filter(Boolean).join('\n\n');
     if (message) {
       await sendImageThenText(bot, MY_USER_ID, { image: () => buildAgendaImage(events), fileName: 'daily-agenda.png', text: message });

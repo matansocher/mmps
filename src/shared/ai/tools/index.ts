@@ -54,5 +54,3 @@ export { gamePriceWatcherTool } from './game-price-watcher';
 export { gameScoresTool } from './game-scores';
 
 export { memoryTool } from './memory';
-
-export { summaryLocationTool } from './summary-location';
