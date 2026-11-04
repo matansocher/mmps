@@ -318,6 +318,52 @@ The chatbot follows accounts on 4 platforms and DMs one daily digest instead of 
 - **Data sources.** Telegram → `@services/telegram-scraper` (t.me/s web preview, no auth). Twitter → `@services/twitter-scraper` (anonymous GraphQL, then an optional logged-in session via `X_AUTH_TOKEN` / `X_CT0` cookies, then a Nitter fallback; no key). YouTube → RSS for collecting, Supadata-backed `@services/youtube` for tool actions. TikTok → RapidAPI `@services/tiktok` (metered free tier, mind the quota).
 - The digest summary goes through the raw `@services/openai` helper, so it is not usage-metered.
 
+### YouTube Pub/Sub collection pilot
+
+`SOCIAL_MEDIA_COLLECTION_MODE=direct` (the default) retains the direct collector. Set it to `pubsub` to queue **only YouTube** on the existing `30 11,15,19,23 * * *` Asia/Jerusalem cron. X, TikTok, Telegram polling, and the 22:45 digest are unchanged. The pilot runs one bounded pull worker in the chatbot process; keep **one application replica** because cron is in-process. No public webhook is needed.
+
+**Provisioning (Google Cloud Console):**
+
+1. Enable Cloud Pub/Sub in the intended project. Create topics `social-media-collection-jobs` and `social-media-collection-jobs-dlq`, without default subscriptions.
+2. Create pull subscription `social-media-collection-jobs-dlq-review` on the DLQ topic: seven-day retention, never expire. The DLQ topic alone is not a retained review inbox.
+3. Create pull subscription `social-media-collection-worker` on the jobs topic: 60-second ack deadline, seven-day retention, never expire; exponential retry 10–300 seconds; DLQ topic above, maximum delivery attempts 10. Leave ordering, exactly-once, filters and transforms off.
+4. Create service account `social-media-collector`. Grant **Pub/Sub Publisher** on the jobs topic and **Pub/Sub Subscriber** on the worker subscription. Create custom role `socialMediaCollectionMetadata` with only `pubsub.topics.get` and `pubsub.subscriptions.get`; grant it on those two resources. Startup reads only the jobs topic and worker subscription metadata, not project lists or DLQ metadata. It checks the topic binding, pull delivery, retry, retention, ack deadline and DLQ policy, but cannot verify service-agent IAM with these grants.
+5. In the worker subscription's Dead lettering panel, grant Google's Pub/Sub service agent Publisher on the DLQ topic and Subscriber on the source subscription. Delivery-attempt limits and forwarding are approximate and depend on these grants. The app identity does not need access to the review subscription.
+
+**Configuration:**
+
+| Variable | Value |
+|---|---|
+| `SOCIAL_MEDIA_COLLECTION_MODE` | `direct` or `pubsub`; currently controls YouTube only; invalid values fail chatbot startup |
+| `SOCIAL_MEDIA_PUBSUB_PROJECT_ID` | Required in Pub/Sub mode; Google project ID |
+| `SOCIAL_MEDIA_PUBSUB_TOPIC` | Optional, default `social-media-collection-jobs` |
+| `SOCIAL_MEDIA_PUBSUB_SUBSCRIPTION` | Optional, default `social-media-collection-worker` |
+| `SOCIAL_MEDIA_PUBSUB_DLQ_TOPIC` | Optional, default `social-media-collection-jobs-dlq` |
+| `SOCIAL_MEDIA_PUBSUB_CREDENTIALS_JSON` | Optional private service-account JSON; never log or commit it |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Optional ADC credentials **file path**, not JSON; unnecessary with the private JSON setting |
+
+Prefer workload identity/ADC where available. For Heroku Config Vars, use the compact JSON object directly, **without surrounding quotes**. For local `.env`, single-quote the compact JSON and preserve escaped newlines in its private key. When the private JSON is absent, the SDK uses Application Default Credentials. The runtime never provisions resources. MongoDB must support transactions (replica set or sharded cluster); standalone MongoDB fails pilot activation.
+
+**Processing and safety:** The cron publishes a version-1 envelope containing only a subscription ObjectId and minute-normalized scheduled timestamp. It reports publish failures and continues other subscriptions. The worker processes one message at a time with five-second pacing, reloads the active subscription, and uses a two-minute lease with a random owner. It reads the latest cursor rather than carrying a stale cursor in the message. First collection still establishes a baseline without importing old videos; deleted/inactive subscriptions become durable no-ops. RSS requests have a 20-second abortable timeout, a 1 MiB response cap and a 100-video cap; malformed feeds fail rather than looking like empty success. Mongo operations and transactions are bounded.
+
+Pending YouTube posts use deterministic Mongo `_id` upserts, independent of the legacy read/filter/insert dedupe used by other collectors. A majority-committed transaction atomically persists pending posts, advances the cursor using `$max`, and records completion in `YouTubeCollectionJob`. The transaction writes the owner-qualified lease as a fence; an expired worker cannot commit after another owner takes over. Subscription edits during fetching trigger a retry. This avoids partial writes and protects replay even after the digest deletes pending rows. The worker acknowledges only after durable success; RSS/database errors, invalid envelopes and unsupported versions are nacked for retry/eventual DLQ. There is **no exactly-once business-execution guarantee**.
+
+Completed jobs expire after 14 days; envelopes older than seven days (or more than five minutes in the future) are rejected. `YouTubeCollectionLease` expires abandoned locks; a lease can be reclaimed after two minutes even before TTL cleanup. Keep clocks synchronized. Backlog is retained in Pub/Sub, not unlimited application memory. Shutdown stops new publishes, aborts RSS, drains in-flight work and closes the subscriber/client before MongoDB closes; the application's existing ten-second hard-exit may interrupt a transaction, leaving the job unacked for redelivery.
+
+**Rollout and exercises:** Start with isolated subscriptions/data. Check a normal collection, first-run baseline, duplicate envelope after digest deletion, worker offline/restart, RSS failure/recovery, deleted subscription, and malformed-job DLQ forwarding. Unit tests mock transports and Mongo operations; production IAM/forwarding and real replica-set failover must be verified in your own test environment. Monitor source backlog size/oldest-unacked age, DLQ backlog and publish/worker error logs. No immediate Telegram message should be produced by a collection job.
+
+**Rollback:** Stop the Pub/Sub-mode process first; do not overlap workers with the direct collector. Inspect/reconcile or deliberately discard queued and dead-letter jobs, then restart with `SOCIAL_MEDIA_COLLECTION_MODE=direct`. Clear stale backlog before later reactivation. Replaying old jobs outside the seven-day window requires reconciliation, not changing their timestamp to bypass validation.
+
+**Reliability boundary:** Publishing and scheduling are not transactional. A process crash or failed publish can omit a scheduled job; the next run usually catches up from the durable cursor. Partial publishing is visible but has no outbox-based guaranteed dispatch. RSS exposes a finite recent window, so long outages can still lose videos. A queue does not repair that source limitation or eliminate the cost of operating a backlog/DLQ. Resource names are social-media-scoped for possible future reuse; other platforms are **not** queued by this pilot.
+
+### Collection and evening digest admin notifications
+
+When the existing `NOTIFIER_TELEGRAM_BOT_TOKEN` and a valid, nonzero `MY_USER_ID` are configured, the notifier bot sends one concise admin summary for each YouTube collection run (11:30, 15:30, 19:30, 23:30) and the 22:45 social-media digest. These are operational notifications to `MY_USER_ID`, not broadcasts to subscribers. No new credentials are required; without existing notifier configuration, collection and delivery still work normally. Notification failures are logged and never retry collection or digest delivery.
+
+The evening digest summary reports text-complete/incomplete chat counts or an empty run, including send failures that the delivery code catches internally. Optional image/video delivery is explicitly labelled unverified rather than claiming full media success. Existing digest delivery and abort behavior are unchanged.
+
+Direct collection reports subscription successes/failures and new-video counts, including empty runs. Pub/Sub publishing is **not** reported as collection success: an in-process monitor polls the durable completion ledger every 30 seconds, in batches of at most 500 job IDs, for up to 15 minutes after publishing. Its single summary distinguishes completed jobs, deleted/inactive skips, publish failures and unresolved/pending jobs. Pending can mean retries, backlog or DLQ forwarding; the app does **not** claim confirmed retry exhaustion. Jobs can finish after that summary without another notification. Monitoring errors report completion as unknown. Monitoring is best-effort and not durable across process restarts; a crash can lose the summary, and interrupted publishing can leave a run incomplete. The business completion ledger remains durable and independent of notification delivery.
+
 ## 16. Boot lifecycle (manual DI)
 
 No framework/IoC container — `initChatbot(app)` wires everything by hand:

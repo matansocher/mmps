@@ -1,10 +1,14 @@
+import { env } from 'node:process';
+import { MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger, sleep } from '@core/utils';
+import { notify } from '@services/notifier';
 import { fetchChannelPosts as fetchTelegramChannelPosts } from '@services/telegram-scraper';
 import { getUserSecUid, getUserVideosBySecUid } from '@services/tiktok';
 import { fetchLatestPosts as fetchTwitterLatestPosts } from '@services/twitter-scraper';
 import { getVideosFromRSS } from '@services/youtube';
 import { createPendingPosts, getSubscriptionsGroupedByChatId, updateLastSeen, updateSecUid } from '@shared/social-follower';
 import type { SocialPlatform, SocialSubscription, UpdateLastSeenData } from '@shared/social-follower';
+import { BOT_CONFIG } from '../chatbot.config';
 
 const logger = new Logger('chatbot:scheduler:social-media-collect');
 
@@ -26,18 +30,44 @@ type CollectResult = {
 // Silently collects new posts into the PendingPost collection; the daily digest
 // scheduler (social-media-digest.ts) sends them to the user at 22:45.
 export async function socialMediaCollect(platforms: SocialPlatform[]): Promise<void> {
-  const subscriptionsByChatId = await getSubscriptionsGroupedByChatId();
+  const outcome = { subscriptions: 0, completed: 0, failed: 0, newVideos: 0 };
+  let fatal = false;
+  try {
+    const subscriptionsByChatId = await getSubscriptionsGroupedByChatId();
 
-  for (const [, subscriptions] of subscriptionsByChatId) {
-    const relevantSubscriptions = subscriptions.filter((subscription) => platforms.includes(subscription.platform));
-    for (const subscription of relevantSubscriptions) {
-      await collectSubscription(subscription);
-      await sleep(SLEEP_BETWEEN_USERS_MS);
+    for (const [, subscriptions] of subscriptionsByChatId) {
+      const relevantSubscriptions = subscriptions.filter((subscription) => platforms.includes(subscription.platform));
+      for (const subscription of relevantSubscriptions) {
+        const result = await collectSubscription(subscription);
+        if (subscription.platform === 'youtube') {
+          outcome.subscriptions++;
+          if (result === null) outcome.failed++;
+          else {
+            outcome.completed++;
+            outcome.newVideos += result;
+          }
+        }
+        await sleep(SLEEP_BETWEEN_USERS_MS);
+      }
+    }
+  } catch (err) {
+    fatal = true;
+    throw err;
+  } finally {
+    if (platforms.includes('youtube') && env.NOTIFIER_TELEGRAM_BOT_TOKEN && Number.isFinite(MY_USER_ID) && MY_USER_ID !== 0) {
+      try {
+        notify(BOT_CONFIG, {
+          action: 'youtube_collection',
+          plainText: `Direct collection: ${fatal ? 'failed/incomplete' : outcome.failed ? (outcome.completed ? 'partial failure' : 'failed') : outcome.subscriptions ? 'completed' : 'no subscriptions'}. ${outcome.completed}/${outcome.subscriptions} subscriptions completed, ${outcome.failed} failed, ${outcome.newVideos} new videos.`,
+        });
+      } catch (err) {
+        logger.error(`Collection notification failed: ${getErrorMessage(err)}`);
+      }
     }
   }
 }
 
-async function collectSubscription(subscription: SocialSubscription): Promise<void> {
+async function collectSubscription(subscription: SocialSubscription): Promise<number | null> {
   const { platform, username, displayName, chatId } = subscription;
   try {
     const { newPosts, lastSeen } = await getNewPosts(subscription);
@@ -50,8 +80,10 @@ async function collectSubscription(subscription: SocialSubscription): Promise<vo
     if (newPosts.length > 0) {
       logger.log(`Collected ${newPosts.length} new posts from ${platform}/@${username}`);
     }
+    return newPosts.length;
   } catch (err) {
     logger.error(`Failed to check ${platform}/@${username}: ${getErrorMessage(err)}`);
+    return null;
   }
 }
 

@@ -8,6 +8,7 @@ import { registerSwaggerRoutes } from '@core/openapi';
 import { closeRedisConnection } from '@core/services';
 import { getErrorMessage, gracefulShutdown, Logger } from '@core/utils';
 import { BOT_CONFIG as chatbotConfig, initChatbot } from '@features/chatbot';
+import { closeYouTubeCollection } from '@features/chatbot/youtube-collection';
 import { BOT_CONFIG as chilliConfig, initChilli } from '@features/chilli';
 import { initClaims } from '@features/claims';
 import { BOT_CONFIG as coachConfig, initCoach } from '@features/coach';
@@ -107,7 +108,7 @@ async function main() {
   });
 
   const closeHttpServer = () => new Promise<void>((resolve) => server.close(() => resolve()));
-  gracefulShutdown(closeHttpServer, stopAllTelegramBots, closeMongoConnections, closeRedisConnection);
+  gracefulShutdown(closeYouTubeCollection, closeHttpServer, stopAllTelegramBots, closeMongoConnections, closeRedisConnection);
 }
 
 main().catch((err) => {

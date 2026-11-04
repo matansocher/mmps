@@ -2,15 +2,17 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { Bot } from 'grammy';
 import { ObjectId } from 'mongodb';
+import { env } from 'node:process';
 import { z } from 'zod';
-import { DEFAULT_TIMEZONE } from '@core/config';
+import { DEFAULT_TIMEZONE, MY_USER_ID } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
+import { notify } from '@services/notifier';
 import { getResponse } from '@services/openai';
 import { CHAT_MODEL } from '@services/openai/constants';
 import { sendShortenedMessage, TELEGRAM_MAX_MESSAGE_LENGTH } from '@services/telegram';
 import { claimDigestDelivery, deletePendingPosts, getPendingPostBacklog, getPendingPostChatIds, getPendingPostsForChat, markDigestTextDelivered } from '@shared/social-follower';
 import type { DigestImageEntry, DigestVideoEntry, PendingPost, SocialPlatform } from '@shared/social-follower';
-import { CHATBOT_CONFIG } from '../chatbot.config';
+import { BOT_CONFIG, CHATBOT_CONFIG } from '../chatbot.config';
 import type { ChatbotService } from '../chatbot.service';
 import { deliverDigestImages } from './social-media-image-delivery';
 import { deliverDigestVideos } from './social-media-video-delivery';
@@ -62,16 +64,46 @@ const shortenSchema = z.object({
 // Iterates one chat at a time with a bounded query so a runaway backlog can't pull the
 // whole collection into memory.
 export async function socialMediaDigest(bot: Bot, chatbotService: ChatbotService): Promise<void> {
-  const digestDate = digestDateFor();
-  const chatIds = await getPendingPostChatIds();
+  let completedChats = 0;
+  let failedChats = 0;
+  let attemptedChats = 0;
+  const mediaNote = CHATBOT_CONFIG.videoDigest.enabled || CHATBOT_CONFIG.imageDigest.enabled ? ' Media delivery unverified.' : '';
 
-  for (const chatId of chatIds) {
-    const posts = await getPendingPostsForChat(chatId);
-    if (!posts.length) {
-      continue;
+  try {
+    const digestDate = digestDateFor();
+    const chatIds = await getPendingPostChatIds();
+
+    for (const chatId of chatIds) {
+      const posts = await getPendingPostsForChat(chatId);
+      if (!posts.length) {
+        continue;
+      }
+      attemptedChats++;
+      await logBacklog(chatId, posts.length);
+      const deliveredAll = await processDigestForChatWithOutcome(bot, chatbotService, chatId, posts, digestDate);
+      if (deliveredAll) {
+        completedChats++;
+      } else {
+        failedChats++;
+      }
     }
-    await logBacklog(chatId, posts.length);
-    await processDigestForChat(bot, chatbotService, chatId, posts, digestDate);
+  } catch (err) {
+    await notifyDigestRun(`Failed; run aborted. Text complete: ${completedChats} chats; incomplete: ${failedChats}. Error: ${getErrorMessage(err).slice(0, 300)}.${mediaNote}`);
+    throw err;
+  }
+
+  const summary = !attemptedChats ? 'Empty; no pending posts.' : `Text ${failedChats ? 'incomplete' : 'delivered'}: ${completedChats} chats complete; ${failedChats} incomplete.${mediaNote}`;
+  await notifyDigestRun(summary);
+}
+
+async function notifyDigestRun(summary: string): Promise<void> {
+  if (!env.NOTIFIER_TELEGRAM_BOT_TOKEN || !Number.isFinite(MY_USER_ID) || !MY_USER_ID) {
+    return;
+  }
+  try {
+    await notify(BOT_CONFIG, { action: 'social_media_digest', plainText: `Evening social media digest: ${summary}` });
+  } catch (err) {
+    logger.error(`Failed to notify digest outcome: ${getErrorMessage(err)}`);
   }
 }
 
@@ -91,6 +123,10 @@ async function logBacklog(chatId: number, loadedCount: number): Promise<void> {
 // Runs one chat's digest keyed to a single `digestDate` supplied by the caller (computed once per
 // run) so a long run that crosses local midnight buckets every chat under the same day.
 export async function processDigestForChat(bot: Bot, chatbotService: ChatbotService, chatId: number, posts: PendingPost[], digestDate: string): Promise<void> {
+  await processDigestForChatWithOutcome(bot, chatbotService, chatId, posts, digestDate);
+}
+
+async function processDigestForChatWithOutcome(bot: Bot, chatbotService: ChatbotService, chatId: number, posts: PendingPost[], digestDate: string): Promise<boolean> {
   // Fix the video selection once per (chat, local date) so restarts/concurrent runs converge on
   // the same set, and snapshot each video's fields so deleting the pending posts is still safe.
   const videos = CHATBOT_CONFIG.videoDigest.enabled ? selectTikTokPendingPosts(posts, CHATBOT_CONFIG.videoDigest.maxVideosPerChat).map(toVideoEntry) : [];
@@ -98,9 +134,11 @@ export async function processDigestForChat(bot: Bot, chatbotService: ChatbotServ
   const record = await claimDigestDelivery({ chatId, digestDate, videos, images });
 
   let deliveredAny = !!record.textDeliveredAt;
+  let deliveredAll = !!record.textDeliveredAt;
   if (!record.textDeliveredAt) {
     const outcome = await sendTextDigest(bot, chatbotService, chatId, posts);
     deliveredAny = outcome.deliveredAny;
+    deliveredAll = outcome.deliveredAll;
     if (outcome.deliveredAll) {
       await markDigestTextDelivered(chatId, digestDate);
     }
@@ -114,6 +152,7 @@ export async function processDigestForChat(bot: Bot, chatbotService: ChatbotServ
   if (CHATBOT_CONFIG.imageDigest.enabled && deliveredAny) {
     await deliverDigestImages(bot, chatId, digestDate);
   }
+  return deliveredAll;
 }
 
 // Local (Asia/Jerusalem) calendar date used to key one chat's digest, so "today" matches how the

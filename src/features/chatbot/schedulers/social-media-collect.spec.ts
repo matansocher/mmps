@@ -1,3 +1,5 @@
+import { notify } from '@services/notifier';
+import { getVideosFromRSS } from '@services/youtube';
 import type { SocialSubscription } from '@shared/social-follower';
 import { socialMediaCollect } from './social-media-collect';
 
@@ -11,6 +13,8 @@ const { getUserSecUid, getUserVideosBySecUid, getSubscriptionsGroupedByChatId, c
 }));
 
 vi.mock('@core/utils', async (importOriginal) => ({ ...(await importOriginal<typeof import('@core/utils')>()), sleep: vi.fn() }));
+vi.mock('@core/config', () => ({ MY_USER_ID: 42, isProd: false }));
+vi.mock('@services/notifier', () => ({ notify: vi.fn() }));
 vi.mock('@services/tiktok', () => ({ getUserSecUid, getUserVideosBySecUid }));
 vi.mock('@services/telegram-scraper', () => ({ fetchChannelPosts: vi.fn() }));
 vi.mock('@services/twitter-scraper', () => ({ fetchLatestPosts: vi.fn() }));
@@ -49,5 +53,42 @@ describe('socialMediaCollect() tiktok secUid caching', () => {
     expect(getUserSecUid).toHaveBeenCalledTimes(1);
     expect(updateSecUid).toHaveBeenCalledWith('creator', CHAT_ID, 'fresh-sec-uid');
     expect(getUserVideosBySecUid).toHaveBeenCalledWith('fresh-sec-uid', 5);
+  });
+});
+
+describe('direct YouTube collection notifications', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.stubEnv('NOTIFIER_TELEGRAM_BOT_TOKEN', 'configured');
+  });
+  afterEach(() => vi.unstubAllEnvs());
+  it('reports no subscriptions rather than a misleading collection count', async () => {
+    getSubscriptionsGroupedByChatId.mockResolvedValue(new Map());
+    await socialMediaCollect(['youtube']);
+    expect(vi.mocked(notify).mock.calls[0][1].plainText).toContain('no subscriptions');
+  });
+  it('reports no new videos separately from swallowed subscription failures', async () => {
+    const sub = { platform: 'youtube', username: 'channel', chatId: 42 };
+    getSubscriptionsGroupedByChatId.mockResolvedValue(new Map([[42, [sub, sub]]]));
+    vi.mocked(getVideosFromRSS).mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('RSS failed'));
+    await socialMediaCollect(['youtube']);
+    expect(notify).toHaveBeenCalledOnce();
+    expect(vi.mocked(notify).mock.calls[0][1].plainText).toContain('partial failure');
+    expect(vi.mocked(notify).mock.calls[0][1].plainText).toContain('1 failed, 0 new videos');
+  });
+  it('preserves business errors and contains notifier failures', async () => {
+    getSubscriptionsGroupedByChatId.mockRejectedValue(new Error('lookup failed'));
+    vi.mocked(notify).mockImplementation(() => {
+      throw new Error('notifier down');
+    });
+    await expect(socialMediaCollect(['youtube'])).rejects.toThrow('lookup failed');
+  });
+  it('does not notify without existing credentials or for unrelated collectors', async () => {
+    getSubscriptionsGroupedByChatId.mockResolvedValue(new Map());
+    vi.stubEnv('NOTIFIER_TELEGRAM_BOT_TOKEN', '');
+    await socialMediaCollect(['youtube']);
+    vi.stubEnv('NOTIFIER_TELEGRAM_BOT_TOKEN', 'configured');
+    await socialMediaCollect(['twitter']);
+    expect(notify).not.toHaveBeenCalled();
   });
 });
