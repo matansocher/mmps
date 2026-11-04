@@ -10,7 +10,7 @@ env:
   HEROKU_APP_NAME: mmps
 
 concurrency:
-  group: heroku-deployment-mmps
+  group: deploy-mmps
   cancel-in-progress: false
 
 jobs:
