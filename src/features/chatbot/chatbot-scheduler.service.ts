@@ -1,6 +1,6 @@
 import type { Bot } from 'grammy';
 import cron from 'node-cron';
-import { DEFAULT_TIMEZONE } from '@core/config';
+import { DEFAULT_TIMEZONE, ISRAEL_TIMEZONE } from '@core/config';
 import { getErrorMessage, Logger } from '@core/utils';
 import { ChatbotService } from './chatbot.service';
 import {
@@ -103,7 +103,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`13 11 * * 1,2,3`, async () => secretaryCheckIn(this.bot, this.secretaryMessageService));
 
-    createSchedule(`10,40 7-22 * * *`, async () => rainRadarAlert(this.bot));
+    createSchedule(`10,40 7-22 * * *`, async () => rainRadarAlert(this.bot), ISRAEL_TIMEZONE);
 
     createSchedule(`5 * * * *`, async () => flightTrafficCheck(this.bot));
   }

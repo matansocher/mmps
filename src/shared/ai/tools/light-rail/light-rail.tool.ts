@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { env } from 'node:process';
 import { z } from 'zod';
-import { DEFAULT_TIMEZONE } from '@core/config';
+import { ISRAEL_TIMEZONE } from '@core/config';
 import { getServiceDate } from '@services/israel-rail';
 import {
   buildLightRailNetwork,
@@ -153,7 +153,7 @@ async function departures(timetable: LightRailTimetable, input: z.infer<typeof s
   }
   const { origin, destination } = trip;
 
-  const nowLocal = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+  const nowLocal = toZonedTime(new Date(), ISRAEL_TIMEZONE);
   const searchDate = date ?? format(nowLocal, 'yyyy-MM-dd');
   const searchTime = time ?? format(nowLocal, 'HH:mm');
 
@@ -195,7 +195,7 @@ async function lastTrain(timetable: LightRailTimetable, input: z.infer<typeof sc
   }
   const { origin, destination } = trip;
 
-  const nowLocal = toZonedTime(new Date(), DEFAULT_TIMEZONE);
+  const nowLocal = toZonedTime(new Date(), ISRAEL_TIMEZONE);
   const serviceDate = input.date ?? getServiceDate(nowLocal);
   if (!hasDirectLightRailTrip(timetable, origin.id, destination.id)) {
     const changeAt = findLightRailInterchange(timetable, origin.id, destination.id);
