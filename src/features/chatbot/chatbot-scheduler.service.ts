@@ -53,7 +53,7 @@ export class ChatbotSchedulerService {
 
     createSchedule(`00 18 * * *`, async () => birthdayReminder(this.bot, this.chatbotService));
 
-    createSchedule(`59 12,23 * * *`, async () => footballUpdate(this.bot, this.chatbotService));
+    createSchedule(`59 12,23 * * *`, async () => footballUpdate(this.bot, this.chatbotService), ISRAEL_TIMEZONE);
 
     createSchedule(`30 9 * * *`, async () => makavdiaUpdate(this.bot, this.chatbotService));
 
